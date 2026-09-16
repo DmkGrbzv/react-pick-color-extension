@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Color Palette"
+  },
+  "extensionDescription": {
+    "message": "Pick colors from your screen and save your current palette."
+  },
+  "openPalette": {
+    "message": "Open palette"
+  }
+}

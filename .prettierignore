@@ -1,0 +1,15 @@
+# Dependencies and generated files
+node_modules/
+dist/
+dist-ssr/
+coverage/
+package-lock.json
+
+# Local tool data and logs
+.codex/
+.agents/
+*.log
+
+# JavaScript/JSX spacing is owned by ESLint Stylistic
+**/*.js
+**/*.jsx

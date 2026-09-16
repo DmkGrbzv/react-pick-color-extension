@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Палітра кольорів"
+  },
+  "extensionDescription": {
+    "message": "Вибирайте кольори з екрана та зберігайте поточну палітру."
+  },
+  "openPalette": {
+    "message": "Відкрити палітру"
+  }
+}
