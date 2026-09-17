@@ -1,4 +1,4 @@
-import { AppError } from './errors.js';
+import { AppError } from '@/errors.js';
 
 export const DIRECTIONS = { right: 'to right', left: 'to left', down: 'to bottom', up: 'to top' };
 
@@ -91,38 +91,68 @@ export function draftDirty( draft ) {
   return JSON.stringify( { direction: draft.direction, stops: draft.stops } ) !== draft.baseline;
 }
 
+// Sliders stay within 0..100 and cannot cross the other color stop.
+function getClampedSliderPosition( draft, stopIndex, inputValue ) {
+  const neighborIndex = stopIndex === 0 ? 1 : 0;
+  const neighborInput = draft.stops[neighborIndex].position;
+  // An unfinished numeric input must not remove the slider's boundary.
+  const neighborPosition = validPosition( neighborInput )
+    ? Number( neighborInput )
+    : draft.preview.stops[neighborIndex].position;
+  const roundedPosition = Math.round( Number( inputValue ) );
+  const boundedPosition = Math.max( 0, Math.min( 100, roundedPosition ) );
+
+  if ( stopIndex === 0 ) return Math.min( boundedPosition, neighborPosition );
+  return Math.max( boundedPosition, neighborPosition );
+}
+
+function buildGradientPreview( updatedDraft, previousPreview ) {
+  const errors = draftErrors( updatedDraft );
+  // Positions form a pair: keep both previous positions if either is invalid or they cross.
+  const keepPreviousPositions = errors.order || errors.position.some( Boolean );
+  const previewStops = updatedDraft.stops.map( ( stop, index ) => {
+    const previousStop = previousPreview.stops[index];
+    return {
+      // HEX fields are independent: an invalid color does not freeze the other color.
+      hex: normalizeHex( stop.hex ) || previousStop.hex,
+      position: keepPreviousPositions ? previousStop.position : Number( stop.position ),
+    };
+  } );
+
+  return { ...previousPreview, direction: updatedDraft.direction, stops: previewStops };
+}
+
+// Keep raw form input in the draft; render only valid values in its preview.
 export function updateGradientDraft( draft, action ) {
-  const next = { ...draft, stops: draft.stops.map( ( stop ) => ( { ...stop } ) ) };
-  if ( action.type === 'hex' ) next.stops[action.index].hex = action.value;
-  if ( action.type === 'position' ) next.stops[action.index].position = action.value;
-  if ( action.type === 'direction' && Object.hasOwn( DIRECTIONS, action.value ) )
-    next.direction = action.value;
-  if ( action.type === 'swap' )
-    [next.stops[0].hex, next.stops[1].hex] = [next.stops[1].hex, next.stops[0].hex];
-  if ( action.type === 'slider' ) {
-    const other = 1 - action.index;
-    const limit = validPosition( next.stops[other].position )
-      ? Number( next.stops[other].position )
-      : draft.preview.stops[other].position;
-    const value = Math.max( 0, Math.min( 100, Math.round( Number( action.value ) ) ) );
-    next.stops[action.index].position = String(
-      action.index === 0 ? Math.min( value, limit ) : Math.max( value, limit )
-    );
-  }
-  const errors = draftErrors( next );
-  // Invalid fields retain their last valid preview value; other valid controls remain live.
-  next.preview = {
-    ...draft.preview,
-    direction: next.direction,
-    stops: next.stops.map( ( stop, index ) => ( {
-      hex: normalizeHex( stop.hex ) || draft.preview.stops[index].hex,
-      position:
-        errors.order || errors.position.some( Boolean )
-          ? draft.preview.stops[index].position
-          : Number( stop.position ),
-    } ) ),
+  const updatedDraft = {
+    ...draft,
+    stops: draft.stops.map( ( stop ) => ( { ...stop } ) ),
   };
-  return next;
+
+  switch ( action.type ) {
+    case 'hex':
+      updatedDraft.stops[action.index].hex = action.value;
+      break;
+    case 'position':
+      updatedDraft.stops[action.index].position = action.value;
+      break;
+    case 'direction':
+      if ( Object.hasOwn( DIRECTIONS, action.value ) ) updatedDraft.direction = action.value;
+      break;
+    case 'swap':
+      // Swap colors only; their positions stay in place.
+      updatedDraft.stops[0].hex = draft.stops[1].hex;
+      updatedDraft.stops[1].hex = draft.stops[0].hex;
+      break;
+    case 'slider':
+      updatedDraft.stops[action.index].position = String(
+        getClampedSliderPosition( draft, action.index, action.value )
+      );
+      break;
+  }
+
+  updatedDraft.preview = buildGradientPreview( updatedDraft, draft.preview );
+  return updatedDraft;
 }
 
 export function gradientFromDraft( draft ) {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getPalette, subscribeToPalette } from './storage';
-import { createPaletteSubscription } from './paletteSubscription';
+import { getPalette, subscribeToPalette } from '@/api/paletteClient.js';
+import { createPaletteSubscription } from '@/paletteSubscription.js';
 
 export function usePalette() {
   const [palette, setPalette] = useState( null );

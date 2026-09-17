@@ -1,0 +1,25 @@
+.app {
+  padding: 24px 18px;
+  margin: 0 auto;
+}
+
+.panel {
+  max-width: 560px;
+}
+
+.editor {
+  max-width: 1000px;
+  padding: 56px 32px;
+}
+
+.notice {
+  min-height: 48px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 420px) {
+  .editor {
+    padding: 24px 16px;
+  }
+}

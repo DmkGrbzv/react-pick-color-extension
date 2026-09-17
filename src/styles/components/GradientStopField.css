@@ -1,0 +1,20 @@
+.gradient-color-field {
+  min-width: 0;
+}
+
+.gradient-color-field h3 {
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
+.gradient-color-actions {
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 20px;
+}
+
+.gradient-color-actions label {
+  min-width: 0;
+  margin: 0;
+}

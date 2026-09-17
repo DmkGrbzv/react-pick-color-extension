@@ -1,0 +1,29 @@
+.print-preview {
+  padding: 24px;
+}
+.print-screen-header {
+  max-width: 1000px;
+  margin: auto;
+}
+@media (max-width: 620px) {
+  .print-preview {
+    padding: 12px;
+  }
+}
+@media print {
+  :root,
+  body {
+    background: white;
+  }
+  .print-preview {
+    padding: 0;
+  }
+  .print-controls,
+  .print-screen-header {
+    display: none !important;
+  }
+  * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

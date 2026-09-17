@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test",
+    "test": "node --import ./tests/registerAliases.js --test",
     "format": "prettier --write . && eslint . --fix",
     "format:check": "prettier --check . && eslint .",
     "lint:fix": "eslint . --fix"

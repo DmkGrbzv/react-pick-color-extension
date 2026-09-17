@@ -6,8 +6,8 @@ import {
   createLanguagePreference,
   resolveLanguage,
   SUPPORTED_LANGUAGES,
-} from '../src/i18n/language.js';
-import { AppError, errorKey } from '../src/errors.js';
+} from '@/i18n/language.js';
+import { AppError, errorKey } from '@/errors.js';
 
 const readJson = ( path ) => JSON.parse( readFileSync( new URL( path, import.meta.url ), 'utf8' ) );
 const uk = readJson( '../src/i18n/locales/uk.json' );

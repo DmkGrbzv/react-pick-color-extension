@@ -1,10 +1,10 @@
 import {
-  GETPALETTE,
-  ADDCOLOR,
-  REMOVECOLOR,
-  SAVEGRADIENT,
-  findCorrectMassageType,
-} from '../src/messageTypes.js';
+  GET_PALETTE,
+  ADD_COLOR,
+  REMOVE_COLOR,
+  SAVE_GRADIENT,
+  findCorrectMessageType,
+} from '@/messageTypes.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -17,9 +17,9 @@ import {
   gradientFromDraft,
   draftErrors,
   draftDirty,
-} from '../src/gradient.js';
-import { createPaletteService } from '../src/storage.js';
-import { isPalette } from '../src/types.js';
+} from '@/gradient.js';
+import { createPaletteExecutor } from './helpers/palette.js';
+import { isPalette } from '@/types.js';
 
 function gradient( direction = 'right', first = 0, second = 100 ) {
   return {
@@ -52,8 +52,8 @@ function service( initial = { id: 'current', name: 'My palette', colors: [] } ) 
     },
   };
   return {
-    execute: createPaletteService( storage, () => 'new-' + ++id ),
-    restart: () => createPaletteService( storage ),
+    execute: createPaletteExecutor( storage, () => 'new-' + ++id ),
+    restart: () => createPaletteExecutor( storage ),
     failNextWrite: () => {
       fail = true;
     },
@@ -169,7 +169,7 @@ test( 'draft initialization/reset is deterministic and does not write to palette
   ] );
   draft = updateGradientDraft( draft, { type: 'hex', index: 0, value: '#f00' } );
   assert.equal( backend.writes(), 0 );
-  assert.deepEqual( ( await backend.execute( { type: findCorrectMassageType( GETPALETTE ) } ) ).colors, [] );
+  assert.deepEqual( ( await backend.execute( { type: findCorrectMessageType( GET_PALETTE ) } ) ).colors, [] );
   assert.equal( createGradientDraft().stops[0].hex, '#000000' );
   assert.equal( gradientFromDraft( draft ).stops[0].hex, '#FF0000' );
 } );
@@ -177,8 +177,8 @@ test( 'draft initialization/reset is deterministic and does not write to palette
 test( 'gradient save adds one normalized item alongside legacy colors and survives restart', async () => {
   const legacy = { id: 'old', hex: '#ABCDEF' };
   const backend = service( { id: 'current', name: 'My palette', colors: [legacy] } );
-  await backend.execute( { type: findCorrectMassageType( SAVEGRADIENT ), gradient: gradient( 'down', 30, 70 ) } );
-  const restored = await backend.restart()( { type: findCorrectMassageType( GETPALETTE ) } );
+  await backend.execute( { type: findCorrectMessageType( SAVE_GRADIENT ), gradient: gradient( 'down', 30, 70 ) } );
+  const restored = await backend.restart()( { type: findCorrectMessageType( GET_PALETTE ) } );
   assert.equal( backend.writes(), 1 );
   assert.equal( restored.colors.length, 2 );
   assert.deepEqual( restored.colors[0], legacy );
@@ -187,8 +187,8 @@ test( 'gradient save adds one normalized item alongside legacy colors and surviv
     ...normalizeGradient( gradient( 'down', 30, 70 ) ),
   } );
   assert.equal( isPalette( restored ), true );
-  await backend.execute( { type: findCorrectMassageType( ADDCOLOR ), hex: '#abcdef' } );
-  assert.equal( ( await backend.execute( { type: findCorrectMassageType( GETPALETTE ) } ) ).colors.length, 2 );
+  await backend.execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#abcdef' } );
+  assert.equal( ( await backend.execute( { type: findCorrectMessageType( GET_PALETTE ) } ) ).colors.length, 2 );
 } );
 
 test( 'editing preserves id and concurrent unrelated additions and deletions are not lost', async () => {
@@ -199,17 +199,17 @@ test( 'editing preserves id and concurrent unrelated additions and deletions are
     colors: [{ id: 'old', hex: '#123456' }, original],
   } );
   await Promise.all( [
-    backend.execute( { type: findCorrectMassageType( ADDCOLOR ), hex: '#FF0000' } ),
-    backend.execute( { type: findCorrectMassageType( SAVEGRADIENT ), gradient: { id: 'g', ...gradient( 'left', 50, 50 ) } } ),
-    backend.execute( { type: findCorrectMassageType( REMOVECOLOR ), id: 'old' } ),
+    backend.execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#FF0000' } ),
+    backend.execute( { type: findCorrectMessageType( SAVE_GRADIENT ), gradient: { id: 'g', ...gradient( 'left', 50, 50 ) } } ),
+    backend.execute( { type: findCorrectMessageType( REMOVE_COLOR ), id: 'old' } ),
   ] );
-  const palette = await backend.execute( { type: findCorrectMassageType( GETPALETTE ) } );
+  const palette = await backend.execute( { type: findCorrectMessageType( GET_PALETTE ) } );
   assert.equal( palette.colors.length, 2 );
   assert.equal( palette.colors.filter( ( item ) => item.type === 'gradient' ).length, 1 );
   assert.equal( palette.colors.find( ( item ) => item.id === 'g' ).direction, 'left' );
   assert.ok( palette.colors.some( ( item ) => item.hex === '#FF0000' ) );
-  await backend.execute( { type: findCorrectMassageType( REMOVECOLOR ), id: 'g' } );
-  assert.deepEqual( ( await backend.execute( { type: findCorrectMassageType( GETPALETTE ) } ) ).colors, [
+  await backend.execute( { type: findCorrectMessageType( REMOVE_COLOR ), id: 'g' } );
+  assert.deepEqual( ( await backend.execute( { type: findCorrectMessageType( GET_PALETTE ) } ) ).colors, [
     { id: 'new-1', hex: '#FF0000' },
   ] );
 } );
@@ -217,7 +217,7 @@ test( 'editing preserves id and concurrent unrelated additions and deletions are
 test( 'a deleted gradient is not resurrected by a stale editing draft', async () => {
   const backend = service();
   await assert.rejects(
-    backend.execute( { type: findCorrectMassageType( SAVEGRADIENT ), gradient: { id: 'deleted', ...gradient() } } ),
+    backend.execute( { type: findCorrectMessageType( SAVE_GRADIENT ), gradient: { id: 'deleted', ...gradient() } } ),
     { code: 'gradientMissing' }
   );
   assert.equal( backend.writes(), 0 );
@@ -233,13 +233,13 @@ test( 'failed save does not change persisted data or the submitted draft, and re
   const before = structuredClone( draft );
   backend.failNextWrite();
   await assert.rejects(
-    backend.execute( { type: findCorrectMassageType( SAVEGRADIENT ), gradient: gradientFromDraft( draft ) } ),
+    backend.execute( { type: findCorrectMessageType( SAVE_GRADIENT ), gradient: gradientFromDraft( draft ) } ),
     /Write failed/
   );
   assert.deepEqual( draft, before );
-  assert.deepEqual( ( await backend.execute( { type: findCorrectMassageType( GETPALETTE ) } ) ).colors, [] );
-  await backend.execute( { type: findCorrectMassageType( SAVEGRADIENT ), gradient: gradientFromDraft( draft ) } );
-  assert.equal( ( await backend.execute( { type: findCorrectMassageType( GETPALETTE ) } ) ).colors.length, 1 );
+  assert.deepEqual( ( await backend.execute( { type: findCorrectMessageType( GET_PALETTE ) } ) ).colors, [] );
+  await backend.execute( { type: findCorrectMessageType( SAVE_GRADIENT ), gradient: gradientFromDraft( draft ) } );
+  assert.equal( ( await backend.execute( { type: findCorrectMessageType( GET_PALETTE ) } ) ).colors.length, 1 );
 } );
 
 test( 'invalid gradient commands never persist and leave queue usable', async () => {
@@ -250,11 +250,28 @@ test( 'invalid gradient commands never persist and leave queue usable', async ()
     { ...gradient(), stops: [] },
     { ...gradient(), gradientType: 'radial' },
   ] ) {
-    await assert.rejects( backend.execute( { type: findCorrectMassageType( SAVEGRADIENT ), gradient: value } ), {
+    await assert.rejects( backend.execute( { type: findCorrectMessageType( SAVE_GRADIENT ), gradient: value } ), {
       code: 'invalidGradient',
     } );
   }
   assert.equal( backend.writes(), 0 );
-  await backend.execute( { type: findCorrectMassageType( ADDCOLOR ), hex: '#123456' } );
+  await backend.execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#123456' } );
   assert.equal( backend.writes(), 1 );
+} );
+
+test( 'editing valid fields keeps working beside invalid inputs without mutating the previous draft', () => {
+  const original = createGradientDraft( { id: 'g', ...gradient( 'right', 30, 70 ) } );
+  const before = structuredClone( original );
+  let draft = updateGradientDraft( original, { type: 'position', index: 1, value: '' } );
+  draft = updateGradientDraft( draft, { type: 'slider', index: 0, value: '95' } );
+  assert.equal( draft.stops[0].position, '70' );
+  assert.equal( draft.stops[1].position, '' );
+  assert.deepEqual( draft.preview.stops.map( ( stop ) => stop.position ), [30, 70] );
+  draft = updateGradientDraft( draft, { type: 'hex', index: 0, value: '#bad-input' } );
+  draft = updateGradientDraft( draft, { type: 'hex', index: 1, value: '#f00' } );
+  draft = updateGradientDraft( draft, { type: 'direction', value: 'down' } );
+  assert.equal( gradientCss( draft.preview ), 'linear-gradient(to bottom, #000000 30%, #FF0000 70%)' );
+  assert.equal( draft.stops[0].hex, '#bad-input' );
+  assert.equal( draftErrors( draft ).invalid, true );
+  assert.deepEqual( original, before );
 } );

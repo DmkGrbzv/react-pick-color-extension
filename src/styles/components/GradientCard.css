@@ -1,0 +1,8 @@
+.gradient-stop-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  margin-bottom: 5px;
+}

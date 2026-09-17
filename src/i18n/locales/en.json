@@ -80,5 +80,31 @@
     "itemRemoved": "Item removed.",
     "copyFailed": "Could not copy. Please try again.",
     "wait": "Wait for the current operation to finish, then try again."
+  },
+  "formats": {
+    "label": "Color format",
+    "failed": "Could not load or save the color format. Please try again."
+  },
+  "print": {
+    "open": "Print preview",
+    "openFailed": "Could not open print preview.",
+    "title": "Palette print preview",
+    "settings": "Print settings",
+    "orientation": "Orientation",
+    "portrait": "Portrait",
+    "landscape": "Landscape",
+    "size": "Card size",
+    "medium": "Medium",
+    "large": "Large",
+    "background": "Paper background",
+    "white": "White",
+    "warm": "Warm white",
+    "show": "Show values",
+    "names": "Color names",
+    "warning": "Screen and printed colors may differ. CMYK values are approximate and depend on the printer, paper, ink, and color profile. This is not a professional color proof.",
+    "dialogHint": "Choose Print or Save as PDF in the browser dialog. For the preview layout, use A4, the selected orientation, no additional margins, 100% scale, background graphics on, and headers/footers off. Changing these settings can change pagination.",
+    "action": "Print / Save as PDF",
+    "approximate": "CMYK is approximate. Printed colors may differ.",
+    "page": "Page {{current}} of {{total}}"
   }
 }

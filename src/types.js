@@ -1,4 +1,4 @@
-import { normalizeGradient } from './gradient.js';
+import { normalizeGradient } from '@/gradient.js';
 
 /**
  * @typedef {{ id: string, hex: string, type?: 'color' }} SavedColor

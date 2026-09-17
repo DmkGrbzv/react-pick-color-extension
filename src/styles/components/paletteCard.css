@@ -1,0 +1,42 @@
+.color-card {
+  overflow: hidden;
+  border: 1px solid #e0e4ec;
+  border-radius: 12px;
+  background: white;
+}
+
+.swatch {
+  height: 88px;
+  border-bottom: 1px solid #0000000d;
+}
+
+.editor .swatch {
+  height: 140px;
+}
+
+.color-details {
+  padding: 12px;
+}
+
+code {
+  font-family: 'Cascadia Code', Consolas, monospace;
+  font-size: 15px;
+  font-weight: 600;
+  user-select: all;
+}
+
+.color-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.color-actions button {
+  font-size: 12px;
+  flex: 1;
+}
+
+.delete {
+  color: #a6424d;
+}

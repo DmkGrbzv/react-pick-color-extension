@@ -1,8 +1,8 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import en from './locales/en.json';
-import uk from './locales/uk.json';
-import { createLanguagePreference, resolveLanguage, SUPPORTED_LANGUAGES } from './language.js';
+import en from '@/i18n/locales/en.json';
+import uk from '@/i18n/locales/uk.json';
+import { createLanguagePreference, resolveLanguage, SUPPORTED_LANGUAGES } from '@/i18n/language.js';
 
 const defaultLanguage = resolveLanguage(
   globalThis.chrome?.i18n?.getUILanguage() || navigator.language
@@ -30,11 +30,15 @@ const preference = createLanguagePreference(
   }
 );
 export let languageLoadFailed = false;
-export const languageReady = i18nReady
-  .then( () => preference.start() )
-  .catch( () => {
+async function initializeLanguage() {
+  try {
+    await i18nReady;
+    await preference.start();
+  } catch {
     languageLoadFailed = true;
-  } );
+  }
+}
+export const languageReady = initializeLanguage();
 export const setLanguage = ( language ) => preference.set( language );
 
 if ( import.meta.hot ) import.meta.hot.dispose( () => preference.stop() );

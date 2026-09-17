@@ -5,21 +5,27 @@ export function isEditorTab( tab, editorUrl ) {
 // This queue only orders API calls. Chrome owns panel visibility and tab options.
 export function createPanelController( api ) {
   const editorUrl = api.runtime.getURL( 'editor.html' );
+  const printUrl = api.runtime.getURL( 'print.html' );
   const pending = new Map();
 
   function sync( tabId ) {
     let entry = pending.get( tabId );
     if ( !entry ) {
-      entry = { removed: false, promise: Promise.resolve() };
+      entry = { removed: false, promise: undefined };
       pending.set( tabId, entry );
     }
-    const operation = entry.promise
-      .catch( () => {} )
-      .then( async () => {
+    const previous = entry.promise;
+    async function run() {
+      try {
+        await previous;
+      } catch {
+        // Retry synchronization even if the previous attempt failed.
+      }
+      try {
         if ( entry.removed ) return;
         const tab = await api.tabs.get( tabId );
         if ( entry.removed ) return;
-        const enabled = !isEditorTab( tab, editorUrl );
+        const enabled = !isEditorTab( tab, editorUrl ) && !isEditorTab( tab, printUrl );
         const options = await api.sidePanel.getOptions( { tabId } );
         if ( entry.removed ) return;
         if (
@@ -37,16 +43,14 @@ export function createPanelController( api ) {
         // Disabled actions cannot invoke the automatic panel behavior in the editor.
         if ( enabled ) await api.action.enable( tabId );
         else await api.action.disable( tabId );
-      } )
-      .catch( ( error ) => {
+      } catch ( error ) {
         if ( !entry.removed ) throw error;
-      } );
-    entry.promise = operation;
-    void operation
-      .finally( () => {
+      } finally {
         if ( pending.get( tabId ) === entry && entry.promise === operation ) pending.delete( tabId );
-      } )
-      .catch( () => {} );
+      }
+    }
+    const operation = run();
+    entry.promise = operation;
     return operation;
   }
 
@@ -69,8 +73,12 @@ export function createPanelController( api ) {
 }
 
 export function registerPanelEvents( api, panel, onError = console.error ) {
-  const sync = ( tabId ) => {
-    void panel.sync( tabId ).catch( onError );
+  const sync = async ( tabId ) => {
+    try {
+      await panel.sync( tabId );
+    } catch ( error ) {
+      onError( error );
+    }
   };
   api.tabs.onCreated.addListener( ( tab ) => sync( tab.id ) );
   api.tabs.onUpdated.addListener( ( tabId, change ) => {

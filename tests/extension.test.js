@@ -1,13 +1,14 @@
 import {
-  GETPALETTE,
-  ADDCOLOR,
-  REMOVECOLOR,
-  findCorrectMassageType,
-} from '../src/messageTypes.js';
+  GET_PALETTE,
+  ADD_COLOR,
+  REMOVE_COLOR,
+  findCorrectMessageType,
+} from '@/messageTypes.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createPaletteService, subscribeToPalette } from '../src/storage.js';
-import { PALETTE_KEY } from '../src/types.js';
+import { createPaletteExecutor } from './helpers/palette.js';
+import { subscribeToPalette } from '@/api/paletteClient.js';
+import { PALETTE_KEY } from '@/types.js';
 
 function createStorage() {
   let data = {};
@@ -34,18 +35,18 @@ function createStorage() {
 function setup() {
   const storage = createStorage();
   let id = 0;
-  const execute = createPaletteService( storage, () => String( ++id ) );
+  const execute = createPaletteExecutor( storage, () => String( ++id ) );
   return { storage, execute };
 }
 
 test( 'concurrent additions from two views survive and persist across worker restart', async () => {
   const { storage, execute } = setup();
   await Promise.all( [
-    execute( { type: findCorrectMassageType( ADDCOLOR ), hex: '#ff0000' } ),
-    execute( { type: findCorrectMassageType( ADDCOLOR ), hex: '#00ff00' } ),
+    execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#ff0000' } ),
+    execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#00ff00' } ),
   ] );
-  const restarted = createPaletteService( storage );
-  const palette = await restarted( { type: findCorrectMassageType( GETPALETTE ) } );
+  const restarted = createPaletteExecutor( storage );
+  const palette = await restarted( { type: findCorrectMessageType( GET_PALETTE ) } );
   assert.deepEqual( palette.colors, [
     { id: '1', hex: '#FF0000' },
     { id: '2', hex: '#00FF00' },
@@ -55,39 +56,39 @@ test( 'concurrent additions from two views survive and persist across worker res
 
 test( 'duplicate colors are normalized and are not appended', async () => {
   const { execute } = setup();
-  await execute( { type: findCorrectMassageType( ADDCOLOR ), hex: '#aabbcc' } );
-  const palette = await execute( { type: findCorrectMassageType( ADDCOLOR ), hex: '#AABBCC' } );
+  await execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#aabbcc' } );
+  const palette = await execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#AABBCC' } );
   assert.equal( palette.colors.length, 1 );
 } );
 
 test( 'concurrent deletion and addition do not restore the removed color', async () => {
   const { execute } = setup();
-  await execute( { type: findCorrectMassageType( ADDCOLOR ), hex: '#112233' } );
+  await execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#112233' } );
   await Promise.all( [
-    execute( { type: findCorrectMassageType( REMOVECOLOR ), id: '1' } ),
-    execute( { type: findCorrectMassageType( ADDCOLOR ), hex: '#445566' } ),
+    execute( { type: findCorrectMessageType( REMOVE_COLOR ), id: '1' } ),
+    execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#445566' } ),
   ] );
-  const palette = await execute( { type: findCorrectMassageType( GETPALETTE ) } );
+  const palette = await execute( { type: findCorrectMessageType( GET_PALETTE ) } );
   assert.deepEqual( palette.colors, [{ id: '2', hex: '#445566' }] );
-  await execute( { type: findCorrectMassageType( REMOVECOLOR ), id: '2' } );
-  assert.deepEqual( ( await execute( { type: findCorrectMassageType( GETPALETTE ) } ) ).colors, [] );
+  await execute( { type: findCorrectMessageType( REMOVE_COLOR ), id: '2' } );
+  assert.deepEqual( ( await execute( { type: findCorrectMessageType( GET_PALETTE ) } ) ).colors, [] );
 } );
 
 test( 'failed storage writes are reported without corrupting data or blocking the queue', async () => {
   const { storage, execute } = setup();
   storage.failNextWrite();
-  await assert.rejects( execute( { type: findCorrectMassageType( ADDCOLOR ), hex: '#112233' } ), /Disk error/ );
-  assert.deepEqual( ( await execute( { type: findCorrectMassageType( GETPALETTE ) } ) ).colors, [] );
-  await execute( { type: findCorrectMassageType( ADDCOLOR ), hex: '#445566' } );
-  assert.equal( ( await execute( { type: findCorrectMassageType( GETPALETTE ) } ) ).colors.length, 1 );
+  await assert.rejects( execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#112233' } ), /Disk error/ );
+  assert.deepEqual( ( await execute( { type: findCorrectMessageType( GET_PALETTE ) } ) ).colors, [] );
+  await execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#445566' } );
+  assert.equal( ( await execute( { type: findCorrectMessageType( GET_PALETTE ) } ) ).colors.length, 1 );
 } );
 
 test( 'invalid input and corrupt stored data are rejected without overwriting storage', async () => {
   const { storage, execute } = setup();
-  await assert.rejects( execute( { type: findCorrectMassageType( ADDCOLOR ), hex: 'red' } ), { code: 'invalidHex' } );
+  await assert.rejects( execute( { type: findCorrectMessageType( ADD_COLOR ), hex: 'red' } ), { code: 'invalidHex' } );
   const corrupt = { id: 'current', colors: 'broken' };
   await storage.set( { [PALETTE_KEY]: corrupt } );
-  await assert.rejects( execute( { type: findCorrectMassageType( ADDCOLOR ), hex: '#123456' } ), {
+  await assert.rejects( execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#123456' } ), {
     code: 'invalidPalette',
   } );
   assert.deepEqual( ( await storage.get() )[PALETTE_KEY], corrupt );
@@ -97,6 +98,7 @@ test( 'storage notifications update both views, ignore other areas, and unsubscr
   const listeners = new Set();
   const previous = globalThis.chrome;
   globalThis.chrome = {
+    runtime: { id: 'test' },
     storage: {
       onChanged: {
         addListener: ( listener ) => listeners.add( listener ),

@@ -1,16 +1,20 @@
-import { isEditorTab } from './panelController.js';
+import { isEditorTab } from '@/panelController.js';
 
 export function createEditorOpener( api, panel ) {
   const pendingByWindow = new Map();
-  return function openEditor( windowId, gradientId ) {
+  return async function openEditor( windowId, gradientId ) {
     if ( !Number.isInteger( windowId ) || windowId < 0 ) {
-      return Promise.reject( new Error( 'A source window is required' ) );
+      throw new Error( 'A source window is required' );
     }
     // Serialize requests, including different edit targets, without creating duplicate tabs.
-    const previous = pendingByWindow.get( windowId ) || Promise.resolve();
-    const operation = previous
-      .catch( () => {} )
-      .then( async () => {
+    const previous = pendingByWindow.get( windowId );
+    async function run() {
+      try {
+        await previous;
+      } catch {
+        // A failed earlier request must not block opening the editor.
+      }
+      try {
         const url = api.runtime.getURL( 'editor.html' );
         const target =
           typeof gradientId === 'string'
@@ -27,10 +31,11 @@ export function createEditorOpener( api, panel ) {
           ...( existing && gradientId ? { url: target } : {} ),
         } );
         return tab.id;
-      } )
-      .finally( () => {
+      } finally {
         if ( pendingByWindow.get( windowId ) === operation ) pendingByWindow.delete( windowId );
-      } );
+      }
+    }
+    const operation = run();
     pendingByWindow.set( windowId, operation );
     return operation;
   };

@@ -1,0 +1,25 @@
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  color: #656a80;
+  margin: 0 0 12px;
+}
+
+h1 {
+  font-size: 27px;
+  line-height: 1.2;
+  margin: 0 0 12px;
+  letter-spacing: -0.03em;
+}
+
+.editor h1 {
+  font-size: 38px;
+}
+
+.intro {
+  color: #626b7d;
+  font-size: 14px;
+  margin: 0 0 24px;
+  max-width: 540px;
+}

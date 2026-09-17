@@ -1,0 +1,16 @@
+.toolbar {
+  margin-bottom: 28px;
+}
+
+.toolbar button {
+  width: 100%;
+}
+
+.secondary {
+  margin-top: 12px;
+}
+
+.toolbar .hint {
+  text-align: center;
+  margin: 8px 0;
+}

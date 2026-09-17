@@ -1,0 +1,53 @@
+.print-document {
+  display: grid;
+  gap: 24px;
+  justify-items: center;
+  overflow-x: auto;
+  padding: 8px;
+}
+.print-page {
+  width: var(--sheet-width);
+  height: var(--sheet-height);
+  padding: 15mm;
+  background: var(--paper);
+  color: #000;
+  box-shadow: 0 2px 16px #0002;
+  display: grid;
+  grid-template-rows: 12mm minmax(0, 1fr) 10mm;
+  gap: 4mm;
+}
+.print-page header h2 {
+  font-size: 16pt;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.print-color-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--print-columns), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--print-rows), minmax(0, 1fr));
+  gap: 5mm;
+}
+.print-page footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5mm;
+  align-items: end;
+  font-size: 8pt;
+}
+@media print {
+  .print-document {
+    display: block;
+    overflow: visible;
+    padding: 0;
+  }
+  .print-page {
+    margin: 0;
+    box-shadow: none;
+    break-after: page;
+    break-inside: avoid;
+  }
+  .print-page:last-child {
+    break-after: auto;
+  }
+}

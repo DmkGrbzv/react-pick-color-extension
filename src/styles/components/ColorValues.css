@@ -1,0 +1,22 @@
+.color-values {
+  margin: 0;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.color-values > div {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 6px;
+}
+.color-values dt {
+  color: #626b7d;
+}
+.color-values dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  user-select: all;
+}
+.color-values .primary-value {
+  font-weight: 600;
+  font-size: 13px;
+}

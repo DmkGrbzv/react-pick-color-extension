@@ -1,0 +1,41 @@
+.print-color-card {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 2mm;
+  padding: 3mm;
+  border: 1px solid #dfe3ec;
+  border-radius: 3mm;
+  break-inside: avoid;
+}
+.print-swatch {
+  height: 18mm;
+  border: 1px solid #00000018;
+  border-radius: 2mm;
+}
+.print-color-card h3 {
+  font-size: 10pt;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.print-direction {
+  font-size: 8pt;
+  margin: 0;
+}
+.print-stop {
+  display: grid;
+  grid-template-columns: 8mm minmax(0, 1fr);
+  gap: 1mm;
+  font-size: 7pt;
+}
+.print-color-card .color-values,
+.print-color-card .color-values .primary-value {
+  font-size: 7pt;
+  line-height: 1.4;
+}
+.print-color-card .color-values > div {
+  grid-template-columns: 10mm minmax(0, 1fr);
+  gap: 1mm;
+}

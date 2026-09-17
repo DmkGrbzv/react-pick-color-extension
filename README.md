@@ -43,9 +43,17 @@ Only Ukrainian (`uk`) and English (`en`) are supported, using `i18next` and `rea
 
 - `sidepanel.html` → `src/sidepanel.jsx`: panel entry point.
 - `editor.html` → `src/editor.jsx`: editor entry point.
-- `src/components/`: shared palette, swatches, and language selector.
+- `src/components/`: page sections, palette cards, and gradient form controls, with styles imported through the `@` alias.
+- `src/hooks/`: palette actions and gradient draft state, including existing save, cancel, and hash navigation behavior.
+- `src/styles/base.css`: global defaults.
+- `src/styles/components/`: component styles and shared palette-card styles.
+- `src/styles/pages/`: page layout styles.
+- `@/` resolves to `src/` in Vite, editor tooling, and the Node test runner.
 - `src/types.js`: shared JSDoc data types.
-- `src/storage.js`: palette reads, writes, and subscriptions.
+- `src/storage.js`: Chrome storage adapter (get, set, subscribe).
+- `src/services/`: palette repository and a single palette service for serialized item operations.
+- `src/runtime/`: message routing, worker response boundary, and request client.
+- `src/api/`: UI-facing palette and editor commands.
 - `src/usePalette.js`: React subscription with stale initial-read protection.
 - `src/background.js`: service worker, panel behavior, command handling.
 - `src/editorTab.js`: editor tab reuse.
@@ -147,3 +155,21 @@ JavaScript and JSX use ESLint Stylistic. Nonempty parentheses and JSX expression
 Prettier formats JSON, CSS, HTML, and Markdown. JavaScript/JSX files are excluded through .prettierignore so Prettier cannot undo the requested spacing. Prettier still uses the project's pinned version and root configuration.
 
 VS Code uses the ESLint extension (dbaeumer.vscode-eslint) as the JavaScript/JSX formatter on save, and Prettier (esbenp.prettier-vscode) for other supported formats. Install both recommended extensions. Existing i18n-ally settings are preserved.
+
+## Service boundaries and errors
+
+Components call api/paletteClient or api/editorClient. Requests pass through runtime/sendRequest to the worker's createListener and createRouter. The router invokes explicit paletteService methods: getPalette, addColor, saveGradient, and removeItem.
+
+paletteService owns getPalette, addColor, saveGradient, and removeItem, including their item rules and shared operation queue. The reusable gradient normalization and CSS functions remain in gradient.js. paletteRepository validates persisted data and supplies an empty default. storage.js only adapts Chrome's key/value and change-event API; it contains no palette logic, routing, validation, or catches.
+
+Read/write failures reject with the original error through the repository and service. The internal queue recovers independently, while the promise returned to each caller remains rejected. Only the worker response boundary serializes failures for messaging. The client rejects with AppError and retains diagnostic details in cause; transport failures also retain their original cause. The UI remains responsible for translated error messages. Subscription failures are forwarded through onError because browser events cannot reject an earlier subscription call.
+
+The storage key, palette schema, message type values, and concurrent-update behavior are unchanged.
+
+## Color formats and printing
+
+HEX remains the only stored color source. `utils/colorConversion.js` derives RGB and approximate CMYK on demand; `api/colorFormatClient.js` persists only the `colorFormat` preference, independently of `currentPalette`. Both palette views subscribe to preference changes.
+
+`print.html` is a separate Vite entry using the existing read/subscription path through `usePalette`. Print controls are local to that page. `utils/printLayout.js` paginates mixed colors and gradients using A4 dimensions and card size. Components under `src/components/Print*` render controls, sheets and cards; styles remain under `styles/components` and `styles/pages`.
+
+Use Print / Save as PDF to open the browser dialog. For matching pagination: A4, selected orientation, 100% scale, no additional margins, background graphics enabled, browser headers/footers disabled. The sheets include their own 15 mm padding. Browser/printer overrides may change pagination or colors. Long optional names are shortened on the sheet and available in screen tooltips. No PDF library, server, ICC conversion, or derived color storage is used. For a future direct PDF exporter, reuse the conversion/layout utilities and add a separate document renderer rather than extending palette storage.

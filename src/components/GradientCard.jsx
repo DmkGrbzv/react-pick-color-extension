@@ -1,7 +1,10 @@
+import ColorValues from '@/components/ColorValues.jsx';
+import '@/styles/components/paletteCard.css';
+import '@/styles/components/GradientCard.css';
 import { useTranslation } from 'react-i18next';
-import { gradientCss, gradientDeclaration } from '../gradient';
+import { gradientCss, gradientDeclaration } from '@/gradient.js';
 
-export default function GradientCard( { item, onCopy, onRemove, onEdit, disabled } ) {
+export default function GradientCard( { item, format = 'hex', onCopy, onRemove, onEdit, disabled } ) {
   const { t } = useTranslation();
   return (
     <li className="color-card gradient-card">
@@ -14,7 +17,7 @@ export default function GradientCard( { item, onCopy, onRemove, onEdit, disabled
       <div className="color-details">
         { item.stops.map( ( stop, index ) => (
           <div className="gradient-stop-summary" key={ index }>
-            <code>{ stop.hex }</code>
+            <ColorValues hex={ stop.hex } primary={ format } />
             <span>{ stop.position }%</span>
           </div>
         ) ) }

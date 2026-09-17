@@ -1,6 +1,7 @@
+import '@/styles/components/LanguageSelector.css';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { languageLoadFailed, setLanguage } from '../i18n';
+import { languageLoadFailed, setLanguage } from '@/i18n/index.js';
 
 export default function LanguageSelector() {
   const { t, i18n } = useTranslation();

@@ -1,0 +1,17 @@
+.format-control {
+  margin-bottom: 16px;
+}
+.format-control label {
+  display: grid;
+  grid-template-columns: auto minmax(80px, 1fr);
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+.format-control select {
+  font: inherit;
+  padding: 8px;
+  border: var(--control-border);
+  border-radius: var(--control-radius);
+  background: white;
+}
