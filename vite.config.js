@@ -1,3 +1,4 @@
+import { EXTENSION_PAGES } from './src/constants/extensionPages.js';
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -11,9 +12,9 @@ export default defineConfig( {
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        sidepanel: 'sidepanel.html',
-        editor: 'editor.html',
-        print: 'print.html',
+        sidepanel: EXTENSION_PAGES.SIDE_PANEL,
+        editor: EXTENSION_PAGES.EDITOR,
+        print: EXTENSION_PAGES.PRINT,
         background: 'src/background.js',
       },
       output: {

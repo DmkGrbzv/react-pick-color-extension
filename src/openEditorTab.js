@@ -1,3 +1,4 @@
+import { EXTENSION_PAGES } from '@/constants/extensionPages.js';
 import { matchesTabUrl } from '@/utils/tabUrl.js';
 
 async function activateEditorTab( api, panel, windowId, gradientId, previousOperation ) {
@@ -7,7 +8,7 @@ async function activateEditorTab( api, panel, windowId, gradientId, previousOper
     // A failed earlier request must not block opening the editor.
   }
 
-  const editorUrl = api.runtime.getURL( 'editor.html' );
+  const editorUrl = api.runtime.getURL( EXTENSION_PAGES.EDITOR );
   const targetUrl =
     typeof gradientId === 'string'
       ? editorUrl +

@@ -1,3 +1,4 @@
+import { EXTENSION_PAGES } from '@/constants/extensionPages.js';
 import { matchesTabUrl } from '@/utils/tabUrl.js';
 
 // Only orders requests. Chrome keeps each tab's native open/closed panel state.
@@ -7,7 +8,7 @@ export class PanelController {
   #pendingTabs = new Map();
   constructor( api ) {
     this.#api = api;
-    this.#disabledUrls = ['editor.html', 'print.html'].map( ( page ) => api.runtime.getURL( page ) );
+    this.#disabledUrls = [EXTENSION_PAGES.EDITOR, EXTENSION_PAGES.PRINT].map( ( page ) => api.runtime.getURL( page ) );
   }
 
   async #configureTab( tabId, tabState, previousOperation ) {
@@ -28,12 +29,12 @@ export class PanelController {
     const needsUpdate =
       currentOptions.enabled !== enabled ||
       currentOptions.tabId !== tabId ||
-      ( enabled && currentOptions.path !== 'sidepanel.html' );
+      ( enabled && currentOptions.path !== EXTENSION_PAGES.SIDE_PANEL );
     if ( needsUpdate ) {
       await this.#api.sidePanel.setOptions( {
         tabId,
         enabled,
-        ...( enabled ? { path: 'sidepanel.html' } : {} ),
+        ...( enabled ? { path: EXTENSION_PAGES.SIDE_PANEL } : {} ),
       } );
     }
     if ( tabState.removed ) return;
