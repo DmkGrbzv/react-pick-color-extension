@@ -11,7 +11,7 @@ export const PALETTE_KEY = 'currentPalette';
 
 /** @returns {Palette} */
 export function createEmptyPalette() {
-  return { id: 'current', name: 'My palette', colors: [] };
+  return { id: 'current', name: 'Big dq', colors: [] };
 }
 
 export function isPalette( value ) {

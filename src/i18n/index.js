@@ -2,7 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import en from '@/i18n/locales/en.json';
 import uk from '@/i18n/locales/uk.json';
-import { createLanguagePreference, resolveLanguage, SUPPORTED_LANGUAGES } from '@/i18n/language.js';
+import { LanguagePreference, resolveLanguage, SUPPORTED_LANGUAGES } from '@/i18n/language.js';
 
 const defaultLanguage = resolveLanguage(
   globalThis.chrome?.i18n?.getUILanguage() || navigator.language
@@ -22,7 +22,7 @@ i18n.on( 'languageChanged', ( language ) => {
 } );
 document.documentElement.lang = defaultLanguage;
 
-const preference = createLanguagePreference(
+const preference = new LanguagePreference(
   globalThis.chrome?.storage,
   defaultLanguage,
   ( language ) => {

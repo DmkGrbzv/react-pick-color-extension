@@ -56,7 +56,7 @@ Only Ukrainian (`uk`) and English (`en`) are supported, using `i18next` and `rea
 - `src/api/`: UI-facing palette and editor commands.
 - `src/usePalette.js`: React subscription with stale initial-read protection.
 - `src/background.js`: service worker, panel behavior, command handling.
-- `src/editorTab.js`: editor tab reuse.
+- `src/openEditorTab.js`: editor tab reuse.
 - `src/i18n/`: translation resources and language preferences.
 - `src/errors.js`: language-independent error codes.
 
@@ -158,7 +158,7 @@ VS Code uses the ESLint extension (dbaeumer.vscode-eslint) as the JavaScript/JSX
 
 ## Service boundaries and errors
 
-Components call api/paletteClient or api/editorClient. Requests pass through runtime/sendRequest to the worker's createListener and createRouter. The router invokes explicit paletteService methods: getPalette, addColor, saveGradient, and removeItem.
+Components call api/paletteClient or api/editorClient. Requests pass through runtime/sendRequest to the worker's createListener and dispatchMessage. The router invokes explicit paletteService methods: getPalette, addColor, saveGradient, and removeItem.
 
 paletteService owns getPalette, addColor, saveGradient, and removeItem, including their item rules and shared operation queue. The reusable gradient normalization and CSS functions remain in gradient.js. paletteRepository validates persisted data and supplies an empty default. storage.js only adapts Chrome's key/value and change-event API; it contains no palette logic, routing, validation, or catches.
 
@@ -168,8 +168,30 @@ The storage key, palette schema, message type values, and concurrent-update beha
 
 ## Color formats and printing
 
-HEX remains the only stored color source. `utils/colorConversion.js` derives RGB and approximate CMYK on demand; `api/colorFormatClient.js` persists only the `colorFormat` preference, independently of `currentPalette`. Both palette views subscribe to preference changes.
+HEX remains the only stored color source. `utils/colorConversion.js` derives RGB and approximate CMYK on demand; `preferences/colorFormatPreference.js` persists only the `colorFormat` preference, independently of `currentPalette`. Both palette views subscribe to preference changes.
 
 `print.html` is a separate Vite entry using the existing read/subscription path through `usePalette`. Print controls are local to that page. `utils/printLayout.js` paginates mixed colors and gradients using A4 dimensions and card size. Components under `src/components/Print*` render controls, sheets and cards; styles remain under `styles/components` and `styles/pages`.
 
 Use Print / Save as PDF to open the browser dialog. For matching pagination: A4, selected orientation, 100% scale, no additional margins, background graphics enabled, browser headers/footers disabled. The sheets include their own 15 mm padding. Browser/printer overrides may change pagination or colors. Long optional names are shortened on the sheet and available in screen tooltips. No PDF library, server, ICC conversion, or derived color storage is used. For a future direct PDF exporter, reuse the conversion/layout utilities and add a separate document renderer rather than extending palette storage.
+
+## Architecture boundaries
+
+Palette, SavedColor, and SavedGradient are data records (see types.js), not service instances. Their persisted shape stays plain and serializable. Conversion, validation, draft updates, and print pagination are pure functions. React components render data; hooks own UI state and subscriptions.
+
+Use a class when several operations share an injected dependency or a lifecycle. Method count alone does not justify a class, and hypothetical future methods are not a reason to introduce one.
+
+| Class                 | Public methods                                     | Responsibility                                                                         |
+| --------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| StorageAdapter        | get, set, subscribe (3)                            | Chrome key/value transport; no palette rules.                                          |
+| PaletteRepository     | read, write (2)                                    | Palette storage key, validation, and empty default.                                    |
+| PaletteService        | getPalette, addColor, saveGradient, removeItem (4) | Palette operations and their shared write queue; no Chrome tab or UI logic.            |
+| ColorFormatPreference | read, save, subscribe (3)                          | One persisted display preference; no palette mutation or message transport.            |
+| LanguagePreference    | start, set, stop (3)                               | Language preference and its storage listener lifecycle.                                |
+| PaletteSubscription   | refresh, dispose (2)                               | Subscription lifetime and protection against stale reads.                              |
+| PanelController       | initialize, sync, forget (3)                       | Per-tab panel settings and cancellation; native Chrome visibility stays authoritative. |
+
+Classes keep dependencies and internal state in private fields. New methods belong here only if they operate within the same responsibility: for example, renaming a palette belongs to PaletteService, while PDF rendering does not. No extra methods are added in anticipation of future work.
+
+Opening the editor is a single operation. createOpenEditor binds its Chrome/panel dependencies and a per-window queue once at worker startup, returning a callable function. It returns no object with a method API. dispatchMessage is a stateless function translating transport commands into application operations. createListener provides the synchronous callback required by Chrome and serializes errors at that boundary.
+
+background.js composes these dependencies. UI api modules send messages; preferences persist settings; services enforce palette rules; the repository and adapter handle persistence. Shared URL matching lives in utils/tabUrl.js so opening the editor does not import the panel controller implementation. Existing camelCase module filenames are preserved; operation modules use verbs and exported class names use PascalCase.

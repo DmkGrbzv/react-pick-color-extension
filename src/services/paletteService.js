@@ -11,29 +11,35 @@ async function runPaletteTask( previousOperation, task ) {
   return await task();
 }
 
-export function createPaletteService( repository, makeId = () => crypto.randomUUID() ) {
-  let tail;
-
-  function enqueue( task ) {
-    tail = runPaletteTask( tail, task );
-    return tail;
+export class PaletteService {
+  #repository;
+  #makeId;
+  #tail;
+  constructor( repository, makeId = () => crypto.randomUUID() ) {
+    this.#repository = repository;
+    this.#makeId = makeId;
   }
 
-  function update( transform ) {
-    return enqueue( async () => {
-      const current = await repository.read();
+  #enqueue( task ) {
+    this.#tail = runPaletteTask( this.#tail, task );
+    return this.#tail;
+  }
+
+  #update( transform ) {
+    return this.#enqueue( async () => {
+      const current = await this.#repository.read();
       const next = transform( current );
-      if ( next !== current ) await repository.write( next );
+      if ( next !== current ) await this.#repository.write( next );
       return next;
     } );
   }
 
-  function getPalette() {
-    return enqueue( () => repository.read() );
+  getPalette() {
+    return this.#enqueue( () => this.#repository.read() );
   }
 
-  function addColor( value ) {
-    return update( ( palette ) => {
+  addColor( value ) {
+    return this.#update( ( palette ) => {
       if ( typeof value !== 'string' || !/^#[\da-f]{6}$/i.test( value ) ) {
         throw new AppError( 'invalidHex' );
       }
@@ -42,15 +48,15 @@ export function createPaletteService( repository, makeId = () => crypto.randomUU
         ( item ) => item.type !== 'gradient' && item.hex.toUpperCase() === hex
       );
       if ( exists ) return palette;
-      return { ...palette, colors: [...palette.colors, { id: makeId(), hex }] };
+      return { ...palette, colors: [...palette.colors, { id: this.#makeId(), hex }] };
     } );
   }
 
-  function saveGradient( value ) {
-    return update( ( palette ) => {
+  saveGradient( value ) {
+    return this.#update( ( palette ) => {
       const gradient = normalizeGradient( value );
       if ( value.id === undefined ) {
-        return { ...palette, colors: [...palette.colors, { id: makeId(), ...gradient }] };
+        return { ...palette, colors: [...palette.colors, { id: this.#makeId(), ...gradient }] };
       }
       const index = palette.colors.findIndex(
         ( item ) => item.id === value.id && item.type === 'gradient'
@@ -65,12 +71,10 @@ export function createPaletteService( repository, makeId = () => crypto.randomUU
     } );
   }
 
-  function removeItem( id ) {
-    return update( ( palette ) => {
+  removeItem( id ) {
+    return this.#update( ( palette ) => {
       if ( typeof id !== 'string' ) throw new AppError( 'missingColor' );
       return { ...palette, colors: palette.colors.filter( ( item ) => item.id !== id ) };
     } );
   }
-
-  return { getPalette, addColor, saveGradient, removeItem };
 }

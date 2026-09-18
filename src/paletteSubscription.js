@@ -1,35 +1,41 @@
-// Read on mount and when shown again. A late read may never replace a newer event.
-export function createPaletteSubscription( { read, subscribe, onValue, onError } ) {
-  let active = true;
-  let revision = 0;
-  let requestId = 0;
-  const unsubscribe = subscribe(
-    ( value ) => {
-      revision++;
-      if ( active ) onValue( value );
-    },
-    ( error ) => {
-      revision++;
-      if ( active ) onError( error );
-    }
-  );
-
-  async function refresh() {
-    const request = ++requestId;
-    const before = revision;
+// A late read must never replace a newer storage event or read.
+export class PaletteSubscription {
+  #read;
+  #onValue;
+  #onError;
+  #unsubscribe;
+  #active = true;
+  #revision = 0;
+  #requestId = 0;
+  constructor( { read, subscribe, onValue, onError } ) {
+    this.#read = read;
+    this.#onValue = onValue;
+    this.#onError = onError;
+    this.#unsubscribe = subscribe(
+      ( value ) => {
+        this.#revision++;
+        if ( this.#active ) this.#onValue( value );
+      },
+      ( error ) => {
+        this.#revision++;
+        if ( this.#active ) this.#onError( error );
+      }
+    );
+  }
+  async refresh() {
+    const request = ++this.#requestId;
+    const before = this.#revision;
     try {
-      const value = await read();
-      if ( active && request === requestId && revision === before ) onValue( value );
+      const value = await this.#read();
+      if ( this.#active && request === this.#requestId && this.#revision === before )
+        this.#onValue( value );
     } catch ( error ) {
-      if ( active && request === requestId && revision === before ) onError( error );
+      if ( this.#active && request === this.#requestId && this.#revision === before )
+        this.#onError( error );
     }
   }
-
-  return {
-    refresh,
-    dispose() {
-      active = false;
-      unsubscribe();
-    },
-  };
+  dispose() {
+    this.#active = false;
+    this.#unsubscribe();
+  }
 }

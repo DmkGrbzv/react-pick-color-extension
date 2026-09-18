@@ -20,7 +20,7 @@ export default function PrintDocument( { palette, settings } ) {
       { pages.map( ( items, index ) => (
         <section className="print-page" key={ index }>
           <header>
-            <h2>{ palette.id === 'current' ? t( 'paletteName' ) : palette.name }</h2>
+            <h2>{ palette.name }</h2>
           </header>
           <div className="print-color-grid">
             { items.map( ( item ) => (

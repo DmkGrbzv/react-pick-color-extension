@@ -18,19 +18,32 @@ test( 'panel and editor copy the selected format after changing and reopening th
     navigator: dom.window.navigator,
     IS_REACT_ACT_ENVIRONMENT: true,
     chrome: {
-      runtime: { id: 'test', async sendMessage() { return { ok: true, value: palette }; } },
+      runtime: {
+        id: 'test',
+        async sendMessage() {
+          return { ok: true, value: palette };
+        },
+      },
       storage: {
         local: {
-          async get( key ) { return { [key]: stored[key] }; },
+          async get( key ) {
+            return { [key]: stored[key] };
+          },
           async set( values ) {
             Object.assign( stored, values );
-            const changes = Object.fromEntries( Object.entries( values ).map( ( [key, value] ) => [key, { newValue: value }] ) );
+            const changes = Object.fromEntries(
+              Object.entries( values ).map( ( [key, value] ) => [key, { newValue: value }] )
+            );
             for ( const listener of listeners ) listener( changes, 'local' );
           },
         },
         onChanged: {
-          addListener( listener ) { listeners.add( listener ); },
-          removeListener( listener ) { listeners.delete( listener ); },
+          addListener( listener ) {
+            listeners.add( listener );
+          },
+          removeListener( listener ) {
+            listeners.delete( listener );
+          },
         },
       },
     },
@@ -39,28 +52,49 @@ test( 'panel and editor copy the selected format after changing and reopening th
     originals.set( key, Object.getOwnPropertyDescriptor( globalThis, key ) );
     Object.defineProperty( globalThis, key, { configurable: true, writable: true, value } );
   }
-  Object.defineProperty( navigator, 'clipboard', { value: { async writeText( value ) { copied.push( value ); } } } );
+  Object.defineProperty( navigator, 'clipboard', {
+    value: {
+      async writeText( value ) {
+        copied.push( value );
+      },
+    },
+  } );
   let server;
   let root;
   try {
-    server = await createServer( { server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' } );
+    server = await createServer( {
+      server: { middlewareMode: true, hmr: false, watch: null },
+      appType: 'custom',
+    } );
     const { default: PaletteView } = await server.ssrLoadModule( '/src/components/PaletteView.jsx' );
     const { languageReady } = await server.ssrLoadModule( '/src/i18n/index.js' );
     await languageReady;
     for ( const editor of [false, true] ) {
       root = createRoot( document.getElementById( 'root' ) );
-      await act( async () => { root.render( createElement( PaletteView, { editor } ) ); } );
+      await act( async () => {
+        root.render( createElement( PaletteView, { editor } ) );
+      } );
       const selector = document.querySelector( '.format-control select' );
       assert.equal( selector.value, stored.colorFormat );
-      const cases = [['rgb', '207, 165, 180'], ['cmyk', '0%, 20%, 13%, 19%'], ['hex', '#CFA5B4'], ['rgb', '207, 165, 180']];
+      const cases = [
+        ['rgb', '207, 165, 180'],
+        ['cmyk', '0%, 20%, 13%, 19%'],
+        ['hex', '#CFA5B4'],
+        ['rgb', '207, 165, 180'],
+      ];
       for ( const [format, expected] of cases ) {
         await act( async () => {
           selector.value = format;
           selector.dispatchEvent( new window.Event( 'change', { bubbles: true } ) );
         } );
         assert.equal( stored.colorFormat, format );
-        assert.equal( document.querySelector( '.color-card .primary-value dt' ).textContent, format.toUpperCase() );
-        await act( async () => { document.querySelector( '.color-card .color-actions button' ).click(); } );
+        assert.equal(
+          document.querySelector( '.color-card .primary-value dt' ).textContent,
+          format.toUpperCase()
+        );
+        await act( async () => {
+          document.querySelector( '.color-card .color-actions button' ).click();
+        } );
         assert.equal( copied.at( -1 ), expected );
         assert.ok( document.querySelector( '.notice' ).textContent.includes( expected ) );
       }

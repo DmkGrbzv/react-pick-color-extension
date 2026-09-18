@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getPalette, subscribeToPalette } from '@/api/paletteClient.js';
-import { createPaletteSubscription } from '@/paletteSubscription.js';
+import { PaletteSubscription } from '@/paletteSubscription.js';
 
 export function usePalette() {
   const [palette, setPalette] = useState( null );
@@ -8,7 +8,7 @@ export function usePalette() {
   const [attempt, setAttempt] = useState( 0 );
 
   useEffect( () => {
-    const subscription = createPaletteSubscription( {
+    const subscription = new PaletteSubscription( {
       read: getPalette,
       subscribe: subscribeToPalette,
       onValue: ( value ) => {

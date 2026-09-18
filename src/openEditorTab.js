@@ -1,4 +1,4 @@
-import { isEditorTab } from '@/panelController.js';
+import { matchesTabUrl } from '@/utils/tabUrl.js';
 
 async function activateEditorTab( api, panel, windowId, gradientId, previousOperation ) {
   try {
@@ -15,7 +15,7 @@ async function activateEditorTab( api, panel, windowId, gradientId, previousOper
         new URLSearchParams( { gradient: gradientId, request: crypto.randomUUID() } )
       : editorUrl;
   const tabs = await api.tabs.query( { windowId } );
-  const existingTab = tabs.find( ( tab ) => isEditorTab( tab, editorUrl ) );
+  const existingTab = tabs.find( ( tab ) => matchesTabUrl( tab, editorUrl ) );
   const editorTab =
     existingTab || ( await api.tabs.create( { url: targetUrl, windowId, active: false } ) );
   await panel.sync( editorTab.id );
@@ -26,7 +26,8 @@ async function activateEditorTab( api, panel, windowId, gradientId, previousOper
   return editorTab.id;
 }
 
-export function createEditorOpener( api, panel ) {
+// This function owns one opening operation, with an independent queue for each window.
+export function createOpenEditor( api, panel ) {
   const pendingByWindow = new Map();
   return async function openEditor( windowId, gradientId ) {
     if ( !Number.isInteger( windowId ) || windowId < 0 ) {

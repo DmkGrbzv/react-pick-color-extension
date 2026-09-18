@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createEditorOpener } from '@/editorTab.js';
-import { createPanelController, registerPanelEvents } from '@/panelController.js';
-import { createPaletteSubscription } from '@/paletteSubscription.js';
+import { createOpenEditor } from '@/openEditorTab.js';
+import { PanelController, registerPanelEvents } from '@/panelController.js';
+import { PaletteSubscription } from '@/paletteSubscription.js';
 
 function event() {
   const listeners = [];
@@ -92,7 +92,7 @@ function setup( tabs = [] ) {
       },
     },
   };
-  const panel = createPanelController( api );
+  const panel = new PanelController( api );
   return { api, state, panel };
 }
 
@@ -122,7 +122,7 @@ test( 'returning to a site and restarting worker do not reset its panel settings
   await panel.sync( 2 );
   await panel.sync( 1 );
   assert.deepEqual( state.calls, [] );
-  await createPanelController( api ).initialize();
+  await new PanelController( api ).initialize();
   assert.deepEqual( state.calls, [['options', { enabled: false }]] );
   // Visibility (open, manually closed, never opened) remains entirely Chrome-owned.
 } );
@@ -147,7 +147,7 @@ test( 'navigating editor to site enables it; reloading or navigating into editor
 test( 'rapid editor requests share one creation and disable the panel before activation', async () => {
   const { api, state, panel } = setup( [site( 1 )] );
   await panel.initialize();
-  const open = createEditorOpener( api, panel );
+  const open = createOpenEditor( api, panel );
   assert.deepEqual( await Promise.all( [open( 1 ), open( 1 ), open( 1 )] ), [100, 100, 100] );
   assert.equal( state.calls.filter( ( [name] ) => name === 'create' ).length, 1 );
   assert.deepEqual( state.calls.find( ( [name] ) => name === 'create' )[1], {
@@ -161,12 +161,12 @@ test( 'rapid editor requests share one creation and disable the panel before act
 
 test( 'each window reuses its own editor; requests in different windows do not share a lock', async () => {
   const { api, state, panel } = setup( [site( 1 ), site( 2, 2 )] );
-  const open = createEditorOpener( api, panel );
+  const open = createOpenEditor( api, panel );
   const [first, second] = await Promise.all( [open( 1 ), open( 2 )] );
   assert.notEqual( first, second );
   assert.equal( state.tabs.find( ( tab ) => tab.id === first ).windowId, 1 );
   assert.equal( state.tabs.find( ( tab ) => tab.id === second ).windowId, 2 );
-  const restarted = createEditorOpener( api, createPanelController( api ) );
+  const restarted = createOpenEditor( api, new PanelController( api ) );
   assert.equal( await restarted( 1 ), first );
   assert.equal( await restarted( 2 ), second );
   assert.equal( state.calls.filter( ( [name] ) => name === 'create' ).length, 2 );
@@ -174,7 +174,7 @@ test( 'each window reuses its own editor; requests in different windows do not s
 
 test( 'existing editor in another window is not activated or used', async () => {
   const { api, state, panel } = setup( [site( 1 ), editor( 2, 2 )] );
-  const id = await createEditorOpener( api, panel )( 1 );
+  const id = await createOpenEditor( api, panel )( 1 );
   assert.notEqual( id, 2 );
   assert.equal( state.tabs.find( ( tab ) => tab.id === id ).windowId, 1 );
   assert.ok( !state.calls.some( ( [name, id] ) => name === 'activate' && id === 2 ) );
@@ -186,13 +186,13 @@ test( 'pending editor URLs and query/hash variants are reused within the current
     { id: 1, windowId: 1, url: 'https://example.com/editor.html' },
     { id: 2, windowId: 1, pendingUrl: editorUrl + '?restored=1#palette' },
   ] );
-  assert.equal( await createEditorOpener( api, panel )( 1 ), 2 );
+  assert.equal( await createOpenEditor( api, panel )( 1 ), 2 );
   assert.ok( !state.calls.some( ( [name] ) => name === 'create' ) );
 } );
 
 test( 'closing editor permits a new one; create failure does not poison the window lock', async () => {
   const { api, state, panel } = setup( [site( 1 )] );
-  const open = createEditorOpener( api, panel );
+  const open = createOpenEditor( api, panel );
   state.failCreate = true;
   await assert.rejects( open( 1 ), /Create failed/ );
   const first = await open( 1 );
@@ -238,7 +238,7 @@ test( 'palette refresh never overwrites a newer storage event or a newer read', 
   const reads = [];
   const values = [];
   let notify;
-  const subscription = createPaletteSubscription( {
+  const subscription = new PaletteSubscription( {
     read: () => new Promise( ( resolve ) => reads.push( resolve ) ),
     subscribe: ( onValue ) => {
       notify = onValue;
@@ -271,7 +271,7 @@ test( 'palette refresh recovers from errors and unsubscribes on disposal', async
   const errors = [];
   let fail = true;
   let stopped = false;
-  const subscription = createPaletteSubscription( {
+  const subscription = new PaletteSubscription( {
     read: async () => {
       if ( fail ) throw new Error( 'offline' );
       return 'saved palette';
@@ -293,7 +293,7 @@ test( 'palette refresh recovers from errors and unsubscribes on disposal', async
 
 test( 'gradient edit requests reuse editor and deliver successive targets via hash without reloading the page', async () => {
   const { api, state, panel } = setup( [site( 1 ), editor( 2 )] );
-  const open = createEditorOpener( api, panel );
+  const open = createOpenEditor( api, panel );
   await open( 1, 'gradient-one' );
   let target = new URL( state.tabs.find( ( tab ) => tab.id === 2 ).url );
   assert.equal( new URLSearchParams( target.hash.slice( 1 ) ).get( 'gradient' ), 'gradient-one' );

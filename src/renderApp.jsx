@@ -8,9 +8,7 @@ export async function renderApp( page ) {
   await languageReady;
   createRoot( document.getElementById( 'root' ) ).render(
     <StrictMode>
-      <I18nextProvider i18n={ i18n }>
-        { page }
-      </I18nextProvider>
+      <I18nextProvider i18n={ i18n }>{ page }</I18nextProvider>
     </StrictMode>
   );
 }

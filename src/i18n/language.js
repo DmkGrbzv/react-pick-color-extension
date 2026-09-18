@@ -6,37 +6,44 @@ export function resolveLanguage( language ) {
   return SUPPORTED_LANGUAGES.includes( base ) ? base : 'uk';
 }
 
-export function createLanguagePreference( api, defaultLanguage, onLanguage ) {
-  let revision = 0;
-  let listener;
-  const apply = ( value ) => onLanguage( resolveLanguage( value ?? defaultLanguage ) );
-
-  return {
-    async start() {
-      if ( !api ) return;
-      listener = ( changes, area ) => {
-        if ( area !== 'local' || !changes[LANGUAGE_KEY] ) return;
-        revision++;
-        apply( changes[LANGUAGE_KEY].newValue );
-      };
-      api.onChanged.addListener( listener );
-      const beforeRead = revision;
-      const stored = await api.local.get( LANGUAGE_KEY );
-      if ( revision === beforeRead ) apply( stored[LANGUAGE_KEY] );
-    },
-    async set( language ) {
-      if ( !SUPPORTED_LANGUAGES.includes( language ) ) throw new Error( 'Unsupported language' );
-      if ( !api ) {
-        apply( language );
-        return;
-      }
-      const beforeWrite = revision;
-      await api.local.set( { [LANGUAGE_KEY]: language } );
-      // Some contexts receive onChanged before the write promise settles.
-      if ( revision === beforeWrite ) apply( language );
-    },
-    stop() {
-      if ( listener ) api.onChanged.removeListener( listener );
-    },
-  };
+export class LanguagePreference {
+  #api;
+  #defaultLanguage;
+  #onLanguage;
+  #revision = 0;
+  #listener;
+  constructor( api, defaultLanguage, onLanguage ) {
+    this.#api = api;
+    this.#defaultLanguage = defaultLanguage;
+    this.#onLanguage = onLanguage;
+  }
+  #apply( value ) {
+    this.#onLanguage( resolveLanguage( value ?? this.#defaultLanguage ) );
+  }
+  async start() {
+    if ( !this.#api ) return;
+    this.#listener = ( changes, area ) => {
+      if ( area !== 'local' || !changes[LANGUAGE_KEY] ) return;
+      this.#revision++;
+      this.#apply( changes[LANGUAGE_KEY].newValue );
+    };
+    this.#api.onChanged.addListener( this.#listener );
+    const beforeRead = this.#revision;
+    const stored = await this.#api.local.get( LANGUAGE_KEY );
+    if ( this.#revision === beforeRead ) this.#apply( stored[LANGUAGE_KEY] );
+  }
+  async set( language ) {
+    if ( !SUPPORTED_LANGUAGES.includes( language ) ) throw new Error( 'Unsupported language' );
+    if ( !this.#api ) {
+      this.#apply( language );
+      return;
+    }
+    const beforeWrite = this.#revision;
+    await this.#api.local.set( { [LANGUAGE_KEY]: language } );
+    // onChanged may arrive before the write promise settles.
+    if ( this.#revision === beforeWrite ) this.#apply( language );
+  }
+  stop() {
+    if ( this.#listener ) this.#api.onChanged.removeListener( this.#listener );
+  }
 }

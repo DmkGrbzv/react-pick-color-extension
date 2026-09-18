@@ -7,7 +7,7 @@ export default function PaletteHeader( { editor, palette } ) {
   return (
     <header>
       <p className="eyebrow">COLOR PALETTE / { t( editor ? 'editor' : 'eyedropper' ) }</p>
-      <h1>{ !palette || palette.id === 'current' ? t( 'paletteName' ) : palette.name }</h1>
+      <h1>{ palette?.name ?? t( 'paletteName' ) }</h1>
       <p className="intro">{ t( editor ? 'editorIntro' : 'panelIntro' ) }</p>
     </header>
   );

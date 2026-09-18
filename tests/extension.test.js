@@ -1,9 +1,4 @@
-import {
-  GET_PALETTE,
-  ADD_COLOR,
-  REMOVE_COLOR,
-  findCorrectMessageType,
-} from '@/messageTypes.js';
+import { GET_PALETTE, ADD_COLOR, REMOVE_COLOR, findCorrectMessageType } from '@/messageTypes.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createPaletteExecutor } from './helpers/palette.js';
@@ -77,7 +72,10 @@ test( 'concurrent deletion and addition do not restore the removed color', async
 test( 'failed storage writes are reported without corrupting data or blocking the queue', async () => {
   const { storage, execute } = setup();
   storage.failNextWrite();
-  await assert.rejects( execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#112233' } ), /Disk error/ );
+  await assert.rejects(
+    execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#112233' } ),
+    /Disk error/
+  );
   assert.deepEqual( ( await execute( { type: findCorrectMessageType( GET_PALETTE ) } ) ).colors, [] );
   await execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#445566' } );
   assert.equal( ( await execute( { type: findCorrectMessageType( GET_PALETTE ) } ) ).colors.length, 1 );
@@ -85,7 +83,9 @@ test( 'failed storage writes are reported without corrupting data or blocking th
 
 test( 'invalid input and corrupt stored data are rejected without overwriting storage', async () => {
   const { storage, execute } = setup();
-  await assert.rejects( execute( { type: findCorrectMessageType( ADD_COLOR ), hex: 'red' } ), { code: 'invalidHex' } );
+  await assert.rejects( execute( { type: findCorrectMessageType( ADD_COLOR ), hex: 'red' } ), {
+    code: 'invalidHex',
+  } );
   const corrupt = { id: 'current', colors: 'broken' };
   await storage.set( { [PALETTE_KEY]: corrupt } );
   await assert.rejects( execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#123456' } ), {

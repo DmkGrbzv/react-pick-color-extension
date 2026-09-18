@@ -7,13 +7,15 @@ export function readPaletteValue( value ) {
   return palette;
 }
 
-export function createPaletteRepository( storage ) {
-  return {
-    async read() {
-      return readPaletteValue( await storage.get( PALETTE_KEY ) );
-    },
-    write( palette ) {
-      return storage.set( PALETTE_KEY, palette );
-    },
-  };
+export class PaletteRepository {
+  #storage;
+  constructor( storage ) {
+    this.#storage = storage;
+  }
+  async read() {
+    return readPaletteValue( await this.#storage.get( PALETTE_KEY ) );
+  }
+  write( palette ) {
+    return this.#storage.set( PALETTE_KEY, palette );
+  }
 }

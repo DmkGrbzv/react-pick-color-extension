@@ -2,11 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createInstance } from 'i18next';
-import {
-  createLanguagePreference,
-  resolveLanguage,
-  SUPPORTED_LANGUAGES,
-} from '@/i18n/language.js';
+import { LanguagePreference, resolveLanguage, SUPPORTED_LANGUAGES } from '@/i18n/language.js';
 import { AppError, errorKey } from '@/errors.js';
 
 const readJson = ( path ) => JSON.parse( readFileSync( new URL( path, import.meta.url ), 'utf8' ) );
@@ -102,10 +98,10 @@ test( 'panel and editor synchronize language, persist it across reopen, and pres
   const api = fakeStorage( { currentPalette: palette } );
   let panelLanguage;
   let editorLanguage;
-  const panel = createLanguagePreference( api, 'uk', ( value ) => {
+  const panel = new LanguagePreference( api, 'uk', ( value ) => {
     panelLanguage = value;
   } );
-  const editor = createLanguagePreference( api, 'uk', ( value ) => {
+  const editor = new LanguagePreference( api, 'uk', ( value ) => {
     editorLanguage = value;
   } );
   await Promise.all( [panel.start(), editor.start()] );
@@ -120,7 +116,7 @@ test( 'panel and editor synchronize language, persist it across reopen, and pres
   panel.stop();
   editor.stop();
   assert.equal( api.listenerCount, 0 );
-  const reopened = createLanguagePreference( api, 'uk', ( value ) => {
+  const reopened = new LanguagePreference( api, 'uk', ( value ) => {
     panelLanguage = value;
   } );
   await reopened.start();
@@ -137,7 +133,7 @@ test( 'late initial storage response does not overwrite a newer language event',
       releaseRead = resolve;
     } );
   let language;
-  const preference = createLanguagePreference( api, 'uk', ( value ) => {
+  const preference = new LanguagePreference( api, 'uk', ( value ) => {
     language = value;
   } );
   const starting = preference.start();
@@ -151,7 +147,7 @@ test( 'late initial storage response does not overwrite a newer language event',
 test( 'failed writes keep the language; retry works and unsupported choices are rejected', async () => {
   const api = fakeStorage( { language: 'uk' } );
   let language;
-  const preference = createLanguagePreference( api, 'en', ( value ) => {
+  const preference = new LanguagePreference( api, 'en', ( value ) => {
     language = value;
   } );
   await preference.start();
@@ -168,7 +164,7 @@ test( 'failed writes keep the language; retry works and unsupported choices are 
 test( 'unsupported saved language falls back to Ukrainian', async () => {
   const api = fakeStorage( { language: 'ru' } );
   let language;
-  const preference = createLanguagePreference( api, 'en', ( value ) => {
+  const preference = new LanguagePreference( api, 'en', ( value ) => {
     language = value;
   } );
   await preference.start();

@@ -1,21 +1,21 @@
-// Infrastructure only: no palette rules, message routing or error handling.
-export function createStorageAdapter( api ) {
-  return {
-    async get( key ) {
-      const values = await api.local.get( key );
-      return values[key];
-    },
-    async set( key, value ) {
-      await api.local.set( { [key]: value } );
-    },
-    subscribe( key, onChange ) {
-      const listener = ( changes, area ) => {
-        if ( area === 'local' && Object.hasOwn( changes, key ) ) {
-          onChange( changes[key].newValue );
-        }
-      };
-      api.onChanged.addListener( listener );
-      return () => api.onChanged.removeListener( listener );
-    },
-  };
+// Infrastructure only: no palette rules or error handling.
+export class StorageAdapter {
+  #api;
+  constructor( api ) {
+    this.#api = api;
+  }
+  async get( key ) {
+    const values = await this.#api.local.get( key );
+    return values[key];
+  }
+  async set( key, value ) {
+    await this.#api.local.set( { [key]: value } );
+  }
+  subscribe( key, onChange ) {
+    const listener = ( changes, area ) => {
+      if ( area === 'local' && Object.hasOwn( changes, key ) ) onChange( changes[key].newValue );
+    };
+    this.#api.onChanged.addListener( listener );
+    return () => this.#api.onChanged.removeListener( listener );
+  }
 }

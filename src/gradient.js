@@ -123,9 +123,10 @@ export function updateGradientDraft( draft, action ) {
       const roundedPosition = Math.round( Number( action.value ) );
       const boundedPosition = Math.max( 0, Math.min( 100, roundedPosition ) );
       // Sliders may meet but cannot cross each other.
-      const sliderPosition = action.index === 0
-        ? Math.min( boundedPosition, neighborPosition )
-        : Math.max( boundedPosition, neighborPosition );
+      const sliderPosition =
+        action.index === 0
+          ? Math.min( boundedPosition, neighborPosition )
+          : Math.max( boundedPosition, neighborPosition );
       updatedDraft.stops[action.index].position = String( sliderPosition );
       break;
     }

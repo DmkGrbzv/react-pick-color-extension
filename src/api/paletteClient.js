@@ -6,7 +6,7 @@ import {
   findCorrectMessageType,
 } from '@/messageTypes.js';
 import { sendRequest, requireExtension } from '@/runtime/sendRequest.js';
-import { createStorageAdapter } from '@/storage.js';
+import { StorageAdapter } from '@/storage.js';
 import { readPaletteValue } from '@/services/paletteRepository.js';
 import { PALETTE_KEY } from '@/types.js';
 
@@ -20,7 +20,7 @@ export function subscribeToPalette( onChange, onError ) {
   // Event callbacks cannot reject a caller's promise: forward failures to the UI explicitly.
   try {
     requireExtension();
-    return createStorageAdapter( chrome.storage ).subscribe( PALETTE_KEY, ( value ) => {
+    return new StorageAdapter( chrome.storage ).subscribe( PALETTE_KEY, ( value ) => {
       let palette;
       try {
         palette = readPaletteValue( value );

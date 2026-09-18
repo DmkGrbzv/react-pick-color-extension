@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { getColorFormatClient } from '@/api/colorFormatClient.js';
+import { ColorFormatPreference } from '@/preferences/colorFormatPreference.js';
 export function useColorFormat() {
   const [format, setFormat] = useState( 'hex' );
   const [ready, setReady] = useState( false );
   const [saving, setSaving] = useState( false );
   const [error, setError] = useState( false );
-  const client = useRef( null );
+  const preferenceRef = useRef( null );
   const revision = useRef( 0 );
   const locked = useRef( false );
   useEffect( () => {
@@ -13,13 +13,13 @@ export function useColorFormat() {
     let unsubscribe;
     async function load() {
       try {
-        client.current = getColorFormatClient();
-        unsubscribe = client.current.subscribe( ( value ) => {
+        preferenceRef.current = new ColorFormatPreference();
+        unsubscribe = preferenceRef.current.subscribe( ( value ) => {
           revision.current++;
           if ( active ) setFormat( value );
         } );
         const before = revision.current;
-        const value = await client.current.read();
+        const value = await preferenceRef.current.read();
         if ( active && before === revision.current ) setFormat( value );
       } catch {
         if ( active ) setError( true );
@@ -39,9 +39,9 @@ export function useColorFormat() {
     setSaving( true );
     setError( false );
     try {
-      const api = client.current || getColorFormatClient();
+      const preference = preferenceRef.current || new ColorFormatPreference();
       const before = revision.current;
-      await api.save( value );
+      await preference.save( value );
       if ( before === revision.current ) setFormat( value );
     } catch {
       setError( true );
