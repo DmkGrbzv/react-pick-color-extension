@@ -1,3 +1,5 @@
+import { errorKey } from '@/errors.js';
+import { ERROR_CODES } from '@/constants/errorCodes.js';
 import '@/styles/components/LanguageSelector.css';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -6,7 +8,9 @@ import { languageLoadFailed, setLanguage } from '@/i18n/index.js';
 export default function LanguageSelector() {
   const { t, i18n } = useTranslation();
   const [saving, setSaving] = useState( false );
-  const [error, setError] = useState( languageLoadFailed ? 'errors.languageLoad' : '' );
+  const [error, setError] = useState(
+    languageLoadFailed ? errorKey( null, ERROR_CODES.LANGUAGE_LOAD ) : ''
+  );
 
   async function change( event ) {
     setSaving( true );
@@ -14,7 +18,7 @@ export default function LanguageSelector() {
     try {
       await setLanguage( event.target.value );
     } catch {
-      setError( 'errors.languageSave' );
+      setError( errorKey( null, ERROR_CODES.LANGUAGE_SAVE ) );
     } finally {
       setSaving( false );
     }

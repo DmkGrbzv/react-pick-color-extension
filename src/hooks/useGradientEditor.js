@@ -1,3 +1,4 @@
+import { ERROR_CODES } from '@/constants/errorCodes.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -27,7 +28,7 @@ export function useGradientEditor( palette, editor ) {
     editor &&
     new URLSearchParams( window.location.hash.slice( 1 ) ).has( 'gradient' ) &&
     !requestedGradient( palette.colors )
-      ? { error: true, key: 'errors.gradientMissing' }
+      ? { error: true, key: errorKey( null, ERROR_CODES.GRADIENT_MISSING ) }
       : null
   );
   const operation = useRef( false );
@@ -58,7 +59,7 @@ export function useGradientEditor( palette, editor ) {
       const item = requestedGradient( palette.colors );
       if ( item ) edit( item );
       else if ( new URLSearchParams( window.location.hash.slice( 1 ) ).has( 'gradient' ) ) {
-        setNotice( { error: true, key: 'errors.gradientMissing' } );
+        setNotice( { error: true, key: errorKey( null, ERROR_CODES.GRADIENT_MISSING ) } );
       }
     };
     window.addEventListener( 'hashchange', requested );
@@ -74,7 +75,8 @@ export function useGradientEditor( palette, editor ) {
       const { sRGBHex } = await new window.EyeDropper().open();
       setDraft( ( value ) => updateGradientDraft( value, { type: 'hex', index, value: sRGBHex } ) );
     } catch ( error ) {
-      if ( error.name !== 'AbortError' ) setNotice( { error: true, key: 'errors.pickFailed' } );
+      if ( error.name !== 'AbortError' )
+        setNotice( { error: true, key: errorKey( null, ERROR_CODES.PICK_FAILED ) } );
     } finally {
       operation.current = false;
       setWorking( false );
@@ -93,7 +95,7 @@ export function useGradientEditor( palette, editor ) {
       // Keep the builder open in create mode.
       window.history.replaceState( null, '', window.location.pathname + window.location.search );
     } catch ( error ) {
-      setNotice( { error: true, key: errorKey( error, 'gradientSave' ) } );
+      setNotice( { error: true, key: errorKey( error, ERROR_CODES.GRADIENT_SAVE ) } );
     } finally {
       operation.current = false;
       setWorking( false );

@@ -1,3 +1,4 @@
+import { ERROR_CODES } from '@/constants/errorCodes.js';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePalette } from '@/usePalette.js';
@@ -27,7 +28,7 @@ export default function PrintPreview() {
       />
       { error ? (
         <div className="error" role="alert">
-          <p>{ t( errorKey( error, 'storageFailure' ) ) }</p>
+          <p>{ t( errorKey( error, ERROR_CODES.STORAGE_FAILURE ) ) }</p>
           <button onClick={ retry }>{ t( 'retry' ) }</button>
         </div>
       ) : !palette ? (

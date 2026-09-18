@@ -1,3 +1,4 @@
+import { ERROR_CODES } from '@/constants/errorCodes.js';
 import {
   GET_PALETTE,
   ADD_COLOR,
@@ -22,6 +23,6 @@ export async function dispatchMessage( { paletteService, openEditor }, message, 
     case findCorrectMessageType( OPEN_EDITOR ):
       return openEditor( sender.tab?.windowId ?? message.windowId, message.gradientId );
     default:
-      throw new AppError( 'unknownOperation' );
+      throw new AppError( ERROR_CODES.UNKNOWN_OPERATION );
   }
 }

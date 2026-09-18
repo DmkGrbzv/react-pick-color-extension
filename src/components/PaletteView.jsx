@@ -1,3 +1,4 @@
+import { ERROR_CODES } from '@/constants/errorCodes.js';
 import ColorFormatSelector from '@/components/ColorFormatSelector.jsx';
 import PrintPreviewButton from '@/components/PrintPreviewButton.jsx';
 import { useColorFormat } from '@/hooks/useColorFormat.js';
@@ -43,7 +44,7 @@ export default function PaletteView( { editor = false } ) {
       <PrintPreviewButton disabled={ !palette } />
       { error ? (
         <div className="error" role="alert">
-          <p>{ t( errorKey( error, 'storageFailure' ) ) }</p>
+          <p>{ t( errorKey( error, ERROR_CODES.STORAGE_FAILURE ) ) }</p>
           <button type="button" onClick={ retry }>
             { t( 'retry' ) }
           </button>

@@ -1,3 +1,4 @@
+import { ERROR_CODES } from '@/constants/errorCodes.js';
 import { useEffect, useRef, useState } from 'react';
 import { addColor, removeColor } from '@/api/paletteClient.js';
 import { openEditor } from '@/api/editorClient.js';
@@ -31,7 +32,7 @@ export function usePaletteActions() {
       setNotice( { key: 'colorSaved', values: { hex: result.sRGBHex.toUpperCase() } } );
     } catch ( reason ) {
       if ( reason.name !== 'AbortError' ) {
-        setNotice( { error: true, key: errorKey( reason, 'pickFailed' ) } );
+        setNotice( { error: true, key: errorKey( reason, ERROR_CODES.PICK_FAILED ) } );
       }
     } finally {
       operationRef.current = false;
@@ -61,7 +62,7 @@ export function usePaletteActions() {
       await removeColor( id );
       setNotice( { key: 'gradient.itemRemoved' } );
     } catch ( reason ) {
-      setNotice( { error: true, key: errorKey( reason, 'removeFailed' ) } );
+      setNotice( { error: true, key: errorKey( reason, ERROR_CODES.REMOVE_FAILED ) } );
     } finally {
       operationRef.current = false;
       setBusy( false );
@@ -74,7 +75,7 @@ export function usePaletteActions() {
     try {
       await openEditor( gradientId );
     } catch ( reason ) {
-      setNotice( { error: true, key: errorKey( reason, 'editorFailed' ) } );
+      setNotice( { error: true, key: errorKey( reason, ERROR_CODES.EDITOR_FAILED ) } );
     } finally {
       setOpening( false );
     }

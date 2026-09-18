@@ -1,3 +1,4 @@
+import { ERROR_CODES } from '@/constants/errorCodes.js';
 import { AppError } from '@/errors.js';
 
 export const DIRECTIONS = { right: 'to right', left: 'to left', down: 'to bottom', up: 'to top' };
@@ -38,7 +39,7 @@ export function normalizeGradient( value ) {
     value.stops.some( ( stop ) => !stop || !normalizeHex( stop.hex ) || !validPosition( stop.position ) ) ||
     Number( value.stops[0].position ) > Number( value.stops[1].position )
   )
-    throw new AppError( 'invalidGradient' );
+    throw new AppError( ERROR_CODES.INVALID_GRADIENT );
   return {
     type: 'gradient',
     gradientType: 'linear',
@@ -151,7 +152,7 @@ export function updateGradientDraft( draft, action ) {
 }
 
 export function gradientFromDraft( draft ) {
-  if ( draftErrors( draft ).invalid ) throw new AppError( 'invalidGradient' );
+  if ( draftErrors( draft ).invalid ) throw new AppError( ERROR_CODES.INVALID_GRADIENT );
   return {
     ...normalizeGradient( { ...draft, type: 'gradient', gradientType: 'linear' } ),
     ...( draft.id ? { id: draft.id } : {} ),

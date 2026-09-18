@@ -1,3 +1,4 @@
+import { ERROR_CODES } from '@/constants/errorCodes.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -181,5 +182,16 @@ test( 'manifest translations exist for both supported languages', () => {
       const key = value.match( /^__MSG_(.+)__$/ )[1];
       assert.ok( messages[key].message );
     }
+  }
+} );
+
+test( 'every shared error code has Ukrainian and English translations', () => {
+  const codes = Object.values( ERROR_CODES );
+  assert.equal( new Set( codes ).size, codes.length );
+  assert.deepEqual( [...codes].sort(), Object.keys( en.errors ).sort() );
+  for ( const code of codes ) {
+    assert.ok( uk.errors[code]?.trim(), code );
+    assert.ok( en.errors[code]?.trim(), code );
+    assert.equal( errorKey( new Error(), code ), 'errors.' + code );
   }
 } );

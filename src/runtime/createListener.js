@@ -1,3 +1,4 @@
+import { ERROR_CODES } from '@/constants/errorCodes.js';
 import { OPEN_EDITOR, findCorrectMessageType, isMessageType } from '@/messageTypes.js';
 import { AppError } from '@/errors.js';
 
@@ -9,7 +10,7 @@ async function respondToMessage( dispatch, message, sender, sendResponse ) {
     response = { ok: true, value };
   } catch ( error ) {
     const isEditorRequest = message.type === findCorrectMessageType( OPEN_EDITOR );
-    const fallbackError = isEditorRequest ? 'editorFailed' : 'storageFailure';
+    const fallbackError = isEditorRequest ? ERROR_CODES.EDITOR_FAILED : ERROR_CODES.STORAGE_FAILURE;
     response = {
       ok: false,
       error: error instanceof AppError ? error.code : fallbackError,

@@ -1,3 +1,4 @@
+import { ERROR_CODES } from '@/constants/errorCodes.js';
 import { AppError } from '@/errors.js';
 import { normalizeGradient } from '@/gradient.js';
 
@@ -41,7 +42,7 @@ export class PaletteService {
   addColor( value ) {
     return this.#update( ( palette ) => {
       if ( typeof value !== 'string' || !/^#[\da-f]{6}$/i.test( value ) ) {
-        throw new AppError( 'invalidHex' );
+        throw new AppError( ERROR_CODES.INVALID_HEX );
       }
       const hex = value.toUpperCase();
       const exists = palette.colors.some(
@@ -61,7 +62,7 @@ export class PaletteService {
       const index = palette.colors.findIndex(
         ( item ) => item.id === value.id && item.type === 'gradient'
       );
-      if ( index < 0 ) throw new AppError( 'gradientMissing' );
+      if ( index < 0 ) throw new AppError( ERROR_CODES.GRADIENT_MISSING );
       return {
         ...palette,
         colors: palette.colors.map( ( item, position ) =>
@@ -73,7 +74,7 @@ export class PaletteService {
 
   removeItem( id ) {
     return this.#update( ( palette ) => {
-      if ( typeof id !== 'string' ) throw new AppError( 'missingColor' );
+      if ( typeof id !== 'string' ) throw new AppError( ERROR_CODES.MISSING_COLOR );
       return { ...palette, colors: palette.colors.filter( ( item ) => item.id !== id ) };
     } );
   }
