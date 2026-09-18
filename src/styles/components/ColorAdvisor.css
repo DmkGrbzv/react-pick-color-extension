@@ -1,0 +1,64 @@
+.color-advisor {
+  border-top: var(--control-border);
+  padding: 12px;
+  background: #f9faff;
+  min-width: 0;
+}
+.advisor-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+.advisor-heading h3 {
+  margin: 0;
+  font-size: 14px;
+}
+.advisor-heading button {
+  font-size: 11px;
+}
+.advisor-source {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0;
+  font-size: 12px;
+}
+.advisor-source > span {
+  height: 42px;
+  border: var(--control-border);
+  border-radius: var(--control-radius);
+}
+.advisor-source code {
+  display: block;
+}
+.advisor-category {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+.advisor-category select {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  padding: 8px;
+  border: var(--control-border);
+  border-radius: var(--control-radius);
+  background: white;
+}
+.advisor-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100px, 100%), 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.advisor-actions button {
+  min-width: 0;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.advisor-notice {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}

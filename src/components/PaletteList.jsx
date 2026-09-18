@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import '@/styles/components/PaletteList.css';
 import { useTranslation } from 'react-i18next';
 import ColorSwatch from '@/components/ColorSwatch.jsx';
@@ -13,6 +14,7 @@ export default function PaletteList( {
   onEdit,
 } ) {
   const { t } = useTranslation();
+  const [advisorColorId, setAdvisorColorId] = useState( null );
 
   return (
     <section aria-label={ t( 'currentPalette' ) }>
@@ -42,6 +44,11 @@ export default function PaletteList( {
                 key={ item.id }
                 format={ format }
                 color={ item }
+                savedColors={ palette.colors }
+                advisorOpen={ advisorColorId === item.id }
+                onToggleAdvisor={ () =>
+                  setAdvisorColorId( ( current ) => ( current === item.id ? null : item.id ) )
+                }
                 onCopy={ onCopy }
                 onRemove={ onRemove }
                 disabled={ disabled }

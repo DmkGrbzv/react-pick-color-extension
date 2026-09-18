@@ -106,5 +106,41 @@
     "action": "Print / Save as PDF",
     "approximate": "CMYK is approximate. Printed colors may differ.",
     "page": "Page {{current}} of {{total}}"
+  },
+  "advisor": {
+    "open": "Suggest combinations",
+    "openFor": "Suggest combinations for {{hex}}",
+    "title": "Color suggestions",
+    "close": "Close",
+    "source": "Source color",
+    "selected": "Selected color",
+    "category": "Suggestions",
+    "categories": {
+      "shades": "Shades",
+      "analogous": "Neighboring colors",
+      "accents": "Color accents"
+    },
+    "descriptions": {
+      "shades": "Lighter and darker versions of the source color for backgrounds or stronger accents.",
+      "analogous": "The source color and two hues 30° to either side, for exploring a close color combination.",
+      "accents": "Explore stronger differences with an opposite hue or two evenly spaced hues."
+    },
+    "complementary": {
+      "title": "Complementary",
+      "description": "A hue opposite the source on the color wheel (180°)."
+    },
+    "triadic": {
+      "title": "Triad",
+      "description": "Two hues spaced 120° from the source form a three-color combination."
+    },
+    "neutral": "This color is black, white, or close to gray. Try its shades, or choose a more colorful source to explore hue combinations.",
+    "previewColor": "Compare {{hex}} with the source",
+    "alreadyAdded": "Already added",
+    "add": "Add",
+    "added": "{{hex}} added to the palette.",
+    "copy": "Copy {{format}}",
+    "swap": "Swap background and accent",
+    "composition": "Background {{background}}, accent {{accent}}.",
+    "guidance": "These are starting points, not guaranteed matches. The result depends on proportions, background, and use. Text readability is not evaluated."
   }
 }

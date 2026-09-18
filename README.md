@@ -195,3 +195,11 @@ Classes keep dependencies and internal state in private fields. New methods belo
 Opening the editor is a single operation. createOpenEditor binds its Chrome/panel dependencies and a per-window queue once at worker startup, returning a callable function. It returns no object with a method API. dispatchMessage is a stateless function translating transport commands into application operations. createListener provides the synchronous callback required by Chrome and serializes errors at that boundary.
 
 background.js composes these dependencies. UI api modules send messages; preferences persist settings; services enforce palette rules; the repository and adapter handle persistence. Shared URL matching lives in utils/tabUrl.js so opening the editor does not import the panel controller implementation. Existing camelCase module filenames are preserved; operation modules use verbs and exported class names use PascalCase.
+
+## Color advisor
+
+The lightbulb on each solid-color card opens an inline advisor; only one source is expanded per view. Suggestions stay local until Add is pressed. Copy uses the currently selected HEX/RGB/CMYK format. Saved colors are marked Already added, and the existing palette service remains responsible for deduplication and persistence. Gradients keep their existing editing flow.
+
+`utils/colorSuggestions.js` is pure: shades mix RGB channels with black or white at 20%, 40%, and 60%; neighboring hues rotate HSL hue by 30 degrees; complementary and triadic variants rotate by 180 and 120/240 degrees. Hue values are not persisted. A source with an RGB channel spread of 16 or less is treated as nearly neutral and offers shades only. Results are deterministic, not a guarantee of aesthetic suitability or text contrast.
+
+ColorAdvisor coordinates categories and selection; ColorSuggestions renders choices; ColorComparison renders the pair and reversible background/accent composition. useColorAdvisorActions handles explicit save/copy actions and local feedback. Styles live in styles/components, and category identifiers in constants/advisorTypes.js.

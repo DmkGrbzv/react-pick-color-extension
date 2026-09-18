@@ -1,0 +1,42 @@
+.color-comparison {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+.comparison-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.comparison-pair figure {
+  margin: 0;
+  min-width: 0;
+}
+.comparison-swatch {
+  height: 84px;
+  border: var(--control-border);
+  border-radius: var(--control-radius);
+}
+.comparison-pair figcaption {
+  font-size: 11px;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+}
+.comparison-pair code {
+  display: block;
+  font-size: 12px;
+}
+.comparison-composition {
+  display: grid;
+  place-items: center;
+  height: 120px;
+  border: var(--control-border);
+  border-radius: var(--control-radius);
+}
+.comparison-composition > div {
+  width: 38%;
+  height: 44%;
+}
+.color-comparison > button {
+  font-size: 12px;
+}

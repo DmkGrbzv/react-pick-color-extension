@@ -63,7 +63,7 @@ test( 'panel and editor copy the selected format after changing and reopening th
   let root;
   try {
     server = await createServer( {
-      server: { middlewareMode: true, hmr: false, watch: null },
+      server: { middlewareMode: true, hmr: false, ws: false, watch: null },
       appType: 'custom',
     } );
     const { default: PaletteView } = await server.ssrLoadModule( '/src/components/PaletteView.jsx' );
