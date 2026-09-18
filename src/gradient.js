@@ -91,37 +91,6 @@ export function draftDirty( draft ) {
   return JSON.stringify( { direction: draft.direction, stops: draft.stops } ) !== draft.baseline;
 }
 
-// Sliders stay within 0..100 and cannot cross the other color stop.
-function getClampedSliderPosition( draft, stopIndex, inputValue ) {
-  const neighborIndex = stopIndex === 0 ? 1 : 0;
-  const neighborInput = draft.stops[neighborIndex].position;
-  // An unfinished numeric input must not remove the slider's boundary.
-  const neighborPosition = validPosition( neighborInput )
-    ? Number( neighborInput )
-    : draft.preview.stops[neighborIndex].position;
-  const roundedPosition = Math.round( Number( inputValue ) );
-  const boundedPosition = Math.max( 0, Math.min( 100, roundedPosition ) );
-
-  if ( stopIndex === 0 ) return Math.min( boundedPosition, neighborPosition );
-  return Math.max( boundedPosition, neighborPosition );
-}
-
-function buildGradientPreview( updatedDraft, previousPreview ) {
-  const errors = draftErrors( updatedDraft );
-  // Positions form a pair: keep both previous positions if either is invalid or they cross.
-  const keepPreviousPositions = errors.order || errors.position.some( Boolean );
-  const previewStops = updatedDraft.stops.map( ( stop, index ) => {
-    const previousStop = previousPreview.stops[index];
-    return {
-      // HEX fields are independent: an invalid color does not freeze the other color.
-      hex: normalizeHex( stop.hex ) || previousStop.hex,
-      position: keepPreviousPositions ? previousStop.position : Number( stop.position ),
-    };
-  } );
-
-  return { ...previousPreview, direction: updatedDraft.direction, stops: previewStops };
-}
-
 // Keep raw form input in the draft; render only valid values in its preview.
 export function updateGradientDraft( draft, action ) {
   const updatedDraft = {
@@ -144,14 +113,39 @@ export function updateGradientDraft( draft, action ) {
       updatedDraft.stops[0].hex = draft.stops[1].hex;
       updatedDraft.stops[1].hex = draft.stops[0].hex;
       break;
-    case 'slider':
-      updatedDraft.stops[action.index].position = String(
-        getClampedSliderPosition( draft, action.index, action.value )
-      );
+    case 'slider': {
+      const neighborIndex = action.index === 0 ? 1 : 0;
+      const neighborInput = draft.stops[neighborIndex].position;
+      // If the neighboring input is invalid, use its last valid preview position.
+      const neighborPosition = validPosition( neighborInput )
+        ? Number( neighborInput )
+        : draft.preview.stops[neighborIndex].position;
+      const roundedPosition = Math.round( Number( action.value ) );
+      const boundedPosition = Math.max( 0, Math.min( 100, roundedPosition ) );
+      // Sliders may meet but cannot cross each other.
+      const sliderPosition = action.index === 0
+        ? Math.min( boundedPosition, neighborPosition )
+        : Math.max( boundedPosition, neighborPosition );
+      updatedDraft.stops[action.index].position = String( sliderPosition );
       break;
+    }
   }
 
-  updatedDraft.preview = buildGradientPreview( updatedDraft, draft.preview );
+  const errors = draftErrors( updatedDraft );
+  // Positions form a pair: keep both previous positions if either is invalid or they cross.
+  const keepPreviousPositions = errors.order || errors.position.some( Boolean );
+  updatedDraft.preview = {
+    ...draft.preview,
+    direction: updatedDraft.direction,
+    stops: updatedDraft.stops.map( ( stop, index ) => {
+      const previousStop = draft.preview.stops[index];
+      return {
+        // Colors are independent: an invalid HEX keeps only its own previous color.
+        hex: normalizeHex( stop.hex ) || previousStop.hex,
+        position: keepPreviousPositions ? previousStop.position : Number( stop.position ),
+      };
+    } ),
+  };
   return updatedDraft;
 }
 

@@ -30,7 +30,6 @@ export default function PaletteView( { editor = false } ) {
 
       { !editor && (
         <PaletteToolbar
-          format={ colorFormat.format }
           palette={ palette }
           busy={ busy }
           supported={ supported }
@@ -53,6 +52,7 @@ export default function PaletteView( { editor = false } ) {
         <p role="status">{ t( 'loading' ) }</p>
       ) : (
         <PaletteItems
+          format={ colorFormat.format }
           palette={ palette }
           editor={ editor }
           busy={ busy || opening }

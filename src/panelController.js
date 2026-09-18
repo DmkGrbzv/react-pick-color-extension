@@ -2,67 +2,69 @@ export function isEditorTab( tab, editorUrl ) {
   return ( tab.pendingUrl || tab.url )?.split( /[?#]/ )[0] === editorUrl;
 }
 
-// This queue only orders API calls. Chrome owns panel visibility and tab options.
-export function createPanelController( api ) {
-  const editorUrl = api.runtime.getURL( 'editor.html' );
-  const printUrl = api.runtime.getURL( 'print.html' );
-  const pending = new Map();
+// Wait for this tab's previous request, then apply its current Chrome settings.
+async function configureTabPanel( api, tabId, tabState, disabledUrls, previousOperation ) {
+  try {
+    await previousOperation;
+  } catch {
+    // The previous caller receives its error; this request can still retry.
+  }
 
-  function sync( tabId ) {
-    let entry = pending.get( tabId );
-    if ( !entry ) {
-      entry = { removed: false, promise: undefined };
-      pending.set( tabId, entry );
+  // A tab can close during any Chrome call. Stop before issuing the next one.
+  if ( tabState.removed ) return;
+  const tab = await api.tabs.get( tabId );
+  if ( tabState.removed ) return;
+  const enabled = !disabledUrls.some( ( url ) => isEditorTab( tab, url ) );
+  const currentOptions = await api.sidePanel.getOptions( { tabId } );
+  if ( tabState.removed ) return;
+
+  const needsUpdate =
+    currentOptions.enabled !== enabled ||
+    currentOptions.tabId !== tabId ||
+    ( enabled && currentOptions.path !== 'sidepanel.html' );
+  if ( needsUpdate ) {
+    await api.sidePanel.setOptions( {
+      tabId,
+      enabled,
+      ...( enabled ? { path: 'sidepanel.html' } : {} ),
+    } );
+  }
+  if ( tabState.removed ) return;
+  // The extension icon must not open a duplicate panel on its own pages.
+  if ( enabled ) await api.action.enable( tabId );
+  else await api.action.disable( tabId );
+}
+
+// Only orders requests. Chrome keeps each tab's native open/closed panel state.
+export function createPanelController( api ) {
+  const disabledUrls = ['editor.html', 'print.html'].map( ( page ) => api.runtime.getURL( page ) );
+  const pendingTabs = new Map();
+
+  async function sync( tabId ) {
+    const tabState = pendingTabs.get( tabId ) || { removed: false, operation: undefined };
+    pendingTabs.set( tabId, tabState );
+    const operation = configureTabPanel( api, tabId, tabState, disabledUrls, tabState.operation );
+    tabState.operation = operation;
+    try {
+      await operation;
+    } catch ( error ) {
+      // Closing the tab cancels its requests; other failures go to the caller.
+      if ( !tabState.removed ) throw error;
+    } finally {
+      const isLatestRequest =
+        pendingTabs.get( tabId ) === tabState && tabState.operation === operation;
+      if ( isLatestRequest ) pendingTabs.delete( tabId );
     }
-    const previous = entry.promise;
-    async function run() {
-      try {
-        await previous;
-      } catch {
-        // Retry synchronization even if the previous attempt failed.
-      }
-      try {
-        if ( entry.removed ) return;
-        const tab = await api.tabs.get( tabId );
-        if ( entry.removed ) return;
-        const enabled = !isEditorTab( tab, editorUrl ) && !isEditorTab( tab, printUrl );
-        const options = await api.sidePanel.getOptions( { tabId } );
-        if ( entry.removed ) return;
-        if (
-          options.enabled !== enabled ||
-          options.tabId !== tabId ||
-          ( enabled && options.path !== 'sidepanel.html' )
-        ) {
-          await api.sidePanel.setOptions( {
-            tabId,
-            enabled,
-            ...( enabled ? { path: 'sidepanel.html' } : {} ),
-          } );
-        }
-        if ( entry.removed ) return;
-        // Disabled actions cannot invoke the automatic panel behavior in the editor.
-        if ( enabled ) await api.action.enable( tabId );
-        else await api.action.disable( tabId );
-      } catch ( error ) {
-        if ( !entry.removed ) throw error;
-      } finally {
-        if ( pending.get( tabId ) === entry && entry.promise === operation ) pending.delete( tabId );
-      }
-    }
-    const operation = run();
-    entry.promise = operation;
-    return operation;
   }
 
   function forget( tabId ) {
-    const entry = pending.get( tabId );
-    if ( entry ) entry.removed = true;
-    pending.delete( tabId );
-    // Chrome removes tab-scoped settings itself. Never close another tab's panel.
+    const tabState = pendingTabs.get( tabId );
+    if ( tabState ) tabState.removed = true;
+    pendingTabs.delete( tabId );
+    // Chrome removes the tab's settings. Other tabs remain untouched.
   }
 
   async function initialize() {
-    // No global panel: each site's panel has independent native open/closed state.
     await api.sidePanel.setOptions( { enabled: false } );
     await api.sidePanel.setPanelBehavior( { openPanelOnActionClick: true } );
     const tabs = await api.tabs.query( {} );

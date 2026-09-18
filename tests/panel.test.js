@@ -307,3 +307,25 @@ test( 'gradient edit requests reuse editor and deliver successive targets via ha
   assert.equal( target.pathname, '/editor.html' );
   assert.ok( !state.calls.some( ( [name] ) => name === 'create' ) );
 } );
+
+test( 'a failed panel request rejects its caller while the next queued request retries', async () => {
+  const { api, panel, state } = setup( [{ id: 1, windowId: 1, url: 'https://example.com' }] );
+  const setOptions = api.sidePanel.setOptions;
+  const failure = new Error( 'Temporary settings failure' );
+  let attempts = 0;
+  api.sidePanel.setOptions = async ( options ) => {
+    attempts++;
+    if ( attempts === 1 ) throw failure;
+    await setOptions( options );
+  };
+  const first = panel.sync( 1 );
+  const second = panel.sync( 1 );
+  const [failed, retried] = await Promise.allSettled( [first, second] );
+  assert.equal( failed.status, 'rejected' );
+  assert.equal( failed.reason, failure );
+  assert.equal( retried.status, 'fulfilled' );
+  assert.equal( attempts, 2 );
+  assert.equal( state.options.get( 1 ).enabled, true );
+  await panel.sync( 1 );
+  assert.equal( attempts, 2, 'Already applied settings should not be written again' );
+} );

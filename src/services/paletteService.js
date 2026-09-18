@@ -1,20 +1,21 @@
 import { AppError } from '@/errors.js';
 import { normalizeGradient } from '@/gradient.js';
 
+// Only recover the previous request; failures in this task reach its caller.
+async function runPaletteTask( previousOperation, task ) {
+  try {
+    await previousOperation;
+  } catch {
+    // Continue processing later palette requests after a failed read or write.
+  }
+  return await task();
+}
+
 export function createPaletteService( repository, makeId = () => crypto.randomUUID() ) {
   let tail;
 
   function enqueue( task ) {
-    const previous = tail;
-    async function run() {
-      try {
-        await previous;
-      } catch {
-        // A failed earlier request must not block this request.
-      }
-      return await task();
-    }
-    tail = run();
+    tail = runPaletteTask( tail, task );
     return tail;
   }
 
