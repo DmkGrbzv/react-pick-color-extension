@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import Icon from '@/components/Icon.jsx';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ADVISOR_CATEGORIES, ACCENT_TYPES } from '@/constants/advisorTypes.js';
 import { createColorSuggestions } from '@/utils/colorSuggestions.js';
@@ -12,9 +13,12 @@ export default function ColorAdvisor( { id, source, savedColors, format, disable
   const [category, setCategory] = useState( ADVISOR_CATEGORIES.SHADES );
   const [selectedHex, setSelectedHex] = useState( null );
   const { saving, notice, add, copy } = useColorAdvisorActions();
-  const suggestions = createColorSuggestions( source.hex );
-  const savedHexes = new Set(
-    savedColors.filter( ( item ) => item.type !== 'gradient' ).map( ( item ) => item.hex.toUpperCase() )
+  const suggestions = useMemo( () => createColorSuggestions( source.hex ), [source.hex] );
+  const savedHexes = useMemo(
+    () => new Set(
+      savedColors.filter( ( item ) => item.type !== 'gradient' ).map( ( item ) => item.hex.toUpperCase() )
+    ),
+    [savedColors]
   );
   const alreadyAdded = savedHexes.has( selectedHex );
   const groups = category === ADVISOR_CATEGORIES.ACCENTS ? Object.values( ACCENT_TYPES ) : [category];
@@ -24,6 +28,7 @@ export default function ColorAdvisor( { id, source, savedColors, format, disable
       <div className="advisor-heading">
         <h3 id={ id + '-title' }>{ t( 'advisor.title' ) }</h3>
         <button type="button" onClick={ onClose }>
+          <Icon name="close" />
           { t( 'advisor.close' ) }
         </button>
       </div>
@@ -84,9 +89,11 @@ export default function ColorAdvisor( { id, source, savedColors, format, disable
               disabled={ disabled || saving || alreadyAdded }
               onClick={ () => add( selectedHex ) }
             >
+              <Icon name={ alreadyAdded ? 'check' : 'plus' } />
               { t( alreadyAdded ? 'advisor.alreadyAdded' : saving ? 'busy' : 'advisor.add' ) }
             </button>
             <button type="button" onClick={ () => copy( selectedHex, format ) }>
+              <Icon name="copy" />
               { t( 'advisor.copy', { format: format.toUpperCase() } ) }
             </button>
           </div>

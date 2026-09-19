@@ -1,17 +1,20 @@
 .print-document {
   display: grid;
   gap: 24px;
-  justify-items: center;
+  justify-items: safe center;
   overflow-x: auto;
   padding: 8px;
 }
 .print-page {
+  --text-muted: #626b7d;
+  color-scheme: light;
   width: var(--sheet-width);
   height: var(--sheet-height);
   padding: 15mm;
   background: var(--paper);
   color: #000;
-  box-shadow: 0 2px 16px #0002;
+  box-shadow: 0 4px 24px #0002;
+  border: 1px solid #dfe3ec;
   display: grid;
   grid-template-rows: 12mm minmax(0, 1fr) 10mm;
   gap: 4mm;
@@ -43,6 +46,7 @@
   }
   .print-page {
     margin: 0;
+    border: 0;
     box-shadow: none;
     break-after: page;
     break-inside: avoid;

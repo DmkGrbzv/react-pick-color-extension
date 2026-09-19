@@ -2,6 +2,7 @@
   min-width: 0;
   display: grid;
   align-content: start;
+  align-self: start;
   gap: 2mm;
   padding: 3mm;
   border: 1px solid #dfe3ec;
@@ -34,6 +35,7 @@
 .print-color-card .color-values .primary-value {
   font-size: 7pt;
   line-height: 1.4;
+  gap: 0;
 }
 .print-color-card .color-values > div {
   grid-template-columns: 10mm minmax(0, 1fr);

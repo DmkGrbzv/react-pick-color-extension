@@ -1,27 +1,16 @@
 .language-control {
-  margin-bottom: 22px;
+  min-width: 0;
 }
-
 .language-label {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
-  color: #626b7d;
-  font-size: 12px;
+  display: block;
 }
-
 .language-label select {
-  font: inherit;
-  color: #202735;
-  background: white;
-  border: 1px solid #dfe3ec;
-  border-radius: 8px;
-  padding: 6px 8px;
   max-width: 100%;
+  min-height: 34px;
+  font-size: 11px;
+  padding: 6px 7px;
 }
-
-.language-label select:focus-visible {
-  outline: 3px solid #9495ff;
-  outline-offset: 3px;
+.language-control .error {
+  max-width: 160px;
+  margin-bottom: 0;
 }

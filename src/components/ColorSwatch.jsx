@@ -1,3 +1,4 @@
+import Icon from '@/components/Icon.jsx';
 import { useId, useRef } from 'react';
 import ColorAdvisor from '@/components/ColorAdvisor.jsx';
 import ColorValues from '@/components/ColorValues.jsx';
@@ -29,28 +30,30 @@ export default function ColorSwatch( {
             onClick={ () => onCopy( colorValues( color.hex )[format] ) }
             aria-label={ t( 'copyColor', { hex: color.hex } ) }
           >
+            <Icon name="copy" />
             { t( 'copy' ) }
           </button>
           <button
             type="button"
-            className="delete"
+            className="delete icon-button"
+            title={ t( 'remove' ) }
             disabled={ disabled }
             onClick={ () => onRemove( color.id ) }
             aria-label={ t( 'removeColor', { hex: color.hex } ) }
           >
-            { t( 'remove' ) }
+            <Icon name="trash" />
           </button>
           <button
             type="button"
             ref={ advisorButton }
-            className="advisor-toggle"
+            className="advisor-toggle icon-button"
             title={ t( 'advisor.open' ) }
             aria-label={ t( 'advisor.openFor', { hex: color.hex } ) }
             aria-expanded={ advisorOpen }
             aria-controls={ advisorOpen ? advisorId : undefined }
             onClick={ onToggleAdvisor }
           >
-            <span aria-hidden="true">&#128161;</span>
+            <Icon name="bulb" />
           </button>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import Icon from '@/components/Icon.jsx';
 import { useState } from 'react';
 import '@/styles/components/PaletteList.css';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +23,10 @@ export default function PaletteList( {
         <h2>
           { t( 'gradient.items' ) } <span>{ palette.colors.length }</span>
         </h2>
-        <span className="hint">{ t( 'savedLocally' ) }</span>
+        <span className="hint saved-status">
+          <Icon name="check" />
+          { t( 'savedLocally' ) }
+        </span>
       </div>
       { palette.colors.length === 0 ? (
         <EmptyPalette editor={ editor } />

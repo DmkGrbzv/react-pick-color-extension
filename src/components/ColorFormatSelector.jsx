@@ -20,7 +20,6 @@ export default function ColorFormatSelector( { format, change, error, disabled }
           { t( 'formats.failed' ) }
         </p>
       ) }
-      { format === 'cmyk' && <p className="hint">{ t( 'print.warning' ) }</p> }
     </div>
   );
 }

@@ -4,25 +4,38 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
-
 .section-heading h2 span {
-  color: #697388;
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  padding: 2px 6px;
   margin-left: 6px;
-  font-weight: 400;
+  border-radius: 5px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
 }
-
+.saved-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.saved-status .icon {
+  width: 14px;
+  height: 14px;
+  color: var(--success);
+}
 .palette-grid {
   align-items: start;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   padding: 0;
   margin: 0;
   list-style: none;
 }
-
 .editor .palette-grid {
-  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
 }

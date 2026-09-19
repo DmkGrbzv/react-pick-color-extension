@@ -6,7 +6,7 @@ import { errorKey } from '@/errors.js';
 import { DEFAULT_PRINT_SETTINGS } from '@/utils/printLayout.js';
 import PrintControls from '@/components/PrintControls.jsx';
 import PrintDocument from '@/components/PrintDocument.jsx';
-import LanguageSelector from '@/components/LanguageSelector.jsx';
+import AppHeader from '@/components/AppHeader.jsx';
 import '@/styles/pages/PrintPreview.css';
 export default function PrintPreview() {
   const { t } = useTranslation();
@@ -19,7 +19,7 @@ export default function PrintPreview() {
     <main className="print-preview">
       <style>{ '@page { size: A4 ' + settings.orientation + '; margin: 0; }' }</style>
       <div className="print-screen-header">
-        <LanguageSelector />
+        <AppHeader />
       </div>
       <PrintControls
         settings={ settings }

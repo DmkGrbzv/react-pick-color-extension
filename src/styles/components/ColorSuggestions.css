@@ -1,30 +1,35 @@
 .color-suggestions h4 {
   margin: 12px 0 4px;
-  font-size: 13px;
+  font-size: 12px;
 }
 .suggestion-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(80px, 100%), 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 .suggestion-option {
+  justify-content: stretch;
+  text-align: center;
   display: grid;
   align-content: start;
   gap: 5px;
-  padding: 6px;
-  font-size: 11px;
+  padding: 3px;
+  font-size: 9px;
   min-width: 0;
+  border-color: transparent;
+  background: transparent;
 }
 .suggestion-option[aria-pressed='true'] {
-  outline: 2px solid #5155d9;
+  outline: 2px solid var(--accent);
   outline-offset: 1px;
+  background: var(--accent-soft);
 }
 .suggestion-swatch {
-  height: 42px;
-  border: 1px solid #00000018;
+  height: 40px;
+  border: 1px solid var(--swatch-border);
   border-radius: 5px;
 }
 .suggestion-saved {
-  font-size: 10px;
+  font-size: 9px;
   overflow-wrap: anywhere;
 }

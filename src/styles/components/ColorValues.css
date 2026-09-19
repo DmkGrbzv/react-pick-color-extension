@@ -2,21 +2,23 @@
   margin: 0;
   font-size: 11px;
   overflow-wrap: anywhere;
+  display: grid;
+  gap: 5px;
 }
 .color-values > div {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  gap: 6px;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 8px;
 }
 .color-values dt {
-  color: #626b7d;
+  color: var(--text-muted);
+  font-weight: 400;
 }
 .color-values dd {
   margin: 0;
   font-variant-numeric: tabular-nums;
   user-select: all;
 }
-.color-values .primary-value {
+.color-values .primary-value dd {
   font-weight: 600;
-  font-size: 13px;
 }

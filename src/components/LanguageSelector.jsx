@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { languageLoadFailed, setLanguage } from '@/i18n/index.js';
 
-export default function LanguageSelector() {
+export default function LanguageSelector( { compact = false } ) {
   const { t, i18n } = useTranslation();
   const [saving, setSaving] = useState( false );
   const [error, setError] = useState(
@@ -27,13 +27,13 @@ export default function LanguageSelector() {
   return (
     <div className="language-control">
       <label className="language-label">
-        { t( 'language' ) }
+        <span className="sr-only">{ t( 'language' ) }</span>
         <select value={ i18n.resolvedLanguage } onChange={ change } disabled={ saving }>
           <option value="uk" lang="uk">
-            Українська
+            { compact ? 'UA' : 'Українська' }
           </option>
           <option value="en" lang="en">
-            English
+            { compact ? 'EN' : 'English' }
           </option>
         </select>
       </label>

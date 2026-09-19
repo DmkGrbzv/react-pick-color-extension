@@ -1,3 +1,7 @@
 .print-preview-button {
-  margin-bottom: 24px;
+  min-width: 0;
+}
+.print-preview-button button {
+  width: 100%;
+  font-size: 11px;
 }

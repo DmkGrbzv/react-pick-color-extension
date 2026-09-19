@@ -1,25 +1,22 @@
-.eyebrow {
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  font-weight: 700;
-  color: #656a80;
-  margin: 0 0 12px;
+.app-header h1 {
+  font-size: 23px;
+  overflow-wrap: anywhere;
 }
-
-h1 {
-  font-size: 27px;
-  line-height: 1.2;
-  margin: 0 0 12px;
-  letter-spacing: -0.03em;
-}
-
-.editor h1 {
-  font-size: 38px;
-}
-
 .intro {
-  color: #626b7d;
-  font-size: 14px;
-  margin: 0 0 24px;
-  max-width: 540px;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  color: var(--text-muted);
+  font-size: 11px;
+  margin: 3px 0 0;
+}
+.editor .app-brand-text {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.editor .intro {
+  margin: 0;
+  border-left: var(--control-border);
+  padding-left: 16px;
 }

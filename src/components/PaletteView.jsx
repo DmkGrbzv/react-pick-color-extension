@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { errorKey } from '@/errors.js';
 import { usePalette } from '@/usePalette.js';
 import PaletteItems from '@/components/PaletteItems.jsx';
-import LanguageSelector from '@/components/LanguageSelector.jsx';
+import AppFooter from '@/components/AppFooter.jsx';
 
 export default function PaletteView( { editor = false } ) {
   const { t } = useTranslation();
@@ -26,7 +26,6 @@ export default function PaletteView( { editor = false } ) {
 
   return (
     <main className={ editor ? 'app editor' : 'app panel' }>
-      <LanguageSelector />
       <PaletteHeader editor={ editor } palette={ palette } />
 
       { !editor && (
@@ -40,8 +39,13 @@ export default function PaletteView( { editor = false } ) {
         />
       ) }
 
-      <ColorFormatSelector { ...colorFormat } />
-      <PrintPreviewButton disabled={ !palette } />
+      <div className="palette-controls">
+        <ColorFormatSelector { ...colorFormat } />
+        <PrintPreviewButton disabled={ !palette } />
+        { colorFormat.format === 'cmyk' && (
+          <p className="hint color-format-warning">{ t( 'print.warning' ) }</p>
+        ) }
+      </div>
       { error ? (
         <div className="error" role="alert">
           <p>{ t( errorKey( error, ERROR_CODES.STORAGE_FAILURE ) ) }</p>
@@ -67,6 +71,7 @@ export default function PaletteView( { editor = false } ) {
           <p className={ notice.error ? 'error' : 'success' }>{ t( notice.key, notice.values ) }</p>
         ) }
       </div>
+      <AppFooter />
     </main>
   );
 }

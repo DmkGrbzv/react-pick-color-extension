@@ -1,4 +1,5 @@
 import '@/styles/components/PaletteToolbar.css';
+import Icon from '@/components/Icon.jsx';
 import { useTranslation } from 'react-i18next';
 
 export default function PaletteToolbar( {
@@ -19,6 +20,7 @@ export default function PaletteToolbar( {
         onClick={ onPick }
         disabled={ !palette || busy || !supported }
       >
+        <Icon name="eyedropper" />
         { t( busy ? 'busy' : 'pick' ) }
       </button>
       { !supported && (
@@ -28,6 +30,7 @@ export default function PaletteToolbar( {
       ) }
       <p className="hint">{ t( 'pickHint' ) }</p>
       <button type="button" className="secondary" onClick={ onOpenEditor } disabled={ opening }>
+        <Icon name="external" />
         { t( opening ? 'opening' : 'openEditor' ) }
       </button>
     </div>

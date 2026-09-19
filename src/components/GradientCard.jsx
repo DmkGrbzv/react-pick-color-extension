@@ -1,3 +1,4 @@
+import Icon from '@/components/Icon.jsx';
 import ColorValues from '@/components/ColorValues.jsx';
 import '@/styles/components/paletteCard.css';
 import '@/styles/components/GradientCard.css';
@@ -24,18 +25,28 @@ export default function GradientCard( { item, format = 'hex', onCopy, onRemove, 
         <p className="hint">{ t( 'gradient.directions.' + item.direction ) }</p>
         <div className="color-actions">
           <button type="button" onClick={ () => onCopy( gradientDeclaration( item ), true ) }>
+            <Icon name="copy" />
             { t( 'gradient.copyCss' ) }
-          </button>
-          <button type="button" disabled={ disabled } onClick={ () => onEdit( item ) }>
-            { t( 'gradient.edit' ) }
           </button>
           <button
             type="button"
-            className="delete"
+            className="icon-button"
+            title={ t( 'gradient.edit' ) }
+            aria-label={ t( 'gradient.edit' ) }
+            disabled={ disabled }
+            onClick={ () => onEdit( item ) }
+          >
+            <Icon name="edit" />
+          </button>
+          <button
+            type="button"
+            className="delete icon-button"
+            title={ t( 'remove' ) }
+            aria-label={ t( 'remove' ) }
             disabled={ disabled }
             onClick={ () => onRemove( item.id ) }
           >
-            { t( 'remove' ) }
+            <Icon name="trash" />
           </button>
         </div>
       </div>

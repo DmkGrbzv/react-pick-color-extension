@@ -1,0 +1,19 @@
+.theme-control {
+  position: relative;
+}
+.theme-toggle {
+  display: flex;
+  gap: 4px;
+}
+.theme-toggle button {
+  color: var(--text-muted);
+}
+.theme-toggle button[aria-pressed='true'] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.theme-control .error {
+  max-width: 180px;
+  margin-bottom: 0;
+}

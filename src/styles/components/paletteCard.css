@@ -1,42 +1,64 @@
 .color-card {
+  min-width: 0;
   overflow: hidden;
-  border: 1px solid #e0e4ec;
-  border-radius: 12px;
-  background: white;
+  padding: 10px;
+  border: var(--control-border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
-
 .swatch {
-  height: 88px;
-  border-bottom: 1px solid #0000000d;
+  min-height: 100px;
+  height: 100%;
+  border: 1px solid var(--swatch-border);
+  border-radius: 6px;
 }
-
 .editor .swatch {
-  height: 140px;
+  height: 130px;
 }
-
 .color-details {
-  padding: 12px;
+  min-width: 0;
+  padding: 12px 0 0;
 }
-
-code {
-  font-family: 'Cascadia Code', Consolas, monospace;
-  font-size: 15px;
-  font-weight: 600;
-  user-select: all;
-}
-
 .color-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  padding-top: 9px;
+  border-top: var(--control-border);
 }
-
 .color-actions button {
-  font-size: 12px;
-  flex: 1;
+  font-size: 11px;
+  min-width: 0;
+  padding: 7px 8px;
 }
-
+.color-actions .icon-button {
+  width: 32px;
+  min-height: 32px;
+}
 .delete {
-  color: #a6424d;
+  color: var(--danger);
+}
+.advisor-toggle[aria-expanded='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.color-card:has(.advisor-toggle[aria-expanded='true']) {
+  border-color: var(--accent);
+}
+@container (min-width: 340px) {
+  .panel .color-card:not(.gradient-card) {
+    display: grid;
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+  .panel .color-card:not(.gradient-card) .color-details {
+    padding: 2px 0 0;
+  }
+  .panel .color-card .color-advisor {
+    grid-column: 1 / -1;
+  }
 }

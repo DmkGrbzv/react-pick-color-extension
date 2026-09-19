@@ -1,16 +1,18 @@
 .toolbar {
-  margin-bottom: 28px;
+  margin-bottom: 16px;
 }
-
 .toolbar button {
   width: 100%;
+  min-height: 40px;
 }
-
-.secondary {
-  margin-top: 12px;
+.toolbar .primary {
+  padding: 11px;
 }
-
+.toolbar .secondary {
+  margin-top: 4px;
+  font-weight: 600;
+}
 .toolbar .hint {
   text-align: center;
-  margin: 8px 0;
+  margin: 6px 0 10px;
 }

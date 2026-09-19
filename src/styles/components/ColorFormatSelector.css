@@ -1,17 +1,22 @@
 .format-control {
-  margin-bottom: 16px;
+  min-width: 0;
 }
 .format-control label {
   display: grid;
-  grid-template-columns: auto minmax(80px, 1fr);
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-muted);
 }
 .format-control select {
-  font: inherit;
-  padding: 8px;
-  border: var(--control-border);
-  border-radius: var(--control-radius);
-  background: white;
+  width: 100%;
+  min-width: 0;
+  font-size: 12px;
+}
+.editor .format-control label {
+  grid-template-columns: auto minmax(75px, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+.format-control .error {
+  margin-bottom: 0;
 }

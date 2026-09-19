@@ -1,25 +1,63 @@
 .app {
-  padding: 24px 18px;
+  padding: 0 20px 12px;
   margin: 0 auto;
 }
-
 .panel {
   max-width: 560px;
+  container-type: inline-size;
 }
-
 .editor {
-  max-width: 1000px;
-  padding: 56px 32px;
+  max-width: 1120px;
+  padding: 0 32px 20px;
 }
-
+.palette-controls {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.9fr) minmax(0, 1.1fr);
+  align-items: start;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.color-format-warning {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.panel .print-preview-button {
+  padding-top: 24px;
+}
+.editor .palette-controls {
+  grid-template-columns: minmax(0, 260px) auto;
+  align-items: start;
+}
+.editor .print-preview-button {
+  justify-self: end;
+}
 .notice {
-  min-height: 48px;
-  font-size: 13px;
+  font-size: 12px;
   overflow-wrap: anywhere;
 }
-
-@media (max-width: 420px) {
+.notice:has(p) {
+  padding: 4px 0 12px;
+}
+.app-footer {
+  margin-top: 26px;
+}
+@media (max-width: 380px) {
+  .app {
+    padding-inline: 12px;
+  }
+  .panel .palette-controls {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .panel .print-preview-button {
+    padding-top: 0;
+  }
+}
+@media (max-width: 620px) {
   .editor {
-    padding: 24px 16px;
+    padding-inline: 16px;
+  }
+  .editor .palette-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }

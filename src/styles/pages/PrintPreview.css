@@ -1,19 +1,21 @@
 .print-preview {
-  padding: 24px;
+  padding: 0 24px 24px;
 }
 .print-screen-header {
-  max-width: 1000px;
+  max-width: 1060px;
   margin: auto;
 }
 @media (max-width: 620px) {
   .print-preview {
-    padding: 12px;
+    padding: 0 12px 12px;
   }
 }
 @media print {
   :root,
+  :root[data-theme='dark'],
   body {
     background: white;
+    color-scheme: light;
   }
   .print-preview {
     padding: 0;

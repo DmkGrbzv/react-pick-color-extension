@@ -1,3 +1,4 @@
+import { useNotice } from '@/hooks/useNotice.js';
 import { ERROR_CODES } from '@/constants/errorCodes.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -24,7 +25,7 @@ export function useGradientEditor( palette, editor ) {
     () => editor && Boolean( requestedGradient( palette.colors ) )
   );
   const [working, setWorking] = useState( false );
-  const [notice, setNotice] = useState( () =>
+  const [notice, setNotice] = useNotice( () =>
     editor &&
     new URLSearchParams( window.location.hash.slice( 1 ) ).has( 'gradient' ) &&
     !requestedGradient( palette.colors )
@@ -50,7 +51,7 @@ export function useGradientEditor( palette, editor ) {
       setNotice( null );
       container.current?.scrollIntoView( { block: 'start', behavior: 'smooth' } );
     },
-    [draft, expanded, t]
+    [draft, expanded, t, setNotice]
   );
 
   useEffect( () => {
@@ -64,7 +65,7 @@ export function useGradientEditor( palette, editor ) {
     };
     window.addEventListener( 'hashchange', requested );
     return () => window.removeEventListener( 'hashchange', requested );
-  }, [palette.colors, editor, edit] );
+  }, [palette.colors, editor, edit, setNotice] );
 
   async function pick( index ) {
     if ( operation.current ) return;

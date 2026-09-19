@@ -1,44 +1,38 @@
 .empty {
-  border: 1px dashed #cfd5e1;
-  border-radius: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
   padding: 32px 20px;
   text-align: center;
-  background: #ffffff80;
+  background: var(--surface-muted);
 }
-
 .empty h3 {
   font-size: 15px;
   margin: 16px 0 8px;
 }
-
 .empty p {
-  font-size: 13px;
-  color: #697388;
+  font-size: 12px;
+  color: var(--text-muted);
   max-width: 320px;
   margin: 0 auto;
 }
-
 .empty-colors {
   display: flex;
   justify-content: center;
 }
-
 .empty-colors i {
   display: block;
   width: 30px;
   height: 36px;
-  border: 2px solid white;
+  border: 2px solid var(--surface);
   border-radius: 7px;
   background: #c6caef;
   transform: rotate(-12deg);
 }
-
 .empty-colors i + i {
   background: #c0ddd3;
   transform: rotate(0deg);
   margin-left: -5px;
 }
-
 .empty-colors i:last-child {
   background: #efdbbd;
   transform: rotate(12deg);

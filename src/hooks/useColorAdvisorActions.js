@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useNotice } from '@/hooks/useNotice.js';
 import { addColor } from '@/api/paletteClient.js';
 import { colorValues } from '@/utils/colorConversion.js';
 import { errorKey } from '@/errors.js';
@@ -6,13 +7,8 @@ import { ERROR_CODES } from '@/constants/errorCodes.js';
 
 export function useColorAdvisorActions() {
   const [saving, setSaving] = useState( false );
-  const [notice, setNotice] = useState( null );
+  const [notice, setNotice] = useNotice();
   const savingRef = useRef( false );
-  useEffect( () => {
-    if ( !notice || notice.error ) return;
-    const timer = window.setTimeout( () => setNotice( null ), 3000 );
-    return () => window.clearTimeout( timer );
-  }, [notice] );
 
   async function add( hex ) {
     if ( savingRef.current ) return;

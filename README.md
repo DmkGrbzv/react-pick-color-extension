@@ -16,6 +16,27 @@ On Windows, use `npm.cmd` if PowerShell blocks `npm.ps1`.
 
 `npm run dev` serves `/sidepanel.html` and `/editor.html` for layout preview. Chrome storage and extension APIs only work inside the installed extension.
 
+## Extension size and ZIP packaging
+
+Only `dist/` is installed in Chrome. `node_modules/`, `src/`, `tests/`, the Git history,
+and development tools are not part of the extension. Keep them for development; do not
+include the project folder in a release archive.
+
+On Windows, run `npm run package` (or `npm.cmd run package` in PowerShell). This first builds
+a clean production `dist/`, then creates `release/color-palette-<manifest-version>.zip`
+using built-in Windows compression, with `manifest.json` at the ZIP root. It reports both
+the unpacked and ZIP sizes. No packaging dependency is added. Other platforms can ZIP the
+contents of `dist/` using their archive tool.
+
+The build target follows `minimum_chrome_version` from the manifest. Native module preload
+is retained; its compatibility polyfill is omitted because supported Chrome versions already
+implement it. Production minification and shared chunks remain enabled. Each build replaces
+old hashed assets, so `dist/` does not accumulate old bundles.
+
+`dist/` and `release/` are generated and ignored by Git. Rebuilding recreates `dist/`;
+do not delete it while using it as an unpacked extension. ZIP compression reduces the download
+size, not the extension's runtime memory. No features or React runtime are removed.
+
 ## Features
 
 - Pick a color anywhere on the screen with EyeDropper. Esc cancels without an error.
@@ -24,6 +45,23 @@ On Windows, use `npm.cmd` if PowerShell blocks `npm.ps1`.
 - Open the editor in a separate tab, or activate the existing editor in the same window. Each window may have its own editor.
 - Palette changes synchronize between the panel and editor.
 - `chrome.storage.local` stores the palette under `currentPalette`. It survives browser restarts; uninstalling the extension removes its data.
+
+## Appearance
+
+The shared header includes light and dark theme buttons on the panel, editor, and print preview.
+Light is the default; an explicit choice is saved under `chrome.storage.local.theme`.
+`ThemePreference` reads, saves, and subscribes to this one preference; `useTheme` handles UI feedback
+and rejects stale reads. It never writes palette data. The saved theme is applied before mounting
+the page, and open views follow `chrome.storage.onChanged`.
+
+Theme colors are semantic CSS variables in `styles/base.css`; component and page styles stay in
+their existing folders. Light uses an indigo accent, dark uses mint on graphite surfaces.
+The A4 document keeps its selected white/warm-white paper and dark text in both themes.
+Theme controls and the rest of the application UI are hidden when printing.
+
+To verify: switch the theme with all three pages open, reload them, and check that the setting
+persists. Check a narrow panel, the gradient builder, expanded color suggestions, and print preview.
+No new permissions, libraries, or palette schema changes are required.
 
 ## Global i18n
 
@@ -186,6 +224,7 @@ Use a class when several operations share an injected dependency or a lifecycle.
 | PaletteRepository     | read, write (2)                                    | Palette storage key, validation, and empty default.                                    |
 | PaletteService        | getPalette, addColor, saveGradient, removeItem (4) | Palette operations and their shared write queue; no Chrome tab or UI logic.            |
 | ColorFormatPreference | read, save, subscribe (3)                          | One persisted display preference; no palette mutation or message transport.            |
+| ThemePreference       | read, save, subscribe (3)                          | One persisted appearance preference; no palette mutation or DOM access.                |
 | LanguagePreference    | start, set, stop (3)                               | Language preference and its storage listener lifecycle.                                |
 | PaletteSubscription   | refresh, dispose (2)                               | Subscription lifetime and protection against stale reads.                              |
 | PanelController       | initialize, sync, forget (3)                       | Per-tab panel settings and cancellation; native Chrome visibility stays authoritative. |

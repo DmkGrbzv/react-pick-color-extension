@@ -1,3 +1,4 @@
+import Icon from '@/components/Icon.jsx';
 import '@/styles/components/PaletteItems.css';
 import { useTranslation } from 'react-i18next';
 import { createGradientDraft, updateGradientDraft } from '@/gradient.js';
@@ -44,6 +45,7 @@ export default function PaletteItems( {
                 setNotice( null );
               } }
             >
+              <Icon name="plus" />
               { t( 'gradient.create' ) }
             </button>
           ) }

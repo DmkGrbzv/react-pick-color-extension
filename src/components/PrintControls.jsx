@@ -1,11 +1,14 @@
+import Icon from '@/components/Icon.jsx';
 import { useTranslation } from 'react-i18next';
 import '@/styles/components/PrintControls.css';
 export default function PrintControls( { settings, onChange, disabled } ) {
   const { t } = useTranslation();
   return (
     <section className="print-controls" aria-label={ t( 'print.settings' ) }>
-      <h1>{ t( 'print.title' ) }</h1>
-      <p>A4</p>
+      <div className="print-controls-heading">
+        <h1>{ t( 'print.title' ) }</h1>
+        <span className="paper-badge">A4</span>
+      </div>
       <div className="print-settings-grid">
         { ['orientation', 'size', 'background'].map( ( key ) => (
           <label key={ key }>
@@ -40,11 +43,24 @@ export default function PrintControls( { settings, onChange, disabled } ) {
           ) ) }
         </fieldset>
       </div>
-      <p className="hint">{ t( 'print.warning' ) }</p>
-      <p className="hint">{ t( 'print.dialogHint' ) }</p>
-      <button type="button" className="primary" disabled={ disabled } onClick={ () => window.print() }>
-        { t( 'print.action' ) }
-      </button>
+      <div className="print-controls-footer">
+        <div>
+          <p className="hint">{ t( 'print.warning' ) }</p>
+          <details className="print-dialog-help">
+            <summary>{ t( 'print.dialogHelp' ) }</summary>
+            <p className="hint">{ t( 'print.dialogHint' ) }</p>
+          </details>
+        </div>
+        <button
+          type="button"
+          className="primary"
+          disabled={ disabled }
+          onClick={ () => window.print() }
+        >
+          <Icon name="print" />
+          { t( 'print.action' ) }
+        </button>
+      </div>
     </section>
   );
 }

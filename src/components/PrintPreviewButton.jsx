@@ -1,3 +1,4 @@
+import Icon from '@/components/Icon.jsx';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { openPrintPreview } from '@/api/printClient.js';
@@ -20,6 +21,7 @@ export default function PrintPreviewButton( { disabled } ) {
   return (
     <div className="print-preview-button">
       <button type="button" disabled={ disabled || busy } onClick={ open }>
+        <Icon name="print" />
         { t( 'print.open' ) }
       </button>
       { failed && (

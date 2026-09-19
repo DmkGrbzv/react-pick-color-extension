@@ -1,7 +1,7 @@
 .color-advisor {
   border-top: var(--control-border);
-  padding: 12px;
-  background: #f9faff;
+  padding: 14px 2px 2px;
+  margin-top: 12px;
   min-width: 0;
 }
 .advisor-heading {
@@ -15,47 +15,54 @@
   font-size: 14px;
 }
 .advisor-heading button {
-  font-size: 11px;
+  font-size: 10px;
+  padding: 4px;
+  min-height: 28px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+}
+.advisor-heading .icon {
+  width: 14px;
+  height: 14px;
 }
 .advisor-source {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-columns: 38px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   margin: 14px 0;
-  font-size: 12px;
+  font-size: 11px;
 }
 .advisor-source > span {
-  height: 42px;
+  height: 38px;
   border: var(--control-border);
-  border-radius: var(--control-radius);
+  border-radius: 5px;
 }
 .advisor-source code {
   display: block;
 }
 .advisor-category {
   display: grid;
-  gap: 6px;
-  font-size: 12px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
 }
 .advisor-category select {
   width: 100%;
   min-width: 0;
-  font: inherit;
-  padding: 8px;
-  border: var(--control-border);
-  border-radius: var(--control-radius);
-  background: white;
+  font-size: 11px;
 }
 .advisor-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100px, 100%), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(110px, 100%), 1fr));
   gap: 8px;
   margin-top: 12px;
 }
 .advisor-actions button {
   min-width: 0;
-  font-size: 12px;
+  font-size: 11px;
   overflow-wrap: anywhere;
 }
 .advisor-notice {
