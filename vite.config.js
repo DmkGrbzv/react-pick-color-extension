@@ -21,6 +21,7 @@ export default defineConfig( ( { mode } ) => ( {
         sidepanel: EXTENSION_PAGES.SIDE_PANEL,
         editor: EXTENSION_PAGES.EDITOR,
         print: EXTENSION_PAGES.PRINT,
+        library: EXTENSION_PAGES.LIBRARY,
         background: 'src/background.js',
       },
       output: {

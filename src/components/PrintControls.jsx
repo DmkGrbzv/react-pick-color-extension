@@ -6,7 +6,7 @@ export default function PrintControls( { settings, onChange, disabled } ) {
   return (
     <section className="print-controls" aria-label={ t( 'print.settings' ) }>
       <div className="print-controls-heading">
-        <h1>{ t( 'print.title' ) }</h1>
+        <h2>{ t( 'print.title' ) }</h2>
         <span className="paper-badge">A4</span>
       </div>
       <div className="print-settings-grid">

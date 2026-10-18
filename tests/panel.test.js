@@ -100,6 +100,16 @@ const editorUrl = 'chrome-extension://test/editor.html';
 const site = ( id, windowId = 1 ) => ( { id, windowId, url: 'https://example.com' } );
 const editor = ( id, windowId = 1 ) => ( { id, windowId, url: editorUrl } );
 
+test( 'saved palette library disables its own side panel and leaves website panels enabled', async () => {
+  const { panel, state } = setup( [site( 1 ), {
+    id: 2, windowId: 1, url: 'chrome-extension://test/library.html',
+  }] );
+  await panel.initialize();
+  assert.equal( state.options.get( 2 ).enabled, false );
+  assert.equal( state.actions.get( 2 ), false );
+  assert.equal( state.options.get( 1 ).enabled, true );
+} );
+
 test( 'startup configures tab-specific site panels and disables direct/restored editors', async () => {
   const { panel, state } = setup( [site( 1 ), editor( 2 ), site( 3, 2 ), editor( 4, 2 )] );
   await panel.initialize();
@@ -157,6 +167,23 @@ test( 'rapid editor requests share one creation and disable the panel before act
   } );
   assert.equal( state.actions.get( 100 ), false );
   assert.equal( state.options.get( 1 ).enabled, true );
+} );
+
+test( 'opening full view carries the active section and reuses legacy app tabs through a fragment only', async () => {
+  const legacy = 'chrome-extension://test/library.html?restored=1';
+  const { api, state, panel } = setup( [site( 1 ), { id: 2, windowId: 1, url: legacy }] );
+  const open = createOpenEditor( api, panel );
+  assert.equal( await open( 1, undefined, 'print' ), 2 );
+  const target = new URL( state.tabs.find( ( tab ) => tab.id === 2 ).url );
+  assert.equal( target.href.split( '#' )[0], legacy );
+  assert.equal( new URLSearchParams( target.hash.slice( 1 ) ).get( 'view' ), 'print' );
+  assert.equal( state.calls.some( ( [name] ) => name === 'create' ), false );
+  await assert.rejects( open( 1, undefined, 'unknown' ), /Unknown app view/ );
+  const fresh = setup( [site( 1 )] );
+  const id = await createOpenEditor( fresh.api, fresh.panel )( 1, undefined, 'library' );
+  const created = new URL( fresh.state.tabs.find( ( tab ) => tab.id === id ).url );
+  assert.equal( created.pathname, '/editor.html' );
+  assert.equal( new URLSearchParams( created.hash.slice( 1 ) ).get( 'view' ), 'library' );
 } );
 
 test( 'each window reuses its own editor; requests in different windows do not share a lock', async () => {

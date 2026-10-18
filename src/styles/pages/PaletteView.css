@@ -21,15 +21,9 @@
   grid-column: 1 / -1;
   margin: 0;
 }
-.panel .print-preview-button {
-  padding-top: 24px;
-}
 .editor .palette-controls {
-  grid-template-columns: minmax(0, 260px) auto;
+  grid-template-columns: minmax(0, 260px);
   align-items: start;
-}
-.editor .print-preview-button {
-  justify-self: end;
 }
 .notice {
   font-size: 12px;
@@ -49,15 +43,12 @@
     grid-template-columns: 1fr;
     gap: 8px;
   }
-  .panel .print-preview-button {
-    padding-top: 0;
-  }
 }
 @media (max-width: 620px) {
   .editor {
     padding-inline: 16px;
   }
   .editor .palette-controls {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 260px);
   }
 }

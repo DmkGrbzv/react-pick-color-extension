@@ -1,0 +1,83 @@
+.cloud-palettes {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.cloud-palettes h2,
+.cloud-palettes h3,
+.cloud-palettes p {
+  margin: 0;
+}
+.cloud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.cloud-actions span {
+  overflow-wrap: anywhere;
+}
+.cloud-actions .cloud-delete {
+  color: var(--danger);
+}
+.cloud-library {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.cloud-library > li,
+.cloud-confirm,
+.cloud-details {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.cloud-preview {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  height: 40px;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.cloud-extra {
+  display: grid;
+  place-items: center;
+  background: var(--surface-muted);
+}
+.cloud-details form,
+.cloud-details label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.cloud-details input {
+  width: 100%;
+}
+.cloud-detail-items {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.cloud-detail-items li {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+.cloud-detail-items code {
+  overflow-wrap: anywhere;
+}

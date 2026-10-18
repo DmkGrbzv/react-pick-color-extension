@@ -8,7 +8,8 @@ export class PanelController {
   #pendingTabs = new Map();
   constructor( api ) {
     this.#api = api;
-    this.#disabledUrls = [EXTENSION_PAGES.EDITOR, EXTENSION_PAGES.PRINT].map( ( page ) => api.runtime.getURL( page ) );
+    this.#disabledUrls = [EXTENSION_PAGES.EDITOR, EXTENSION_PAGES.PRINT, EXTENSION_PAGES.LIBRARY]
+      .map( ( page ) => api.runtime.getURL( page ) );
   }
 
   async #configureTab( tabId, tabState, previousOperation ) {

@@ -23,7 +23,8 @@ export async function dispatchMessage( { paletteService, openEditor, cloud }, me
     case findCorrectMessageType( SAVE_GRADIENT ):
       return paletteService.saveGradient( message.gradient );
     case findCorrectMessageType( OPEN_EDITOR ):
-      return openEditor( sender.tab?.windowId ?? message.windowId, message.gradientId );
+      return openEditor( sender.tab?.windowId ?? message.windowId, message.gradientId,
+        ...( message.view === undefined ? [] : [message.view] ) );
     default:
       throw new AppError( ERROR_CODES.UNKNOWN_OPERATION );
   }

@@ -19,4 +19,5 @@ export class PaletteRepository {
   write( palette ) {
     return this.#storage.set( PALETTE_KEY, palette );
   }
+
 }

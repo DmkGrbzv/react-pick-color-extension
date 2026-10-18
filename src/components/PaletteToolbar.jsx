@@ -6,9 +6,7 @@ export default function PaletteToolbar( {
   palette,
   busy,
   supported,
-  opening,
   onPick,
-  onOpenEditor,
 } ) {
   const { t } = useTranslation();
 
@@ -29,10 +27,6 @@ export default function PaletteToolbar( {
         </p>
       ) }
       <p className="hint">{ t( 'pickHint' ) }</p>
-      <button type="button" className="secondary" onClick={ onOpenEditor } disabled={ opening }>
-        <Icon name="external" />
-        { t( opening ? 'opening' : 'openEditor' ) }
-      </button>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
 } from '@/gradient.js';
 import { saveGradient } from '@/api/paletteClient.js';
 import { errorKey } from '@/errors.js';
+import { clearGradientRequest } from '@/navigation/appRoutes.js';
 
 function requestedGradient( items ) {
   const id = new URLSearchParams( window.location.hash.slice( 1 ) ).get( 'gradient' );
@@ -94,7 +95,7 @@ export function useGradientEditor( palette, editor ) {
       setDraft( createGradientDraft() );
       setNotice( { key: 'gradient.saved' } );
       // Keep the builder open in create mode.
-      window.history.replaceState( null, '', window.location.pathname + window.location.search );
+      clearGradientRequest();
     } catch ( error ) {
       setNotice( { error: true, key: errorKey( error, ERROR_CODES.GRADIENT_SAVE ) } );
     } finally {
@@ -107,7 +108,7 @@ export function useGradientEditor( palette, editor ) {
     setDraft( createGradientDraft() );
     setExpanded( false );
     setNotice( null );
-    window.history.replaceState( null, '', window.location.pathname + window.location.search );
+    clearGradientRequest();
   }
 
   return {
