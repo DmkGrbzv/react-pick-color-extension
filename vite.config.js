@@ -1,11 +1,13 @@
 import manifest from './public/manifest.json' with { type: 'json' };
 import { EXTENSION_PAGES } from './src/constants/extensionPages.js';
 import { fileURLToPath, URL } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
+import { cloudManifest, cloudManifestPlugin } from './scripts/cloudManifest.js';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig( {
-  plugins: [react()],
+export default defineConfig( ( { mode } ) => ( {
+  plugins: [react(), cloudManifestPlugin( cloudManifest( manifest,
+    loadEnv( mode, '.', 'VITE_' ).VITE_PALETTE_API_URL || '' ) )],
   resolve: { alias: { '@': fileURLToPath( new URL( './src', import.meta.url ) ) } },
   base: './',
   build: {
@@ -27,4 +29,4 @@ export default defineConfig( {
       },
     },
   },
-} );
+} ) );

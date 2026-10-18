@@ -8,9 +8,11 @@ import {
   findCorrectMessageType,
 } from '@/messageTypes.js';
 import { AppError } from '@/errors.js';
+import { dispatchCloudMessage } from '@/runtime/dispatchCloudMessage.js';
 
 // Translate transport commands into application operations. No state or persistence here.
-export async function dispatchMessage( { paletteService, openEditor }, message, sender = {} ) {
+export async function dispatchMessage( { paletteService, openEditor, cloud }, message, sender = {} ) {
+  if ( message?.type?.startsWith( 'cloud:' ) ) return dispatchCloudMessage( cloud, message );
   switch ( message?.type ) {
     case findCorrectMessageType( GET_PALETTE ):
       return paletteService.getPalette();

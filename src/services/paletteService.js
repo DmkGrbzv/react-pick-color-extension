@@ -1,6 +1,8 @@
 import { ERROR_CODES } from '@/constants/errorCodes.js';
 import { AppError } from '@/errors.js';
 import { normalizeGradient } from '@/gradient.js';
+import { isPalette } from '@/types.js';
+import { paletteVersion, snapshotSignature } from '@/cloud/snapshot.js';
 
 // Only recover the previous request; failures in this task reach its caller.
 async function runPaletteTask( previousOperation, task ) {
@@ -37,6 +39,32 @@ export class PaletteService {
 
   getPalette() {
     return this.#enqueue( () => this.#repository.read() );
+  }
+
+  markCloudSource( source, commit ) {
+    return this.#enqueue( async () => {
+      const current = await this.#repository.read();
+      if ( !current.colors.length || snapshotSignature( current ) !== source.signature ) return;
+      await commit( () => this.#repository.write( { ...current, cloudSource: source } ) );
+    } );
+  }
+
+  clearCloudSource( id, ownerId ) {
+    return this.#update( ( palette ) => {
+      if ( palette.cloudSource?.id !== id || palette.cloudSource.ownerId !== ownerId ) return palette;
+      const { cloudSource: _source, ...working } = palette;
+      return working;
+    } );
+  }
+
+  replacePalette( replacement, expectedVersion, commit ) {
+    return this.#enqueue( async () => {
+      if ( !isPalette( replacement ) ) throw new AppError( ERROR_CODES.INVALID_PALETTE );
+      const current = await this.#repository.read();
+      if ( paletteVersion( current ) !== expectedVersion ) throw new AppError( 'paletteChanged' );
+      await commit( () => this.#repository.write( replacement ) );
+      return replacement;
+    } );
   }
 
   addColor( value ) {

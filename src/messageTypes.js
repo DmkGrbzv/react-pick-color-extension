@@ -20,5 +20,10 @@ export function findCorrectMessageType( key ) {
 }
 
 export function isMessageType( type ) {
-  return MESSAGE_TYPES.some( ( entry ) => entry.type === type );
+  return MESSAGE_TYPES.some( ( entry ) => entry.type === type ) || CLOUD_MESSAGE_TYPES.includes( type );
 }
+
+export const CLOUD_MESSAGE_TYPES = Object.freeze( [
+  'cloud:state', 'cloud:signIn', 'cloud:logout', 'cloud:prepare', 'cloud:cancelSave',
+  'cloud:save', 'cloud:nameSave', 'cloud:list', 'cloud:get', 'cloud:open', 'cloud:rename', 'cloud:remove',
+] );
