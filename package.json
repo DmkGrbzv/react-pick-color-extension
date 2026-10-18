@@ -9,7 +9,8 @@
     "package": "npm run build && node scripts/packageExtension.js",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --import ./tests/registerAliases.js --test",
+    "test": "node --import ./tests/registerAliases.js --test tests/*.test.js",
+    "backend:test": "npm --prefix backend test",
     "format": "prettier --write . && eslint . --fix",
     "format:check": "prettier --check . && eslint .",
     "lint:fix": "eslint . --fix"

@@ -12,6 +12,15 @@ dist
 dist-ssr
 release/
 *.local
+.env
+.env.*
+!.env.example
+
+# Local agent instructions
+/AGENTS.md
+
+# Local documentation
+/backend-sync-flow.md
 
 # Editor directories and files
 .vscode/*
