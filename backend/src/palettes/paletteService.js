@@ -1,7 +1,7 @@
 import { ApiError } from '../http/apiError.js';
 import { decodeCursor, normalizeSnapshot, paletteName, publicPalette, saveKey, snapshotHash } from './paletteValidation.js';
 
-export class CloudPaletteService {
+export class SavedPaletteService {
   #repository;
   #config;
   constructor( { repository, config } ) {

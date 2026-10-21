@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createOpenEditor } from '@/openEditorTab.js';
-import { PanelController, registerPanelEvents } from '@/panelController.js';
-import { PaletteSubscription } from '@/paletteSubscription.js';
+import { createOpenEditor } from '@/extension/openEditorTab.js';
+import { PanelController, registerPanelEvents } from '@/extension/panelController.js';
+import { PaletteSubscription } from '@/features/palette/models/paletteSubscription.js';
 
 function event() {
   const listeners = [];

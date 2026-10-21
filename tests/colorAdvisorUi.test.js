@@ -113,14 +113,14 @@ test( 'advisor previews without writes, adds explicitly, rejects duplicates and 
       server: { middlewareMode: true, hmr: false, ws: false, watch: null },
       appType: 'custom',
     } );
-    const { default: PaletteView } = await server.ssrLoadModule( '/src/components/PaletteView.jsx' );
+    const { default: App } = await server.ssrLoadModule( '/src/App.jsx' );
     const { languageReady } = await server.ssrLoadModule( '/src/i18n/index.js' );
     await languageReady;
     for ( const editor of [false, true] ) {
       stored.currentPalette = structuredClone( initial );
       writes = 0;
       root = createRoot( document.getElementById( 'root' ) );
-      await act( async () => root.render( createElement( PaletteView, { editor } ) ) );
+      await act( async () => root.render( createElement( App, { panel: !editor } ) ) );
       assert.equal(
         document.querySelectorAll( '.advisor-toggle' ).length,
         3,

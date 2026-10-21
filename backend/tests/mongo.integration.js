@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { MongoClient } from 'mongodb';
 import { createIndexes } from '../src/database/indexes.js';
 import { CloudPaletteRepository } from '../src/palettes/paletteRepository.js';
-import { CloudPaletteService } from '../src/palettes/paletteService.js';
+import { SavedPaletteService } from '../src/palettes/paletteService.js';
 
 // Explicit opt-in URI. Every test uses and drops only its own generated database.
 test( 'MongoDB enforces concurrent save uniqueness, ownership, quota and cursor pagination', async () => {
@@ -16,7 +16,7 @@ test( 'MongoDB enforces concurrent save uniqueness, ownership, quota and cursor 
   try {
     await createIndexes( db );
     await db.collection( 'users' ).insertOne( { _id: 'A', paletteCount: 0 } );
-    const service = new CloudPaletteService( {
+    const service = new SavedPaletteService( {
       repository: new CloudPaletteRepository( { db, client } ), config: { maxItems: 256, maxPalettes: 3 },
     } );
     const snapshot = { items: [{ type: 'color', hex: '#AABBCC' }] };

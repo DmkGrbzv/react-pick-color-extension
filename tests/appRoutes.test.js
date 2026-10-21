@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { appViewHash, readAppView } from '@/navigation/appRoutes.js';
+import { appViewHash, readAppView } from '@/routes/appRoutes.js';
 
 test( 'direct links select app screens while legacy entries and gradient links retain their meaning', () => {
   for ( const view of ['working', 'library', 'print'] ) {

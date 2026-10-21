@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BrowserSignIn } from '@/cloud/browserSignIn.js';
+import { BrowserSignIn } from '@/features/auth/services/browserSignIn.js';
 
 function fixture( { failure, browserError } ) {
   const redirect = 'https://extension.example.test/oauth';

@@ -10,7 +10,7 @@
     "failed": "Could not open this action. Your working palette is safe. Try again.",
     "accountFailed": "The account action could not be completed. Please try again from Account."
   },
-  "cloud": {
+  "library": {
     "title": "My saved palettes",
     "openLibrary": "Open saved palettes",
     "libraryPageTitle": "Palettes and account",
@@ -29,14 +29,14 @@
     "confirmTitle": "Palette ready to save",
     "confirmHint": "Confirm saving this snapshot, including gradients. Later local changes are not included.",
     "loginBeforeSave": "Sign in first, then confirm saving this snapshot. Signing in alone does not save it.",
-    "confirm": "Confirm cloud save",
+    "confirm": "Confirm save",
     "cancel": "Cancel save",
     "count": "Items: {{count}}",
     "details": "Details",
     "name": "Palette name",
     "rename": "Save name",
     "delete": "Delete palette",
-    "deleteConfirm": "Delete saved palette “{{name}}” from your cloud library? This cannot be undone. Your working palette will stay on this device.",
+    "deleteConfirm": "Delete saved palette “{{name}}” from your library library? This cannot be undone. Your working palette will stay on this device.",
     "deleted": "Saved palette deleted. Your working palette is unchanged.",
     "deleting": "Deleting saved palette…",
     "open": "Open as working palette",
@@ -47,7 +47,7 @@
     "unnamed": "Untitled palette",
     "loading": "Loading saved palettes…",
     "more": "Load more",
-    "saved": "Snapshot saved in the cloud. Your working palette is unchanged.",
+    "saved": "Snapshot saved to your account. Your working palette is unchanged.",
     "opened": "Palette opened on this device.",
     "signingIn": "Signing in…",
     "signingOut": "Signing out…",
@@ -72,8 +72,8 @@
       "sessionChanged": "The account changed. Please review the action and try again.",
       "rateLimited": "Too many requests. Please wait a minute and try again.",
       "invalidPalette": "The palette is invalid or exceeds 256 items.",
-      "cloudBusy": "Another cloud operation is running. Please wait.",
-      "cloudFailed": "Could not confirm the cloud operation. Your local palette is unchanged. Retry a pending save with the same snapshot. If signing out, server revocation was not confirmed."
+      "cloudBusy": "Another library operation is running. Please wait.",
+      "cloudFailed": "Could not confirm the library operation. Your local palette is unchanged. Retry a pending save with the same snapshot. If signing out, server revocation was not confirmed."
     }
   },
   "theme": {

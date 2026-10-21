@@ -2,11 +2,11 @@ import manifest from './public/manifest.json' with { type: 'json' };
 import { EXTENSION_PAGES } from './src/constants/extensionPages.js';
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
-import { cloudManifest, cloudManifestPlugin } from './scripts/cloudManifest.js';
+import { apiManifest, apiManifestPlugin } from './scripts/apiManifest.js';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig( ( { mode } ) => ( {
-  plugins: [react(), cloudManifestPlugin( cloudManifest( manifest,
+  plugins: [react(), apiManifestPlugin( apiManifest( manifest,
     loadEnv( mode, '.', 'VITE_' ).VITE_PALETTE_API_URL || '' ) )],
   resolve: { alias: { '@': fileURLToPath( new URL( './src', import.meta.url ) ) } },
   base: './',
@@ -22,7 +22,7 @@ export default defineConfig( ( { mode } ) => ( {
         editor: EXTENSION_PAGES.EDITOR,
         print: EXTENSION_PAGES.PRINT,
         library: EXTENSION_PAGES.LIBRARY,
-        background: 'src/background.js',
+        background: 'src/extension/background.js',
       },
       output: {
         entryFileNames: ( chunk ) =>

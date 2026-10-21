@@ -56,7 +56,7 @@ test( 'theme controls synchronize, reject stale reads, report failed saves, and 
       server: { middlewareMode: true, hmr: false, ws: false, watch: null },
       appType: 'custom',
     } );
-    const { default: ThemeToggle } = await server.ssrLoadModule( '/src/components/ThemeToggle.jsx' );
+    const { default: ThemeToggle } = await server.ssrLoadModule( '/src/features/preferences/components/ThemeToggle.jsx' );
     const { languageReady } = await server.ssrLoadModule( '/src/i18n/index.js' );
     await languageReady;
     const initialListenerCount = listeners.size;

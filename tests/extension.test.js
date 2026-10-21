@@ -1,9 +1,9 @@
-import { GET_PALETTE, ADD_COLOR, REMOVE_COLOR, findCorrectMessageType } from '@/messageTypes.js';
+import { GET_PALETTE, ADD_COLOR, REMOVE_COLOR, findCorrectMessageType } from '@/extension/messaging/messageTypes.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createPaletteExecutor } from './helpers/palette.js';
-import { subscribeToPalette } from '@/api/paletteClient.js';
-import { PALETTE_KEY } from '@/types.js';
+import { subscribeToPalette } from '@/extension/clients/paletteClient.js';
+import { PALETTE_KEY } from '@/types/palette.js';
 
 function createStorage() {
   let data = {};

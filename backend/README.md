@@ -9,7 +9,7 @@ Nothing in this directory is imported into the extension or packaged in its ZIP.
 - `auth/OidcProvider`: injected OIDC adapter using `openid-client`; the issuer is
   deployment configuration. Google is the first configured provider. Browser
   accounts are not automatically identity providers.
-- `palettes/CloudPaletteService`: snapshot validation, ownership and save rules.
+- `palettes/SavedPaletteService`: snapshot validation, ownership and save rules.
 - Repositories: MongoDB persistence, atomic exchange and transactional quotas.
 - `http`: request IDs, CORS, shared MongoDB rate limits and sanitized errors.
 
@@ -133,12 +133,12 @@ checks actual indexes, transactions, concurrent quota and pagination.
 Deploy this directory as its own service: build `npm ci --omit=dev`, start
 `node src/server.js`, health endpoint `/health`. With Docker, build from `backend/`
 and inject secrets at runtime. `npm start` is for local use with a `.env` file.
-No live deployment, Google credentials or cloud database are supplied by this repo.
+No live deployment, Google credentials or database instance are supplied by this repo.
 Real Google/Chrome login, backup restore and deployment still require acceptance
 checks against the configured services. Firefox/Opera packaging is not implemented.
 
 Validation on 2026-10-14: 79 extension tests and 20 backend tests passed, along
-with root lint/format checks and local/cloud extension builds. The backend npm
+with root lint/format checks and local/API-enabled extension builds. The backend npm
 audit reported zero vulnerabilities. Generated `dist/` and the extension ZIP
 were checked for backend/environment files. The MongoDB integration test was
 attempted but could not connect to `127.0.0.1:27017` (`ECONNREFUSED`); its database

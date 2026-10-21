@@ -1,0 +1,128 @@
+import { useNotice } from '@/hooks/useNotice.js';
+import { ERROR_CODES } from '@/constants/errorCodes.js';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  createGradientDraft,
+  draftDirty,
+  gradientFromDraft,
+  updateGradientDraft,
+} from '@/utils/gradient.js';
+import { saveGradient } from '@/extension/clients/paletteClient.js';
+import { errorKey } from '@/utils/errors.js';
+import { clearGradientRequest } from '@/routes/appRoutes.js';
+
+function requestedGradient( items ) {
+  const id = new URLSearchParams( window.location.hash.slice( 1 ) ).get( 'gradient' );
+  return items.find( ( item ) => item.type === 'gradient' && item.id === id );
+}
+
+export function useGradientEditor( palette, editor ) {
+  const { t } = useTranslation();
+  const [draft, setDraft] = useState( () =>
+    createGradientDraft( editor ? requestedGradient( palette.colors ) : undefined )
+  );
+  const [expanded, setExpanded] = useState(
+    () => editor && Boolean( requestedGradient( palette.colors ) )
+  );
+  const [working, setWorking] = useState( false );
+  const [notice, setNotice] = useNotice( () =>
+    editor &&
+    new URLSearchParams( window.location.hash.slice( 1 ) ).has( 'gradient' ) &&
+    !requestedGradient( palette.colors )
+      ? { error: true, key: errorKey( null, ERROR_CODES.GRADIENT_MISSING ) }
+      : null
+  );
+  const operation = useRef( false );
+  const container = useRef( null );
+
+  const edit = useCallback(
+    ( item ) => {
+      if ( operation.current ) {
+        setNotice( { error: true, key: 'gradient.wait' } );
+        return;
+      }
+      if ( expanded && draft.id === item.id ) {
+        container.current?.scrollIntoView( { block: 'start', behavior: 'smooth' } );
+        return;
+      }
+      if ( expanded && draftDirty( draft ) && !window.confirm( t( 'gradient.discard' ) ) ) return;
+      setDraft( createGradientDraft( item ) );
+      setExpanded( true );
+      setNotice( null );
+      container.current?.scrollIntoView( { block: 'start', behavior: 'smooth' } );
+    },
+    [draft, expanded, t, setNotice]
+  );
+
+  useEffect( () => {
+    if ( !editor ) return;
+    const requested = () => {
+      const item = requestedGradient( palette.colors );
+      if ( item ) edit( item );
+      else if ( new URLSearchParams( window.location.hash.slice( 1 ) ).has( 'gradient' ) ) {
+        setNotice( { error: true, key: errorKey( null, ERROR_CODES.GRADIENT_MISSING ) } );
+      }
+    };
+    window.addEventListener( 'hashchange', requested );
+    return () => window.removeEventListener( 'hashchange', requested );
+  }, [palette.colors, editor, edit, setNotice] );
+
+  async function pick( index ) {
+    if ( operation.current ) return;
+    operation.current = true;
+    setWorking( true );
+    setNotice( null );
+    try {
+      const { sRGBHex } = await new window.EyeDropper().open();
+      setDraft( ( value ) => updateGradientDraft( value, { type: 'hex', index, value: sRGBHex } ) );
+    } catch ( error ) {
+      if ( error.name !== 'AbortError' )
+        setNotice( { error: true, key: errorKey( null, ERROR_CODES.PICK_FAILED ) } );
+    } finally {
+      operation.current = false;
+      setWorking( false );
+    }
+  }
+
+  async function save() {
+    if ( operation.current ) return;
+    operation.current = true;
+    setWorking( true );
+    setNotice( null );
+    try {
+      await saveGradient( gradientFromDraft( draft ) );
+      setDraft( createGradientDraft() );
+      setNotice( { key: 'gradient.saved' } );
+      // Keep the builder open in create mode.
+      clearGradientRequest();
+    } catch ( error ) {
+      setNotice( { error: true, key: errorKey( error, ERROR_CODES.GRADIENT_SAVE ) } );
+    } finally {
+      operation.current = false;
+      setWorking( false );
+    }
+  }
+
+  function cancel() {
+    setDraft( createGradientDraft() );
+    setExpanded( false );
+    setNotice( null );
+    clearGradientRequest();
+  }
+
+  return {
+    draft,
+    setDraft,
+    expanded,
+    setExpanded,
+    working,
+    notice,
+    setNotice,
+    container,
+    edit,
+    pick,
+    save,
+    cancel,
+  };
+}

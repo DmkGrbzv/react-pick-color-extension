@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createColorSuggestions } from '@/utils/colorSuggestions.js';
+import { createColorSuggestions } from '@/features/color-advisor/utils/colorSuggestions.js';
 import { hexToRgb } from '@/utils/colorConversion.js';
 
 test( 'hue combinations are deterministic and match primary-color rotations', () => {

@@ -4,7 +4,7 @@ import {
   REMOVE_COLOR,
   SAVE_GRADIENT,
   findCorrectMessageType,
-} from '@/messageTypes.js';
+} from '@/extension/messaging/messageTypes.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -17,9 +17,9 @@ import {
   gradientFromDraft,
   draftErrors,
   draftDirty,
-} from '@/gradient.js';
+} from '@/utils/gradient.js';
 import { createPaletteExecutor } from './helpers/palette.js';
-import { isPalette } from '@/types.js';
+import { isPalette } from '@/types/palette.js';
 
 function gradient( direction = 'right', first = 0, second = 100 ) {
   return {

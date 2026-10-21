@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { StorageAdapter } from '@/storage.js';
-import { PaletteRepository } from '@/services/paletteRepository.js';
-import { PaletteService } from '@/services/paletteService.js';
-import { createListener } from '@/runtime/createListener.js';
-import { dispatchMessage } from '@/runtime/dispatchMessage.js';
-import { sendRequest } from '@/runtime/sendRequest.js';
-import { subscribeToPalette } from '@/api/paletteClient.js';
-import { AppError } from '@/errors.js';
-import { GET_PALETTE, OPEN_EDITOR, findCorrectMessageType } from '@/messageTypes.js';
+import { StorageAdapter } from '@/services/storage.js';
+import { PaletteRepository } from '@/features/palette/services/paletteRepository.js';
+import { PaletteService } from '@/features/palette/services/paletteService.js';
+import { createListener } from '@/extension/messaging/createListener.js';
+import { dispatchMessage } from '@/extension/messaging/dispatchMessage.js';
+import { sendRequest } from '@/extension/messaging/sendRequest.js';
+import { subscribeToPalette } from '@/extension/clients/paletteClient.js';
+import { AppError } from '@/utils/errors.js';
+import { GET_PALETTE, OPEN_EDITOR, findCorrectMessageType } from '@/extension/messaging/messageTypes.js';
 
 test( 'storage and service propagate the original read/write failure and the queue recovers', async () => {
   const failure = new Error( 'Disk unavailable' );

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ThemePreference } from '@/preferences/themePreference.js';
+import { ThemePreference } from '@/features/preferences/services/themePreference.js';
 import { THEMES } from '@/constants/themes.js';
 
 function fakeStorage( initial = {} ) {

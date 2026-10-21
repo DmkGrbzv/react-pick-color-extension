@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { hexToRgb, rgbToCmyk, colorValues } from '@/utils/colorConversion.js';
-import { DEFAULT_PRINT_SETTINGS, paginateItems, printLayout } from '@/utils/printLayout.js';
-import { ColorFormatPreference } from '@/preferences/colorFormatPreference.js';
-import { PanelController } from '@/panelController.js';
+import { DEFAULT_PRINT_SETTINGS, paginateItems, printLayout } from '@/features/printing/utils/printLayout.js';
+import { ColorFormatPreference } from '@/features/preferences/services/colorFormatPreference.js';
+import { PanelController } from '@/extension/panelController.js';
 
 test( 'color conversion handles black, white, primaries, shorthand and supplied sample', () => {
   assert.deepEqual( hexToRgb( '#cfa5b4' ), { red: 207, green: 165, blue: 180 } );

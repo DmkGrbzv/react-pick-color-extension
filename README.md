@@ -1,6 +1,6 @@
 # Color Palette
 
-A Manifest V3 Chrome extension built with React 19 and Vite 8. The side panel and full tab share a single-page React interface for the working palette, saved palettes, and print preview. Local color and gradient tools work without an account or server; Google sign-in and cloud storage use the optional Node.js/MongoDB backend.
+A Manifest V3 Chrome extension built with React 19 and Vite 8. The side panel and full tab share a single-page React interface for the working palette, saved palettes, and print preview. Local color and gradient tools work without an account or server; Google sign-in and saved palettes use the optional Node.js/MongoDB backend.
 
 ## Run
 
@@ -49,8 +49,8 @@ size, not the extension's runtime memory. No features or React runtime are remov
 
 ## SPA navigation and state
 
-`PaletteApp` owns the shared header, menu, footer, working-palette subscription,
-and account/library model. WorkingPalette, CloudPalettes, and PrintWorkspace are
+`App` owns the shared header, menu, footer, working-palette subscription,
+and account/library model. WorkingPalettePage, SavedPalettesPage, and PrintPage are
 content screens inside that shell. Navigation changes the URL fragment and the
 visible React screen, without replacing the document or restarting the app:
 
@@ -90,8 +90,8 @@ Light is the default; an explicit choice is saved under `chrome.storage.local.th
 and rejects stale reads. It never writes palette data. The saved theme is applied before mounting
 the page, and open views follow `chrome.storage.onChanged`.
 
-Theme colors are semantic CSS variables in `styles/base.css`; component and page styles stay in
-their existing folders. Light uses an indigo accent, dark uses mint on graphite surfaces.
+Theme colors are semantic CSS variables in `styles/base.css`; component and page styles live beside
+their owning JSX files. Light uses an indigo accent, dark uses mint on graphite surfaces.
 The A4 document keeps its selected white/warm-white paper and dark text in both themes.
 Theme controls and the rest of the application UI are hidden when printing.
 
@@ -115,32 +115,82 @@ Only Ukrainian (`uk`) and English (`en`) are supported, using `i18next` and `rea
 
 ## Structure
 
-- `sidepanel.html` → `src/sidepanel.jsx`: panel entry point.
-- `editor.html` → `src/editor.jsx`: editor entry point.
-- `library.html` / `print.html`: compatible entry points that select an initial SPA screen.
-- `src/components/PaletteApp.jsx`: persistent shell, route selection, and shared palette/account state.
-- `src/components/AppNavigation.jsx`: screen links, explicit full-view action, Save, and Account menu.
-- `src/components/WorkingPalette.jsx`, `CloudPalettes.jsx`, `PrintWorkspace.jsx`: screen content.
-- `src/navigation/appRoutes.js` and `src/hooks/useAppRoute.js`: fragment routes, history, and gradient-link compatibility.
-- `src/cloud/` and `src/hooks/useCloudLibrary.js`: cloud transport/session services and the shared UI model, including activation of library loading.
-- `src/components/`: page sections, palette cards, and gradient form controls, with styles imported through the `@` alias.
-- `src/hooks/`: palette actions and gradient draft state, including existing save, cancel, and hash navigation behavior.
-- `src/styles/base.css`: global defaults.
-- `src/styles/components/`: component styles and shared palette-card styles.
-- `src/styles/pages/`: page layout styles.
-- `@/` resolves to `src/` in Vite, editor tooling, and the Node test runner.
-- `src/types.js`: shared JSDoc data types.
-- `src/storage.js`: Chrome storage adapter (get, set, subscribe).
-- `src/services/`: palette repository and a single palette service for serialized item operations.
-- `src/runtime/`: message routing, worker response boundary, and request client.
-- `src/api/`: UI-facing palette and editor commands.
-- `src/usePalette.js`: React subscription with stale initial-read protection.
-- `src/background.js`: service worker, panel behavior, command handling.
-- `src/openEditorTab.js`: full app tab reuse, active-screen handoff, and gradient-edit requests.
-- `src/i18n/`: translation resources and language preferences.
-- `src/errors.js`: language-independent error codes.
+```text
+src/
+├── main.jsx                       # shared React bootstrap for all extension HTML pages
+├── App.jsx                        # screen composition and shared palette/account state
+├── api/                           # HTTP client and public API configuration; requests run in the worker
+├── components/
+│   ├── ui/                        # generic icons, color values, and format selection
+│   └── common/                    # presentational header, footer, and navigation
+├── layouts/
+│   └── MainLayout.jsx             # shared panel/tab frame, receiving content and action slots
+├── pages/
+│   ├── WorkingPalette/            # working palette screen
+│   ├── SavedPalettes/             # account library screen
+│   └── Print/                     # print screen and its local settings
+├── features/
+│   ├── auth/                      # account menu, browser sign-in, trusted session storage
+│   ├── palette/                   # local palette components, subscription, repository, mutation queue
+│   ├── gradients/                 # gradient builder, cards, and editing hook
+│   ├── saved-palettes/            # library components, view model, and snapshot service
+│   ├── color-advisor/             # suggestions, comparison, actions, and pure suggestion functions
+│   ├── preferences/               # theme, language controls, and color-format preferences
+│   └── printing/                  # document components and pagination
+├── extension/
+│   ├── background.js              # worker composition; registers browser listeners synchronously
+│   ├── clients/                   # explicit UI-to-worker commands, separate from HTTP
+│   ├── messaging/                 # command allowlist, sender checks, dispatch, response boundary
+│   ├── panelController.js         # side-panel lifecycle
+│   └── openEditorTab.js           # full-view reuse and explicit screen handoff
+├── routes/                        # hash routes, history, startup options, and navigation actions
+├── hooks/                         # shared UI hooks such as useNotice
+├── services/                      # generic storage adapter
+├── utils/                         # shared pure color, gradient, snapshot, and URL functions
+├── constants/                     # shared operation codes, browser-page names, and identifiers
+├── types/                         # palette JSDoc types and validation
+├── i18n/                          # dictionaries and language initialization
+└── styles/                        # global defaults and shared palette-card styles
+```
 
-Palette mutations run through a single worker queue to prevent lost concurrent updates. Views update after storage writes. Editor opening also handles concurrent requests; a restarted worker finds the existing tab by URL.
+The root `backend/` directory contains the independent Node.js/MongoDB API.
+`public/` holds the manifest, browser icons, and browser translations.
+`scripts/` contains build, packaging, and architecture checks.
+
+Components, features, pages, and layouts keep their CSS beside the owning JSX.
+Global theme variables remain in `src/styles/base.css`; shared card rules remain in
+`src/styles/paletteCard.css`. JSX continues to use explicit imports without barrel files.
+
+### Dependency and state ownership
+
+- `App` composes pages, feature controls, and the layout. It owns one working-palette subscription and one account/library UI model per mounted surface.
+- `MainLayout` owns placement only. The header and navigation receive content and action slots; they do not authenticate, save, load data, or import features.
+- Pages compose features. Features can depend on shared UI, utilities, browser clients, and other required feature modules; they cannot import pages or application composition.
+- Shared components, layouts, types, utilities, storage adapters, and i18n cannot import features or application orchestration.
+- Services and models cannot import React or JSX. The UI dependency graph cannot reach credential storage, browser OAuth, the HTTP client, or worker handlers. The worker cannot reach React UI.
+- The shared mutation queue in the worker remains the owner of persisted palette changes. HTTP requests and session credentials stay in the worker.
+- Visited screens remain mounted when hidden, retaining gradient drafts and print settings. Explicitly opening a saved set still resets the working-screen draft and checks palette version/account state.
+
+`sidepanel.html`, `editor.html`, `library.html`, and `print.html` all load
+`src/main.jsx`. Their root elements explicitly declare `data-surface` and
+`data-initial-view`. Existing URLs and hash links remain supported; menu navigation
+does not reload HTML. The separately built service worker remains `background.js`.
+
+Run `npm run check:architecture` to validate actual import edges, missing local
+imports, cycles, layer boundaries, and transitive UI/worker separation.
+`npm run lint` also runs this audit. It reports module/import counts and requires
+zero cycles and zero boundary violations; these are project checks, not a claim
+that a folder convention guarantees production readiness.
+
+The decisions follow [React's state ownership guidance](https://react.dev/learn/thinking-in-react),
+[React's state preservation rules](https://react.dev/learn/preserving-and-resetting-state),
+[Vite's HTML entry support](https://vite.dev/guide/build#multi-page-app), and
+[Chrome's worker lifecycle guidance](https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/lifecycle).
+The directory names and audit boundaries are project decisions based on those constraints.
+
+Palette mutations run through a single worker queue to prevent lost concurrent
+updates. Views update after storage writes. Editor opening also handles concurrent
+requests; a restarted worker finds the existing tab by URL.
 
 ```ts
 type SavedColor = { id: string; hex: string };
@@ -159,16 +209,16 @@ type Palette = {
 };
 ```
 
-Local-mode permissions: `storage`, `sidePanel`, and `tabs`. The `tabs` permission lets the worker identify editor URLs, including direct/restored tabs and pending navigation. No content scripts are used. Configured cloud builds additionally use `identity` and the API host permission.
+Local-mode permissions: `storage`, `sidePanel`, and `tabs`. The `tabs` permission lets the worker identify editor URLs, including direct/restored tabs and pending navigation. No content scripts are used. API-enabled builds additionally use `identity` and the API host permission.
 
-## Cloud palettes and backend
+## Saved palettes and backend
 
 The extension remains a Vite/React project at the repository root. Its independent
 Node.js/MongoDB API lives in [`backend/`](backend/README.md), with its own
 `package.json` and lockfile. Next.js and a separate repository are not required.
 The server runs separately; it is never copied into the extension's `dist/` or ZIP.
 
-Cloud functionality is opt-in at build time. Copy root `.env.example` to
+Server-backed palette storage is opt-in at build time. Copy root `.env.example` to
 `.env.local`, set `VITE_PALETTE_API_URL` to your actual API origin, and build.
 Only the public API URL enters the extension. The generated manifest adds
 `identity` and the configured host permission. An unset URL keeps local mode and
@@ -189,7 +239,7 @@ Account; see [SPA navigation and state](#spa-navigation-and-state) for screen ro
 All entry points read the same worker session and follow storage notifications on
 account changes and logout. The worker admits
 only the explicit page allowlist from its own extension; websites and unknown
-extension pages cannot send cloud commands. Menus outside the library read session
+extension pages cannot send library commands. Menus outside the library read session
 state without fetching the saved palette list; entering the library activates its load.
 **Open as working palette** replaces the shared working set after confirmation;
 the panel and editor receive the same storage update, and the current interface
@@ -206,7 +256,7 @@ Library pagination does not merge unrelated sets.
 
 The extension loads four library cards per page. Save confirmation includes an
 editable name; after the first submission, retries keep the same name and payload.
-Opening or successfully saving a set stores its cloud ID, account ID and original
+Opening or successfully saving a set stores its saved-set ID, account ID and original
 content locally. Save is disabled while the working content matches that source;
 editing colors or gradients enables it, reverting the edits disables it again.
 This reference survives extension restarts and is not part of the HTTP payload.
@@ -233,12 +283,15 @@ npm run build
 npm run verify:extension
 ```
 
-On Windows, if parallel UI tests collide on Vite's shared dependency cache (`EPERM`),
-run the same extension suite sequentially:
+`npm test` runs the extension suite sequentially because UI tests share Vite's
+dependency cache; this avoids concurrent cache writes and Windows `EPERM` failures.
 
-```sh
-node --import ./tests/registerAliases.js --test --test-concurrency=1 tests/*.test.js
-```
+Architecture refactor verification (2026-10-21): 98 extension tests and 23 backend
+tests passed. The import audit checked 84 source modules and 213 internal imports,
+with zero cycles and zero boundary violations. Formatting, ESLint, API-enabled and
+local-only builds, and build-content checks passed. The local-only manifest has no
+identity or API-host permissions. Live Google sign-in, a real MongoDB integration
+run, and manual Chrome layout checks were not repeated for this refactor.
 
 Automated tests use simulated Chrome APIs. Real browser verification is still required:
 
@@ -255,7 +308,7 @@ Automated tests use simulated Chrome APIs. Real browser verification is still re
 11. From each panel screen, use Open full view: the corresponding screen must open in a reused app tab in the same window.
 12. Save explicitly, confirm the name/snapshot, and open the saved set. Opening must switch to Working palette; an unchanged saved set must have Save disabled. Verify cancellation, offline failure, logout, and account change preserve working colors.
 
-Scenes are outside this iteration. Color recommendations remain local. Account/server configuration and acceptance checks are described in the cloud/backend section.
+Scenes are outside this iteration. Color recommendations remain local. Account/server configuration and acceptance checks are described in the saved-palettes/backend section.
 
 ## Side panel lifecycle (Chrome 116+)
 
@@ -318,25 +371,27 @@ VS Code uses the ESLint extension (dbaeumer.vscode-eslint) as the JavaScript/JSX
 
 ## Service boundaries and errors
 
-Components call api/paletteClient or api/editorClient. Requests pass through runtime/sendRequest to the worker's createListener and dispatchMessage. The router invokes explicit paletteService methods: getPalette, addColor, saveGradient, and removeItem.
+Components call extension/clients/paletteClient or extension/clients/editorClient. Requests pass through extension/messaging/sendRequest to the worker's createListener and dispatchMessage. The router invokes explicit paletteService methods: getPalette, addColor, saveGradient, and removeItem.
 
-paletteService owns local item operations, version-checked palette replacement, and local cloud-source tracking in one shared queue. CloudService coordinates snapshots, HTTP requests and session checks; it does not bypass that queue when opening a saved set. The reusable gradient normalization and CSS functions remain in gradient.js. paletteRepository validates persisted data and supplies an empty default. storage.js only adapts Chrome's key/value and change-event API; it contains no palette logic, routing, validation, or catches.
+paletteService owns local item operations, version-checked palette replacement, and local saved-source tracking in one shared queue. SavedPaletteService coordinates snapshots, HTTP requests and session checks; it does not bypass that queue when opening a saved set. The reusable gradient normalization and CSS functions remain in utils/gradient.js. paletteRepository validates persisted data and supplies an empty default. services/storage.js only adapts Chrome's key/value and change-event API; it contains no palette logic, routing, validation, or catches.
 
 Read/write failures reject with the original error through the repository and service. The internal queue recovers independently, while the promise returned to each caller remains rejected. Only the worker response boundary serializes failures for messaging. The client rejects with AppError and retains diagnostic details in cause; transport failures also retain their original cause. The UI remains responsible for translated error messages. Subscription failures are forwarded through onError because browser events cannot reject an earlier subscription call.
 
-The storage key and mixed colors/gradients remain compatible with existing local data. An optional `cloudSource` reference records the saved set, account, and original content signature; it is excluded from HTTP snapshots. The editor-open command additionally accepts the requested SPA view. Local item operations retain their existing message values and concurrent-update behavior.
+The storage key and mixed colors/gradients remain compatible with existing local data. An optional `cloudSource` reference (a persisted legacy field name) records the saved set, account, and original content signature; it is excluded from HTTP snapshots. The editor-open command additionally accepts the requested SPA view. Local item operations retain their existing message values and concurrent-update behavior.
+
+Existing session keys (`cloudSession`, `cloudEpoch`, `cloudPendingSave`), `cloud:*` message values, and error codes remain stable for compatibility. These legacy values do not select a hosting provider. Current modules use account, session, library, and saved-palette names; data is stored by the project's Node.js/MongoDB API.
 
 ## Color formats and printing
 
-HEX remains the only stored color source. `utils/colorConversion.js` derives RGB and approximate CMYK on demand; `preferences/colorFormatPreference.js` persists only the `colorFormat` preference, independently of `currentPalette`. Both palette views subscribe to preference changes.
+HEX remains the only stored color source. `utils/colorConversion.js` derives RGB and approximate CMYK on demand; `features/preferences/services/colorFormatPreference.js` persists only the `colorFormat` preference, independently of `currentPalette`. Both palette views subscribe to preference changes.
 
-PrintWorkspace is the print screen inside PaletteApp and receives the same working palette as the other screens. Its settings stay in React state across menu transitions, but reset on reload. `print.html` remains a compatible entry into that screen. `utils/printLayout.js` paginates mixed colors and gradients using A4 dimensions and card size. Components under `src/components/Print*` render controls, sheets and cards; styles remain under `styles/components` and `styles/pages`.
+`src/pages/Print/PrintPage.jsx` is the print screen inside App and receives the same working palette as the other screens. Its settings stay in React state across menu transitions, but reset on reload. `print.html` remains a compatible entry into that screen. `features/printing/utils/printLayout.js` paginates mixed colors and gradients using A4 dimensions and card size. Components under `src/features/printing/components/` render controls, sheets and cards; styles live beside the screen and print components.
 
 Use Print / Save as PDF to open the browser dialog. For matching pagination: A4, selected orientation, 100% scale, no additional margins, background graphics enabled, browser headers/footers disabled. The sheets include their own 15 mm padding. Browser/printer overrides may change pagination or colors. Long optional names are shortened on the sheet and available in screen tooltips. No PDF library, server, ICC conversion, or derived color storage is used. For a future direct PDF exporter, reuse the conversion/layout utilities and add a separate document renderer rather than extending palette storage.
 
 ## Architecture boundaries
 
-Palette, SavedColor, and SavedGradient are data records (see types.js), not service instances. Their persisted shape stays plain and serializable. Conversion, validation, draft updates, and print pagination are pure functions. React components render data; hooks own UI state and subscriptions.
+Palette, SavedColor, and SavedGradient are data records (see `types/palette.js`), not service instances. Their persisted shape stays plain and serializable. Conversion, validation, draft updates, and print pagination are pure functions. React components render data; hooks own UI state and subscriptions.
 
 Use a class when several operations share an injected dependency or a lifecycle. Method count alone does not justify a class, and hypothetical future methods are not a reason to introduce one.
 
@@ -344,7 +399,7 @@ Use a class when several operations share an injected dependency or a lifecycle.
 | --------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | StorageAdapter        | get, set, subscribe (3)                                                                               | Chrome key/value transport; no palette rules.                                          |
 | PaletteRepository     | read, write (2)                                                                                       | Palette storage key, validation, and empty default.                                    |
-| PaletteService        | getPalette, addColor, saveGradient, removeItem, replacePalette, markCloudSource, clearCloudSource (7) | Local item operations, confirmed replacement, and saved-content tracking in one queue. |
+| PaletteService        | getPalette, addColor, saveGradient, removeItem, replacePalette, markSavedSource, clearSavedSource (7) | Local item operations, confirmed replacement, and saved-content tracking in one queue. |
 | ColorFormatPreference | read, save, subscribe (3)                                                                             | One persisted display preference; no palette mutation or message transport.            |
 | ThemePreference       | read, save, subscribe (3)                                                                             | One persisted appearance preference; no palette mutation or DOM access.                |
 | LanguagePreference    | start, set, stop (3)                                                                                  | Language preference and its storage listener lifecycle.                                |
@@ -361,6 +416,6 @@ background.js composes these dependencies. UI api modules send messages; prefere
 
 The lightbulb on each solid-color card opens an inline advisor; only one source is expanded per view. Suggestions stay local until Add is pressed. Copy uses the currently selected HEX/RGB/CMYK format. Saved colors are marked Already added, and the existing palette service remains responsible for deduplication and persistence. Gradients keep their existing editing flow.
 
-`utils/colorSuggestions.js` is pure: shades mix RGB channels with black or white at 20%, 40%, and 60%; neighboring hues rotate HSL hue by 30 degrees; complementary and triadic variants rotate by 180 and 120/240 degrees. Hue values are not persisted. A source with an RGB channel spread of 16 or less is treated as nearly neutral and offers shades only. Results are deterministic, not a guarantee of aesthetic suitability or text contrast.
+`features/color-advisor/utils/colorSuggestions.js` is pure: shades mix RGB channels with black or white at 20%, 40%, and 60%; neighboring hues rotate HSL hue by 30 degrees; complementary and triadic variants rotate by 180 and 120/240 degrees. Hue values are not persisted. A source with an RGB channel spread of 16 or less is treated as nearly neutral and offers shades only. Results are deterministic, not a guarantee of aesthetic suitability or text contrast.
 
-ColorAdvisor coordinates categories and selection; ColorSuggestions renders choices; ColorComparison renders the pair and reversible background/accent composition. useColorAdvisorActions handles explicit save/copy actions and local feedback. Styles live in styles/components, and category identifiers in constants/advisorTypes.js.
+Components in `src/features/color-advisor/components/` have separate roles: ColorAdvisor coordinates categories and selection; ColorSuggestions renders choices; ColorComparison renders the pair and reversible background/accent composition. useColorAdvisorActions handles explicit save/copy actions and local feedback. Styles live beside those components, and category identifiers in constants/advisorTypes.js.

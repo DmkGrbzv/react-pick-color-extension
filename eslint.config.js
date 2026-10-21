@@ -22,7 +22,7 @@ export default defineConfig( [
     },
     rules: { 'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }] },
   },
-  { files: ['tests/**/*.js', 'backend/**/*.js'], languageOptions: { globals: globals.node } },
+  { files: ['tests/**/*.js', 'backend/**/*.js', 'scripts/**/*.js'], languageOptions: { globals: globals.node } },
   prettier,
   {
     files: ['**/*.{js,jsx}'],

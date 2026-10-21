@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { CloudPaletteService } from '../src/palettes/paletteService.js';
+import { SavedPaletteService } from '../src/palettes/paletteService.js';
 import { normalizeSnapshot, decodeCursor, encodeCursor } from '../src/palettes/paletteValidation.js';
 
 const gradient = {
@@ -40,7 +40,7 @@ test( 'save retries preserve the snapshot, conflict on different content and sco
       return { document, created: true };
     },
   };
-  const service = new CloudPaletteService( { repository, config: { maxItems: 256, maxPalettes: 100 } } );
+  const service = new SavedPaletteService( { repository, config: { maxItems: 256, maxPalettes: 100 } } );
   const key = randomUUID();
   const first = await service.save( 'A', snapshot, key );
   const retry = await service.save( 'A', snapshot, key );
@@ -57,7 +57,7 @@ test( 'read and rename always pass owner; missing and foreign palettes have the 
     find: async ( owner, id ) => owner === 'A' && id === 'own' ? { _id: id, ...snapshot, createdAt: new Date() } : null,
     rename: async ( owner, id, name ) => owner === 'A' && id === 'own' ? { _id: id, ...snapshot, name } : null,
   };
-  const service = new CloudPaletteService( { repository, config: {} } );
+  const service = new SavedPaletteService( { repository, config: {} } );
   assert.equal( ( await service.get( 'A', 'own' ) ).name, 'Mixed' );
   for ( const id of ['own', 'missing'] ) await assert.rejects( service.get( 'B', id ), { status: 404 } );
   await assert.rejects( service.rename( 'B', 'own', { name: 'Changed' } ), { status: 404 } );
@@ -70,14 +70,14 @@ test( 'pagination validates limits and cursors and retains the tie-breaking ID',
   const cursor = decodeCursor( encodeCursor( document ) );
   assert.deepEqual( cursor, { date: document.createdAt, id: document._id } );
   assert.throws( () => decodeCursor( 'invalid' ), { code: 'invalidCursor' } );
-  const service = new CloudPaletteService( { repository: { list: async ( owner, page ) => ( { owner, ...page } ) }, config: {} } );
+  const service = new SavedPaletteService( { repository: { list: async ( owner, page ) => ( { owner, ...page } ) }, config: {} } );
   for ( const limit of ['0', '51', 'invalid'] ) assert.throws( () => service.list( 'A', { limit } ), { status: 400 } );
   assert.equal( ( await service.list( 'A', { limit: '20' } ) ).limit, 20 );
 } );
 
 test( 'deletion scopes by owner and a deleted save receipt cannot resurrect the snapshot', async () => {
   const calls = [];
-  const service = new CloudPaletteService( {
+  const service = new SavedPaletteService( {
     config: { maxItems: 256, maxPalettes: 100 },
     repository: {
       remove: async ( owner, id ) => { calls.push( [owner, id] ); return owner === 'A' && id === 'own'; },

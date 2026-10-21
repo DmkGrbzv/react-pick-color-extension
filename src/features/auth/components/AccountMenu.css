@@ -1,0 +1,61 @@
+.app-account {
+  position: relative;
+}
+.app-account summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 9px 12px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--control-radius);
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  list-style: none;
+}
+.app-account summary:hover {
+  color: var(--text);
+  background: var(--hover-bg);
+}
+.app-account summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.app-account summary::-webkit-details-marker {
+  display: none;
+}
+.account-connected,
+.account-guest {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+.account-connected {
+  background: var(--success);
+}
+.app-account-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 10;
+  display: grid;
+  gap: 12px;
+  width: min(260px, calc(100vw - 64px));
+  padding: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: var(--control-border);
+  border-radius: 9px;
+  box-shadow: 0 8px 24px #00000018;
+}
+.app-account-menu p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createInstance } from 'i18next';
 import { LanguagePreference, resolveLanguage, SUPPORTED_LANGUAGES } from '@/i18n/language.js';
-import { AppError, errorKey } from '@/errors.js';
+import { AppError, errorKey } from '@/utils/errors.js';
 
 const readJson = ( path ) => JSON.parse( readFileSync( new URL( path, import.meta.url ), 'utf8' ) );
 const uk = readJson( '../src/i18n/locales/uk.json' );

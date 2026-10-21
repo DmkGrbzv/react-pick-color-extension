@@ -66,13 +66,13 @@ test( 'panel and editor copy the selected format after changing and reopening th
       server: { middlewareMode: true, hmr: false, ws: false, watch: null },
       appType: 'custom',
     } );
-    const { default: PaletteView } = await server.ssrLoadModule( '/src/components/PaletteView.jsx' );
+    const { default: App } = await server.ssrLoadModule( '/src/App.jsx' );
     const { languageReady } = await server.ssrLoadModule( '/src/i18n/index.js' );
     await languageReady;
     for ( const editor of [false, true] ) {
       root = createRoot( document.getElementById( 'root' ) );
       await act( async () => {
-        root.render( createElement( PaletteView, { editor } ) );
+        root.render( createElement( App, { panel: !editor } ) );
       } );
       const selector = document.querySelector( '.format-control select' );
       assert.equal( selector.value, stored.colorFormat );

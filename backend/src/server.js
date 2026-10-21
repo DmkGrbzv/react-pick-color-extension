@@ -8,7 +8,7 @@ import { AuthRepository } from './auth/authRepository.js';
 import { AuthService } from './auth/authService.js';
 import { createIdentityProvider } from './auth/oidcProvider.js';
 import { CloudPaletteRepository } from './palettes/paletteRepository.js';
-import { CloudPaletteService } from './palettes/paletteService.js';
+import { SavedPaletteService } from './palettes/paletteService.js';
 import { RateLimiter } from './http/rateLimit.js';
 
 function registerShutdown( server, client ) {
@@ -37,7 +37,7 @@ async function start() {
     const auth = new AuthService( {
       repository: new AuthRepository( db ), provider: await createIdentityProvider( config ), config,
     } );
-    const palettes = new CloudPaletteService( {
+    const palettes = new SavedPaletteService( {
       repository: new CloudPaletteRepository( { db, client } ), config,
     } );
     const app = createApp( { config, auth, palettes, limiter: new RateLimiter( db ) } );

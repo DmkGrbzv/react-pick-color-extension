@@ -1,0 +1,25 @@
+.app {
+  padding: 0 20px 12px;
+  margin: 0 auto;
+}
+.panel {
+  max-width: 560px;
+  container-type: inline-size;
+}
+.editor {
+  max-width: 1120px;
+  padding: 0 32px 20px;
+}
+.app-footer {
+  margin-top: 26px;
+}
+@media (max-width: 380px) {
+  .app {
+    padding-inline: 12px;
+  }
+}
+@media (max-width: 620px) {
+  .editor {
+    padding-inline: 16px;
+  }
+}

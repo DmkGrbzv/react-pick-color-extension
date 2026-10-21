@@ -1,0 +1,43 @@
+.app-content[hidden] {
+  display: none !important;
+}
+.app-content {
+  min-width: 0;
+  animation: app-content-enter 140ms ease-out;
+}
+@keyframes app-content-enter {
+  from {
+    opacity: 0.5;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.palette-app .print-preview {
+  padding: 0;
+}
+.palette-app .saved-palettes {
+  margin-top: 16px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-content {
+    animation: none;
+  }
+}
+@media print {
+  .app-content {
+    animation: none;
+  }
+  .palette-app {
+    max-width: none;
+    padding: 0;
+    margin: 0;
+  }
+  .palette-app > .app-header,
+  .palette-app > .app-footer,
+  .palette-storage-error {
+    display: none !important;
+  }
+}
