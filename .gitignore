@@ -22,6 +22,9 @@ release/
 # Local documentation
 /backend-sync-flow.md
 
+# Local design sources
+/branding/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

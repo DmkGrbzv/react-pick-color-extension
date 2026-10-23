@@ -12,18 +12,20 @@ export default function AppNavigation( { page, pages, onNavigate, actions } ) {
   }
 
   return (
+    <div className="app-navigation-container">
     <nav className="app-navigation" aria-label={ t( 'navigation.label' ) }>
       <div className="app-navigation-pages">
         { pages.map( ( item ) => (
-          <a key={ item.id } href={ item.href }
+          <a key={ item.id } href={ item.href } data-tooltip={ item.label } aria-label={ item.label }
             onClick={ ( event ) => visit( event, item.id ) }
             aria-current={ page === item.id ? 'page' : undefined }>
             { item.icon && <Icon name={ item.icon } /> }
-            { item.label }
+            <span className="navigation-label">{ item.label }</span>
           </a>
         ) ) }
       </div>
       { actions && <div className="app-navigation-actions">{ actions }</div> }
     </nav>
+    </div>
   );
 }

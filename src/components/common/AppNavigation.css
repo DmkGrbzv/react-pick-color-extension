@@ -1,3 +1,6 @@
+.app-navigation-container {
+  container: navigation / inline-size;
+}
 .app-navigation {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -56,7 +59,61 @@
 .navigation-feedback {
   margin: -12px 0 18px;
 }
-@media (max-width: 760px) {
+@container navigation (max-width: 900px) {
+  .app-navigation .navigation-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .app-navigation [data-tooltip] {
+    position: relative;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
+  }
+  .app-navigation [data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    z-index: 20;
+    width: max-content;
+    max-width: 160px;
+    padding: 7px 10px;
+    border: var(--control-border);
+    border-radius: var(--control-radius);
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    font-size: 12px;
+    font-weight: 400;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    visibility: hidden;
+  }
+  .app-navigation [data-tooltip]:hover::after,
+  .app-navigation [data-tooltip]:focus-visible::after {
+    visibility: visible;
+  }
+  .app-navigation-actions [data-tooltip]::after,
+  .app-navigation-pages a:last-child::after {
+    left: auto;
+    right: 0;
+  }
+  .app-navigation-actions > :first-child::after {
+    left: 0;
+    right: auto;
+  }
+  .app-account[open] summary::after {
+    display: none;
+  }
+}
+@container navigation (max-width: 430px) {
   .app-navigation {
     grid-template-columns: minmax(0, 1fr);
     gap: 8px;

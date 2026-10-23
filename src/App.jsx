@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ERROR_CODES } from '@/constants/errorCodes.js';
+import { appName } from '@/constants/branding.js';
 import { EXTENSION_PAGES } from '@/constants/extensionPages.js';
 import { errorKey } from '@/utils/errors.js';
 import { isSavedPalette } from '@/utils/paletteSnapshot.js';
@@ -38,9 +39,9 @@ export default function App( { panel = false, initialPage = 'working' } ) {
     id: view,
     href: EXTENSION_PAGES.EDITOR + appViewHash( view ),
     label: t( 'navigation.' + ( view === 'library' ? 'saved' : view ) ),
-    icon: view === 'print' ? 'print' : null,
+    icon: view === 'print' ? 'print' : view === 'library' ? 'library' : 'eyedropper',
   } ) );
-  useEffect( () => { document.title = title; }, [title] );
+  useEffect( () => { document.title = title + ' — ' + appName; }, [title] );
 
   function opened() {
     setWorkingRevision( ( value ) => value + 1 );
@@ -54,14 +55,16 @@ export default function App( { panel = false, initialPage = 'working' } ) {
     { page === 'working' && <p className="intro">{ t( panel ? 'brandIntro' : 'editorTitle' ) }</p> }
   </AppHeader>;
   const navigationActions = ( panel || apiUrl ) ? <>
-    { panel && <button type="button" disabled={ actions.opening } onClick={ actions.expand }>
-      <Icon name="external" />{ t( 'navigation.openFull' ) }
+    { panel && <button type="button" disabled={ actions.opening } onClick={ actions.expand } data-tooltip={ t( 'navigation.openFull' ) } aria-label={ t( 'navigation.openFull' ) }>
+      <Icon name="external" /><span className="navigation-label">{ t( 'navigation.openFull' ) }</span>
     </button> }
     { apiUrl && <>
       <button type="button" className="primary"
+        aria-label={ t( 'library.save' ) }
+        data-tooltip={ unchanged ? t( 'library.unchanged' ) : t( 'library.save' ) }
         disabled={ busy || !palette?.colors.length || Boolean( state.pending ) || unchanged }
         title={ unchanged ? t( 'library.unchanged' ) : undefined }
-        onClick={ () => void actions.save() }>{ t( 'library.save' ) }</button>
+        onClick={ () => void actions.save() }><Icon name="save" /><span className="navigation-label">{ t( 'library.save' ) }</span></button>
       <AccountMenu user={ state.user } busy={ busy }
         onSignIn={ () => model.signIn() } onSignOut={ () => model.logout() } />
     </> }

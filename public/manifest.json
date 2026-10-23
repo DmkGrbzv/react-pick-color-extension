@@ -10,7 +10,19 @@
     "type": "module"
   },
   "action": {
-    "default_title": "__MSG_openPalette__"
+    "default_title": "__MSG_openPalette__",
+    "default_icon": {
+      "16": "icons/pickment-16.png",
+      "32": "icons/pickment-32.png",
+      "48": "icons/pickment-48.png",
+      "128": "icons/pickment-128.png"
+    }
   },
-  "default_locale": "uk"
+  "default_locale": "uk",
+  "icons": {
+    "16": "icons/pickment-16.png",
+    "32": "icons/pickment-32.png",
+    "48": "icons/pickment-48.png",
+    "128": "icons/pickment-128.png"
+  }
 }

@@ -76,6 +76,7 @@ test( 'library UI allows independent login, preserves full mixed sets and requir
       server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom',
     } );
     const { default: App } = await server.ssrLoadModule( '/src/App.jsx' );
+    const { appName } = await server.ssrLoadModule( '/src/constants/branding.js' );
     const { snapshotSignature } = await server.ssrLoadModule( '/src/utils/paletteSnapshot.js' );
     const { languageReady } = await server.ssrLoadModule( '/src/i18n/index.js' );
     await languageReady;
@@ -126,7 +127,7 @@ test( 'library UI allows independent login, preserves full mixed sets and requir
     assert.equal( palette.colors.length, 1 );
     deletes = 0;
     await act( async () => root.render( createElement( App, { initialPage: 'library', key: 'reopened' } ) ) );
-    assert.equal( document.title, 'Palettes and account' );
+    assert.equal( document.title, 'Palettes and account \u2014 ' + appName );
     assert.ok( document.body.textContent.includes( 'Working palette: Working' ) );
     const stableNavigation = document.querySelector( 'nav' );
     const stableHeader = document.querySelector( '.app-header' );

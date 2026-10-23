@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import './AccountMenu.css';
+import Icon from '@/components/ui/Icon.jsx';
 
 export default function AccountMenu( { user, busy, onSignIn, onSignOut } ) {
   const { t } = useTranslation();
@@ -26,7 +27,7 @@ export default function AccountMenu( { user, busy, onSignIn, onSignOut } ) {
 
   return (
     <details className="app-account" ref={ element } onKeyDown={ keyDown }>
-      <summary>{ t( 'navigation.account' ) }<span className={ user ? 'account-connected' : 'account-guest' } aria-hidden="true" /></summary>
+      <summary aria-label={ t( 'navigation.account' ) } data-tooltip={ t( 'navigation.account' ) }><Icon name="user" /><span className="navigation-label">{ t( 'navigation.account' ) }</span><span className={ user ? 'account-connected' : 'account-guest' } aria-hidden="true" /></summary>
       <div className="app-account-menu">
         <p>{ user?.email || t( user ? 'library.account' : 'navigation.guest' ) }</p>
         <button type="button" disabled={ busy } onClick={ select }>{ t( user ? 'library.logout' : 'library.login' ) }</button>
