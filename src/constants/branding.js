@@ -1,1 +1,1 @@
-export const appName = import.meta.env?.VITE_APP_NAME?.trim() || 'Pickment';
+export const appName = import.meta.env?.VITE_APP_NAME?.trim() || 'Tintoom';

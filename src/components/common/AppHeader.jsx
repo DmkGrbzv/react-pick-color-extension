@@ -7,8 +7,10 @@ export default function AppHeader( { children, preferences, panel = false } ) {
   return (
     <header className="app-header">
       <div className="app-brand">
-        <img className="app-mark" src="./icons/pickment-128.png" width={ panel ? 32 : 38 } height={ panel ? 32 : 38 } alt={ appName } />
-        <div className="app-brand-text">{ children || <strong>{ appName }</strong> }</div>
+        { appName === 'Tintoom'
+          ? <img className="app-logo" src="./icons/tintoom-logo.png" width={ panel ? 160 : 176 } height={ panel ? 40 : 44 } alt={ appName } />
+          : <strong>{ appName }</strong> }
+        <div className="app-brand-text">{ children }</div>
       </div>
       <div className="app-preferences" aria-label={ t( 'appearance' ) }>
         { preferences }

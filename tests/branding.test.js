@@ -5,8 +5,8 @@ import { JSDOM } from 'jsdom';
 import { brandingPlugin, resolveAppName } from '../scripts/branding.js';
 
 test( 'brand names default, normalize and reject invalid manifest names', () => {
-  assert.equal( resolveAppName(), 'Pickment' );
-  assert.equal( resolveAppName( '  ' ), 'Pickment' );
+  assert.equal( resolveAppName(), 'Tintoom' );
+  assert.equal( resolveAppName( '  ' ), 'Tintoom' );
   assert.equal( resolveAppName( ' Custom brand ' ), 'Custom brand' );
   assert.throws( () => resolveAppName( 'a'.repeat( 76 ) ) );
   assert.throws( () => resolveAppName( 'one\ntwo' ) );

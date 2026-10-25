@@ -37,7 +37,8 @@ test( 'library UI allows independent login, preserves full mixed sets and requir
         case 'editor:open': fullRequests.push( message ); return { ok: true, value: 100 };
         case 'cloud:open': {
           opens++;
-          working = { id: 'current', name: set.name, colors: [{ id: 'opened', hex: '#000000' }] };
+          working = { id: 'current', name: set.name, colors: [{ id: 'opened', hex: '#000000' }],
+            cloudSource: { id: set.id, ownerId: account.id } };
           await storage.local.set( { currentPalette: working } );
           return { ok: true, value: working };
         }

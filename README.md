@@ -1,4 +1,4 @@
-# Pickment
+# Tintoom
 
 A Manifest V3 Chrome extension built with React 19 and Vite 8. The side panel and full tab share a single-page React interface for the working palette, saved palettes, and print preview. Local color and gradient tools work without an account or server; Google sign-in and saved palettes use the optional Node.js/MongoDB backend.
 
@@ -18,15 +18,17 @@ On Windows, use `npm.cmd` if PowerShell blocks `npm.ps1`.
 
 ## App name and icons
 
-Set VITE_APP_NAME=Pickment in root .env.local to configure the public app name.
-The default is Pickment. Rebuild and reload the extension after changing it.
+Set VITE_APP_NAME=Tintoom in root .env.local to configure the public app name.
+The default is Tintoom. Rebuild and reload the extension after changing it.
 The build uses the same name for the manifest, initial HTML titles, React tab titles,
 and interface branding. Palette names and saved data remain independent.
 VITE_ values are public build configuration, not secrets.
 
 PNG icons in public/icons/ cover browser tabs, the toolbar, extension management,
 and installation (16, 32, 48, and 128 px). All screens share the same brand icon;
-menu sections use distinct outline icons.
+menu sections use distinct outline icons. The header uses icons/tintoom-logo.png;
+the same artwork is used in both themes. VITE_APP_NAME changes text branding;
+a different name uses a text header until its own logo is provided.
 
 Navigation responds to its own container width: at 900 px or less it shows icons
 with labels on hover and keyboard focus; at 430 px or less sections and actions

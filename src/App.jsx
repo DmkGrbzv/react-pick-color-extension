@@ -33,15 +33,16 @@ export default function App( { panel = false, initialPage = 'working' } ) {
   const [workingRevision, setWorkingRevision] = useState( 0 );
   const busy = actions.opening || Boolean( state.busy );
   const unchanged = isSavedPalette( palette, state.user?.id );
+  const savedPaletteName = palette?.cloudSource?.id ? palette.name : '';
   const title = page === 'library' ? t( 'library.libraryPageTitle' ) :
-    page === 'print' ? t( 'print.title' ) : palette?.name ?? t( 'paletteName' );
+    page === 'print' ? t( 'print.title' ) : savedPaletteName || appName;
   const pages = ['working', ...( apiUrl ? ['library'] : [] ), 'print'].map( ( view ) => ( {
     id: view,
     href: EXTENSION_PAGES.EDITOR + appViewHash( view ),
     label: t( 'navigation.' + ( view === 'library' ? 'saved' : view ) ),
     icon: view === 'print' ? 'print' : view === 'library' ? 'library' : 'eyedropper',
   } ) );
-  useEffect( () => { document.title = title + ' — ' + appName; }, [title] );
+  useEffect( () => { document.title = title === appName ? appName : title + ' — ' + appName; }, [title] );
 
   function opened() {
     setWorkingRevision( ( value ) => value + 1 );
@@ -51,7 +52,9 @@ export default function App( { panel = false, initialPage = 'working' } ) {
   const header = <AppHeader panel={ panel } preferences={ <>
     <LanguageSelector compact={ panel } /><ThemeToggle />
   </> }>
-    <h1>{ title }</h1>
+    { page === 'working' ? <div className="working-palette-heading">
+      <h1 className={ savedPaletteName ? 'working-palette-name' : 'sr-only' }>{ title }</h1>
+    </div> : <h1>{ title }</h1> }
     { page === 'working' && <p className="intro">{ t( panel ? 'brandIntro' : 'editorTitle' ) }</p> }
   </AppHeader>;
   const navigationActions = ( panel || apiUrl ) ? <>
