@@ -11,7 +11,17 @@
 }
 .palette-controls .format-control {
   max-width: 260px;
+}
+.palette-settings-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  align-items: end;
+  gap: 12px 16px;
   margin-top: 8px;
+}
+.palette-clear {
+  justify-self: end;
+  color: var(--danger);
 }
 .color-format-warning {
   margin: 8px 0 0;

@@ -1,7 +1,7 @@
 import { ERROR_CODES } from '@/constants/errorCodes.js';
 import { AppError } from '@/utils/errors.js';
 import { normalizeGradient } from '@/utils/gradient.js';
-import { isPalette } from '@/types/palette.js';
+import { createEmptyPalette, isPalette } from '@/types/palette.js';
 import { paletteVersion, snapshotSignature } from '@/utils/paletteSnapshot.js';
 
 // Only recover the previous request; failures in this task reach its caller.
@@ -115,6 +115,13 @@ export class PaletteService {
     return this.#update( ( palette ) => {
       if ( typeof id !== 'string' ) throw new AppError( ERROR_CODES.MISSING_COLOR );
       return { ...palette, colors: palette.colors.filter( ( item ) => item.id !== id ) };
+    } );
+  }
+
+  clearPalette( expectedVersion ) {
+    return this.#update( ( palette ) => {
+      if ( paletteVersion( palette ) !== expectedVersion ) throw new AppError( 'paletteChanged' );
+      return createEmptyPalette();
     } );
   }
 }

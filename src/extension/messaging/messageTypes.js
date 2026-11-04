@@ -2,6 +2,7 @@ export const GET_PALETTE = 'GET_PALETTE';
 export const ADD_COLOR = 'ADD_COLOR';
 export const MOVE_ITEM_FIRST = 'MOVE_ITEM_FIRST';
 export const REMOVE_COLOR = 'REMOVE_COLOR';
+export const CLEAR_PALETTE = 'CLEAR_PALETTE';
 export const SAVE_GRADIENT = 'SAVE_GRADIENT';
 export const OPEN_EDITOR = 'OPEN_EDITOR';
 
@@ -11,6 +12,7 @@ export const MESSAGE_TYPES = Object.freeze( [
   Object.freeze( { key: ADD_COLOR, type: 'palette:add' } ),
   Object.freeze( { key: MOVE_ITEM_FIRST, type: 'palette:moveFirst' } ),
   Object.freeze( { key: REMOVE_COLOR, type: 'palette:remove' } ),
+  Object.freeze( { key: CLEAR_PALETTE, type: 'palette:clear' } ),
   Object.freeze( { key: SAVE_GRADIENT, type: 'gradient:save' } ),
   Object.freeze( { key: OPEN_EDITOR, type: 'editor:open' } ),
 ] );

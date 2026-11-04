@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import ColorFormatSelector from '@/components/ui/ColorFormatSelector.jsx';
+import Icon from '@/components/ui/Icon.jsx';
 import PaletteToolbar from '@/features/palette/components/PaletteToolbar.jsx';
 import PaletteItems from '@/features/palette/components/PaletteItems.jsx';
 import { useColorFormat } from '@/features/preferences/hooks/useColorFormat.js';
@@ -9,13 +10,19 @@ import './WorkingPalettePage.css';
 export default function WorkingPalettePage( { palette, panel } ) {
   const { t } = useTranslation();
   const colorFormat = useColorFormat();
-  const { notice, busy, opening, supported, pickColor, copy, remove, showEditor } = usePaletteActions();
+  const { notice, busy, opening, supported, pickColor, copy, remove, clear, showEditor } = usePaletteActions();
   return (
     <>
       { panel && <PaletteToolbar palette={ palette } busy={ busy } supported={ supported } onPick={ pickColor } /> }
       <details className="palette-controls" open>
         <summary>{ t( 'paletteSettings' ) } - { t( 'formats.label' ) }: { colorFormat.format.toUpperCase() }</summary>
-        <ColorFormatSelector { ...colorFormat } />
+        <div className="palette-settings-actions">
+          <ColorFormatSelector { ...colorFormat } />
+          <button type="button" className="palette-clear" disabled={ busy || opening || !palette?.colors.length }
+            onClick={ () => void clear( palette ) }>
+            <Icon name="trash" />{ t( 'paletteClear.action' ) }
+          </button>
+        </div>
         { colorFormat.format === 'cmyk' && <p className="hint color-format-warning">{ t( 'print.warning' ) }</p> }
       </details>
       { palette && <PaletteItems format={ colorFormat.format } palette={ palette } editor={ !panel }

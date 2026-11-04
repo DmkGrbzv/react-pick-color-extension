@@ -18,6 +18,12 @@ On Windows, use `npm.cmd` if PowerShell blocks `npm.ps1`.
 
 New palette saves require an explicit, nonblank name. The confirmation field starts empty; retries retain the submitted name and snapshot.
 
+**Clear working palette**, beside the color format selector, removes all local
+colors, gradients, the name and the saved-set reference after confirmation. It
+works without signing in and does not upload, delete library cards or clear the
+account. A change in another view invalidates the confirmation; failed storage
+writes preserve the working palette.
+
 ## App name and icons
 
 Set VITE_APP_NAME=Tintoom in root .env.local to configure the public app name.
@@ -458,16 +464,16 @@ Palette, SavedColor, and SavedGradient are data records (see `types/palette.js`)
 
 Use a class when several operations share an injected dependency or a lifecycle. Method count alone does not justify a class, and hypothetical future methods are not a reason to introduce one.
 
-| Class                 | Public methods                                                                                        | Responsibility                                                                         |
-| --------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| StorageAdapter        | get, set, subscribe (3)                                                                               | Chrome key/value transport; no palette rules.                                          |
-| PaletteRepository     | read, write (2)                                                                                       | Palette storage key, validation, and empty default.                                    |
-| PaletteService        | getPalette, addColor, saveGradient, removeItem, replacePalette, markSavedSource, clearSavedSource (7) | Local item operations, confirmed replacement, and saved-content tracking in one queue. |
-| ColorFormatPreference | read, save, subscribe (3)                                                                             | One persisted display preference; no palette mutation or message transport.            |
-| ThemePreference       | read, save, subscribe (3)                                                                             | One persisted appearance preference; no palette mutation or DOM access.                |
-| LanguagePreference    | start, set, stop (3)                                                                                  | Language preference and its storage listener lifecycle.                                |
-| PaletteSubscription   | refresh, dispose (2)                                                                                  | Subscription lifetime and protection against stale reads.                              |
-| PanelController       | initialize, sync, forget (3)                                                                          | Per-tab panel settings and cancellation; native Chrome visibility stays authoritative. |
+| Class                 | Public methods                                                                                                                     | Responsibility                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| StorageAdapter        | get, set, subscribe (3)                                                                                                            | Chrome key/value transport; no palette rules.                                                   |
+| PaletteRepository     | read, write (2)                                                                                                                    | Palette storage key, validation, and empty default.                                             |
+| PaletteService        | getPalette, addColor, moveItemFirst, saveGradient, removeItem, clearPalette, replacePalette, markSavedSource, clearSavedSource (9) | Local item operations, confirmed clearing/replacement, and saved-content tracking in one queue. |
+| ColorFormatPreference | read, save, subscribe (3)                                                                                                          | One persisted display preference; no palette mutation or message transport.                     |
+| ThemePreference       | read, save, subscribe (3)                                                                                                          | One persisted appearance preference; no palette mutation or DOM access.                         |
+| LanguagePreference    | start, set, stop (3)                                                                                                               | Language preference and its storage listener lifecycle.                                         |
+| PaletteSubscription   | refresh, dispose (2)                                                                                                               | Subscription lifetime and protection against stale reads.                                       |
+| PanelController       | initialize, sync, forget (3)                                                                                                       | Per-tab panel settings and cancellation; native Chrome visibility stays authoritative.          |
 
 Classes keep dependencies and internal state in private fields. New methods belong here only if they operate within the same responsibility: for example, renaming a palette belongs to PaletteService, while PDF rendering does not. No extra methods are added in anticipation of future work.
 

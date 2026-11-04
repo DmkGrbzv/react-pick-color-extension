@@ -2,6 +2,7 @@ import {
   GET_PALETTE,
   ADD_COLOR,
   REMOVE_COLOR,
+  CLEAR_PALETTE,
   MOVE_ITEM_FIRST,
   SAVE_GRADIENT,
   findCorrectMessageType,
@@ -14,6 +15,8 @@ import { PALETTE_KEY } from '@/types/palette.js';
 export const getPalette = () => sendRequest( { type: findCorrectMessageType( GET_PALETTE ) } );
 export const addColor = ( hex ) => sendRequest( { type: findCorrectMessageType( ADD_COLOR ), hex } );
 export const removeColor = ( id ) => sendRequest( { type: findCorrectMessageType( REMOVE_COLOR ), id } );
+export const clearPalette = ( expectedVersion ) =>
+  sendRequest( { type: findCorrectMessageType( CLEAR_PALETTE ), expectedVersion } );
 export const saveGradient = ( gradient ) =>
   sendRequest( { type: findCorrectMessageType( SAVE_GRADIENT ), gradient } );
 

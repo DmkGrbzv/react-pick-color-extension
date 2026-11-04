@@ -1,11 +1,14 @@
 import { ERROR_CODES } from '@/constants/errorCodes.js';
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNotice } from '@/hooks/useNotice.js';
-import { addColor, removeColor } from '@/extension/clients/paletteClient.js';
+import { addColor, clearPalette, removeColor } from '@/extension/clients/paletteClient.js';
 import { openEditor } from '@/extension/clients/editorClient.js';
 import { errorKey } from '@/utils/errors.js';
+import { paletteVersion } from '@/utils/paletteSnapshot.js';
 
 export function usePaletteActions() {
+  const { t } = useTranslation();
   const [notice, setNotice] = useNotice();
   const [busy, setBusy] = useState( false );
   const [opening, setOpening] = useState( false );
@@ -63,6 +66,25 @@ export function usePaletteActions() {
     }
   }
 
+  async function clear( palette ) {
+    if ( operationRef.current || !palette?.colors.length ) return;
+    const expectedVersion = paletteVersion( palette );
+    if ( !window.confirm( t( 'paletteClear.confirm' ) ) ) return;
+    operationRef.current = true;
+    setBusy( true );
+    setNotice( null );
+    try {
+      await clearPalette( expectedVersion );
+      setNotice( { key: 'paletteClear.cleared' } );
+    } catch ( reason ) {
+      setNotice( { error: true, key: reason.code === 'paletteChanged'
+        ? 'paletteClear.changed' : errorKey( reason, ERROR_CODES.STORAGE_FAILURE ) } );
+    } finally {
+      operationRef.current = false;
+      setBusy( false );
+    }
+  }
+
   async function showEditor( gradientId ) {
     setOpening( true );
     setNotice( null );
@@ -75,5 +97,5 @@ export function usePaletteActions() {
     }
   }
 
-  return { notice, busy, opening, supported, pickColor, copy, remove, showEditor };
+  return { notice, busy, opening, supported, pickColor, copy, remove, clear, showEditor };
 }

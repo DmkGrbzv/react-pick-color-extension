@@ -237,5 +237,11 @@
     "moveFirst": "Move to beginning",
     "failed": "Could not reorder the palette. Try again."
   },
-  "paletteSettings": "Palette settings"
+  "paletteSettings": "Palette settings",
+  "paletteClear": {
+    "action": "Clear working palette",
+    "confirm": "Remove all colors and gradients from the working palette on this device? Unsaved items will be lost. Palettes already saved in the library will not be deleted.",
+    "cleared": "Working palette cleared.",
+    "changed": "The working palette changed in another view. Review it before trying to clear it again."
+  }
 }
