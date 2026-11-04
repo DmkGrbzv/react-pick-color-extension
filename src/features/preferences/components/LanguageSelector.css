@@ -6,9 +6,6 @@
 }
 .language-label select {
   max-width: 100%;
-  min-height: 34px;
-  font-size: 11px;
-  padding: 6px 7px;
 }
 .language-control .error {
   max-width: 160px;

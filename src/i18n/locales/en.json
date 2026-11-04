@@ -229,5 +229,6 @@
     "swap": "Swap background and accent",
     "composition": "Background {{background}}, accent {{accent}}.",
     "guidance": "These are starting points, not guaranteed matches. The result depends on proportions, background, and use. Text readability is not evaluated."
-  }
+  },
+  "paletteSettings": "Palette settings"
 }

@@ -13,10 +13,11 @@ export default function WorkingPalettePage( { palette, panel } ) {
   return (
     <>
       { panel && <PaletteToolbar palette={ palette } busy={ busy } supported={ supported } onPick={ pickColor } /> }
-      <div className="palette-controls">
+      <details className="palette-controls" open>
+        <summary>{ t( 'paletteSettings' ) } - { t( 'formats.label' ) }: { colorFormat.format.toUpperCase() }</summary>
         <ColorFormatSelector { ...colorFormat } />
         { colorFormat.format === 'cmyk' && <p className="hint color-format-warning">{ t( 'print.warning' ) }</p> }
-      </div>
+      </details>
       { palette && <PaletteItems format={ colorFormat.format } palette={ palette } editor={ !panel }
         busy={ busy || opening } onCopy={ copy } onRemove={ remove }
         onEditInPanel={ ( item ) => showEditor( item.id ) } /> }

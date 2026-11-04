@@ -93,8 +93,22 @@ button:hover:not(:disabled) {
   outline-offset: 3px;
 }
 select {
-  padding: 8px 10px;
+  appearance: none;
+  padding: 8px 32px 8px 10px;
   min-height: 36px;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 12px;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) 50%,
+    calc(100% - 12px) 50%;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
 }
 input[type='checkbox'],
 input[type='range'] {
@@ -156,4 +170,17 @@ code {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+select:hover:not(:disabled) {
+  background-color: var(--hover-bg);
+  border-color: var(--text-muted);
+}
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+select option {
+  background: var(--surface);
+  color: var(--text);
 }
