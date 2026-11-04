@@ -6,6 +6,7 @@ import { createListener } from '@/extension/messaging/createListener.js';
 import { createOpenEditor } from '@/extension/openEditorTab.js';
 import { PanelController, registerPanelEvents } from '@/extension/panelController.js';
 import { ApiClient } from '@/api/client.js';
+import { ChromeSessionStorage } from '@/features/auth/adapters/chromeSessionStorage.js';
 import { SessionStore } from '@/features/auth/services/sessionStore.js';
 import { BrowserSignIn } from '@/features/auth/services/browserSignIn.js';
 import { SavedPaletteService } from '@/features/saved-palettes/services/savedPaletteService.js';
@@ -15,7 +16,7 @@ const storage = new StorageAdapter( chrome.storage );
 const paletteService = new PaletteService( new PaletteRepository( storage ) );
 const panel = new PanelController( chrome );
 const http = apiUrl ? new ApiClient( apiUrl ) : null;
-const sessions = http ? new SessionStore( chrome.storage ) : null;
+const sessions = http ? new SessionStore( new ChromeSessionStorage( chrome.storage ) ) : null;
 const library = http ? new SavedPaletteService( {
   http,
   store: sessions,

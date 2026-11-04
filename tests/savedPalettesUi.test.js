@@ -19,6 +19,7 @@ test( 'library UI allows independent login, preserves full mixed sets and requir
   let pending = null;
   let saves = 0;
   let logins = 0;
+  let stateReads = 0;
   let deletes = 0;
   let listOffline = true;
   let working = { id: 'current', name: 'Working', colors: [{ id: 'one', hex: '#AABBCC' }] };
@@ -42,7 +43,7 @@ test( 'library UI allows independent login, preserves full mixed sets and requir
           await storage.local.set( { currentPalette: working } );
           return { ok: true, value: working };
         }
-        case 'cloud:state': return { ok: true, value: state() };
+        case 'cloud:state': stateReads++; return { ok: true, value: state() };
         case 'cloud:signIn':
           logins++;
           account = { id: 'A', email: 'a@example.test', expiresAt: new Date( Date.now() + 60_000 ).toISOString() };
@@ -82,6 +83,7 @@ test( 'library UI allows independent login, preserves full mixed sets and requir
     const { snapshotSignature } = await server.ssrLoadModule( '/src/utils/paletteSnapshot.js' );
     const { languageReady } = await server.ssrLoadModule( '/src/i18n/index.js' );
     await languageReady;
+    const idleListeners = storage.listeners.size;
     const palette = { id: 'current', name: 'Working', colors: [{ id: 'one', hex: '#AABBCC' }] };
     root = createRoot( document.getElementById( 'root' ) );
     await act( async () => root.render( createElement( App, { initialPage: 'library' } ) ) );
@@ -190,6 +192,19 @@ test( 'library UI allows independent login, preserves full mixed sets and requir
     await click( 'Open full view' );
     assert.equal( fullRequests.length, 1 );
     assert.equal( fullRequests[0].view, 'library' );
+    const reads = stateReads;
+    await act( async () => window.dispatchEvent( new window.Event( 'focus' ) ) );
+    assert.ok( stateReads > reads );
+    await act( async () => root.unmount() );
+    root = null;
+    assert.equal( storage.listeners.size, idleListeners );
+    const afterUnmount = stateReads;
+    await act( async () => {
+      window.dispatchEvent( new window.Event( 'focus' ) );
+      await storage.local.set( { cloudSession: null } );
+      await storage.session.set( { cloudPendingSave: null } );
+    } );
+    assert.equal( stateReads, afterUnmount );
   } finally {
     if ( root ) await act( async () => root.unmount() );
     await server?.close();

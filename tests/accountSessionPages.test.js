@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { ChromeSessionStorage } from '@/features/auth/adapters/chromeSessionStorage.js';
+import { subscribeToAccountEvents } from '@/features/auth/adapters/accountEvents.js';
 import { SessionStore } from '@/features/auth/services/sessionStore.js';
 import { SavedPaletteService } from '@/features/saved-palettes/services/savedPaletteService.js';
 import { SavedPalettesModel } from '@/features/saved-palettes/models/savedPalettesModel.js';
@@ -16,7 +18,7 @@ const identity = ( id ) => ( {
 
 test( 'all extension pages read the same worker session and follow account changes and logout', async () => {
   const storage = createTestStorage();
-  const store = new SessionStore( storage );
+  const store = new SessionStore( new ChromeSessionStorage( storage ) );
   await store.saveSession( identity( 'A' ), await store.beginLogin() );
   const service = new SavedPaletteService( { store, http: {}, login: {}, palette: {} } );
   const extensionId = 'a'.repeat( 32 );
@@ -34,12 +36,10 @@ test( 'all extension pages read the same worker session and follow account chang
       listSavedPalettes: () => assert.fail( 'Menus must not load the library library' ),
     }, { loadLibrary: false } );
   } );
-  const changed = ( changes, area ) => {
-    if ( area === 'local' && Object.hasOwn( changes, 'cloudSession' ) ) {
-      for ( const model of models ) model.sessionChanged();
-    }
-  };
-  storage.onChanged.addListener( changed );
+  const unsubscribe = subscribeToAccountEvents( {
+    onSessionChange: () => { for ( const model of models ) model.sessionChanged(); },
+    onPendingChange: () => { for ( const model of models ) void model.refresh(); },
+  }, storage );
   try {
     for ( const model of models ) model.start();
     await settle();
@@ -57,7 +57,8 @@ test( 'all extension pages read the same worker session and follow account chang
       assert.equal( model.getSnapshot().stateError, null );
     }
   } finally {
-    storage.onChanged.removeListener( changed );
+    unsubscribe();
     for ( const model of models ) model.stop();
   }
+  assert.equal( storage.listeners.size, 0 );
 } );

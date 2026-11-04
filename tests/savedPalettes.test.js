@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SavedPaletteService } from '@/features/saved-palettes/services/savedPaletteService.js';
+import { ChromeSessionStorage } from '@/features/auth/adapters/chromeSessionStorage.js';
 import { SessionStore } from '@/features/auth/services/sessionStore.js';
 import { createPaletteSnapshot, restorePaletteSnapshot, paletteVersion, isSavedPalette } from '@/utils/paletteSnapshot.js';
 import { PaletteService } from '@/features/palette/services/paletteService.js';
@@ -23,7 +24,7 @@ const identity = ( id = 'A' ) => ( {
 
 async function fixture( http = { request: async () => ( {} ) }, login ) {
   const storage = createTestStorage();
-  const store = new SessionStore( storage );
+  const store = new SessionStore( new ChromeSessionStorage( storage ) );
   let saved = structuredClone( palette );
   const local = new PaletteService( {
     read: async () => structuredClone( saved ),
@@ -130,7 +131,7 @@ test( 'successful opening replaces once and gives every restored item a new ID',
 
 test( 'session survives browser storage restart; pending retry is session-scoped and stale login cannot undo logout', async () => {
   const storage = createTestStorage();
-  const store = new SessionStore( storage );
+  const store = new SessionStore( new ChromeSessionStorage( storage ) );
   const epoch = await store.beginLogin();
   await store.saveSession( identity(), epoch );
   await store.setPending( { key: 'pending' } );
@@ -138,7 +139,7 @@ test( 'session survives browser storage restart; pending retry is session-scoped
   // Browser restart clears session storage, while local storage persists.
   await storage.session.remove( 'cloudPendingSave' );
   await storage.session.remove( 'cloudEpoch' );
-  const restarted = new SessionStore( storage );
+  const restarted = new SessionStore( new ChromeSessionStorage( storage ) );
   assert.equal( ( await restarted.session() ).user.id, 'A' );
   assert.equal( await restarted.pending(), null );
   await store.clear();
@@ -156,7 +157,7 @@ test( 'failed server logout still clears local credentials and pending data', as
 
 test( 'a stale unauthorized response cannot clear a newer account session', async () => {
   const storage = createTestStorage();
-  const store = new SessionStore( storage );
+  const store = new SessionStore( new ChromeSessionStorage( storage ) );
   const first = identity( 'A' );
   await store.saveSession( first, await store.beginLogin() );
   await store.saveSession( identity( 'B' ), await store.beginLogin() );
