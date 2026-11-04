@@ -34,7 +34,7 @@ export default function SavedPalettesPage( { palette, library, onOpened } ) {
 
   return (
     <>
-      { palette && <p className="hint">{ t( 'library.currentWorking', {
+      { palette && <p className="hint">{ t( palette.cloudSource?.id && palette.name ? 'library.currentWorking' : 'library.currentWorkingUnnamed', {
         name: palette.name, count: palette.colors.length,
       } ) }</p> }
     <section className="saved-palettes" aria-label={ t( 'library.title' ) }>
