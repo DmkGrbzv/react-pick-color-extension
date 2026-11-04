@@ -13,6 +13,7 @@
     "backend:test": "npm --prefix backend test",
     "verify:extension": "node scripts/verifyExtensionBuild.js",
     "check:architecture": "node scripts/checkArchitecture.js",
+    "check:frontend": "npm run lint && npm test && npm run build && npm run verify:extension",
     "format": "prettier --write . && eslint . --fix",
     "format:check": "prettier --check . && eslint .",
     "lint:fix": "eslint . --fix"
