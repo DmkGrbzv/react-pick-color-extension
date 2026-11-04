@@ -174,6 +174,8 @@
     "failed": "Could not load or save the color format. Please try again."
   },
   "print": {
+    "fullViewHint": "Open the full view to preview and print your palette comfortably.",
+    "widenHint": "Widen this window to preview and print your palette comfortably.",
     "open": "Print preview",
     "openFailed": "Could not open print preview.",
     "title": "Palette print preview",

@@ -91,7 +91,7 @@ export default function App( { panel = false, initialPage = 'working' } ) {
         <SavedPalettesPage palette={ palette } library={ library } onOpened={ opened } />
       </section> }
       { visited.includes( 'print' ) && <section className="app-content" hidden={ page !== 'print' } aria-label={ t( 'navigation.print' ) }>
-        <PrintPage palette={ palette } />
+        <PrintPage palette={ palette } panel={ panel } onOpenFull={ actions.expand } opening={ actions.opening } />
       </section> }
     </MainLayout>
   );

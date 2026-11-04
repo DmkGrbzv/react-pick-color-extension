@@ -6,6 +6,7 @@
   padding: 8px;
 }
 .print-page {
+  zoom: var(--print-preview-scale, 1);
   --text-muted: #626b7d;
   color-scheme: light;
   width: var(--sheet-width);
@@ -45,6 +46,7 @@
     padding: 0;
   }
   .print-page {
+    zoom: 1;
     margin: 0;
     border: 0;
     box-shadow: none;

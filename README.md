@@ -456,6 +456,12 @@ HEX remains the only stored color source. `utils/colorConversion.js` derives RGB
 
 `src/pages/Print/PrintPage.jsx` is the print screen inside App and receives the same working palette as the other screens. Its settings stay in React state across menu transitions, but reset on reload. `print.html` remains a compatible entry into that screen. `features/printing/utils/printLayout.js` paginates mixed colors and gradients using A4 dimensions and card size. Components under `src/features/printing/components/` render controls, sheets and cards; styles live beside the screen and print components.
 
+Below 820 px of available preview width, the side panel offers **Open full view**;
+a narrow full tab asks to widen the window. Print controls and sheets are hidden
+in that state, while settings remain intact. Wider previews scale sheets down as
+needed to fit, including landscape orientation. This scale applies only on screen;
+printed sheets retain their A4 dimensions.
+
 Use Print / Save as PDF to open the browser dialog. For matching pagination: A4, selected orientation, 100% scale, no additional margins, background graphics enabled, browser headers/footers disabled. The sheets include their own 15 mm padding. Browser/printer overrides may change pagination or colors. Long optional names are shortened on the sheet and available in screen tooltips. No PDF library, server, ICC conversion, or derived color storage is used. For a future direct PDF exporter, reuse the conversion/layout utilities and add a separate document renderer rather than extending palette storage.
 
 ## Architecture boundaries
