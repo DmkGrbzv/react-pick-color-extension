@@ -3,6 +3,7 @@ import {
   GET_PALETTE,
   ADD_COLOR,
   REMOVE_COLOR,
+  MOVE_ITEM_FIRST,
   SAVE_GRADIENT,
   OPEN_EDITOR,
   findCorrectMessageType,
@@ -18,6 +19,8 @@ export async function dispatchMessage( { paletteService, openEditor, library }, 
       return paletteService.getPalette();
     case findCorrectMessageType( ADD_COLOR ):
       return paletteService.addColor( message.hex );
+    case findCorrectMessageType( MOVE_ITEM_FIRST ):
+      return paletteService.moveItemFirst( message.id );
     case findCorrectMessageType( REMOVE_COLOR ):
       return paletteService.removeItem( message.id );
     case findCorrectMessageType( SAVE_GRADIENT ):

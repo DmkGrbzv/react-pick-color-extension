@@ -2,6 +2,7 @@ import {
   GET_PALETTE,
   ADD_COLOR,
   REMOVE_COLOR,
+  MOVE_ITEM_FIRST,
   SAVE_GRADIENT,
   findCorrectMessageType,
 } from '@/extension/messaging/messageTypes.js';
@@ -35,3 +36,5 @@ export function subscribeToPalette( onChange, onError ) {
     return () => {};
   }
 }
+
+export const moveItemFirst = ( id ) => sendRequest( { type: findCorrectMessageType( MOVE_ITEM_FIRST ), id } );

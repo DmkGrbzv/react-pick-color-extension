@@ -100,6 +100,17 @@ export class PaletteService {
     } );
   }
 
+  moveItemFirst( id ) {
+    return this.#update( ( palette ) => {
+      const index = palette.colors.findIndex( ( item ) => item.id === id );
+      if ( index < 0 ) throw new AppError( ERROR_CODES.MISSING_COLOR );
+      if ( index === 0 ) return palette;
+      const colors = [...palette.colors];
+      const [item] = colors.splice( index, 1 );
+      return { ...palette, colors: [item, ...colors] };
+    } );
+  }
+
   removeItem( id ) {
     return this.#update( ( palette ) => {
       if ( typeof id !== 'string' ) throw new AppError( ERROR_CODES.MISSING_COLOR );

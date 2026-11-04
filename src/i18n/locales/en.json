@@ -230,5 +230,10 @@
     "composition": "Background {{background}}, accent {{accent}}.",
     "guidance": "These are starting points, not guaranteed matches. The result depends on proportions, background, and use. Text readability is not evaluated."
   },
+  "palettePreview": {
+    "label": "All palette items",
+    "moveFirst": "Move to beginning",
+    "failed": "Could not reorder the palette. Try again."
+  },
   "paletteSettings": "Palette settings"
 }

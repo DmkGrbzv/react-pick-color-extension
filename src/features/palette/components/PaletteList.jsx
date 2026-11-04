@@ -1,3 +1,4 @@
+import PalettePreview from './PalettePreview.jsx';
 import Icon from '@/components/ui/Icon.jsx';
 import { useState } from 'react';
 import './PaletteList.css';
@@ -28,6 +29,7 @@ export default function PaletteList( {
           { t( 'savedLocally' ) }
         </span>
       </div>
+      <PalettePreview items={ palette.colors } />
       { palette.colors.length === 0 ? (
         <EmptyPalette editor={ editor } />
       ) : (

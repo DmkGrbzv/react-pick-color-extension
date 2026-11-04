@@ -1,0 +1,23 @@
+.palette-preview {
+  width: 100%;
+  margin-bottom: 12px;
+  min-width: 0;
+}
+.palette-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 28px);
+  gap: 6px;
+}
+.palette-preview-grid button {
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  cursor: pointer;
+  border: 1px solid var(--text-muted);
+  border-radius: 5px;
+}
+.palette-preview-grid button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
