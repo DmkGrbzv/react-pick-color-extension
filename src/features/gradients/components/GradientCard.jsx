@@ -18,11 +18,11 @@ export default function GradientCard( { item, format = 'hex', onCopy, onRemove, 
       <div className="color-details">
         { item.stops.map( ( stop, index ) => (
           <div className="gradient-stop-summary" key={ index }>
-            <ColorValues hex={ stop.hex } primary={ format } />
+            <ColorValues hex={ stop.hex } primary={ format } visible={ [format] } />
             <span>{ stop.position }%</span>
           </div>
         ) ) }
-        <p className="hint">{ t( 'gradient.directions.' + item.direction ) }</p>
+        <p className="hint gradient-card-direction">{ t( 'gradient.directions.' + item.direction ) }</p>
         <div className="color-actions">
           <button type="button" onClick={ () => onCopy( gradientDeclaration( item ), true ) }>
             <Icon name="copy" />

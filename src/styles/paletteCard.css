@@ -10,7 +10,6 @@
 .swatch {
   min-height: 100px;
   height: 100%;
-  border: 1px solid var(--swatch-border);
   border-radius: 6px;
 }
 .editor .swatch {
@@ -50,15 +49,29 @@
   border-color: var(--accent);
 }
 @container (min-width: 340px) {
-  .panel .color-card:not(.gradient-card) {
+  .panel .color-card {
     display: grid;
     grid-template-columns: minmax(0, 0.72fr) minmax(0, 1fr);
     gap: 12px;
   }
-  .panel .color-card:not(.gradient-card) .color-details {
+  .panel .color-card .color-details {
     padding: 2px 0 0;
   }
   .panel .color-card .color-advisor {
     grid-column: 1 / -1;
   }
+}
+
+.editor .palette-grid {
+  align-items: stretch;
+}
+.editor .color-card {
+  display: flex;
+  flex-direction: column;
+}
+.editor .color-card > .swatch {
+  flex-shrink: 0;
+}
+.editor .color-card > .color-details {
+  margin-top: auto;
 }

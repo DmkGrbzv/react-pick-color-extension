@@ -8,7 +8,6 @@
 .gradient-preview {
   width: 100%;
   height: 72px;
-  border: 1px solid var(--swatch-border);
   border-radius: 6px;
   margin: 16px 0;
 }

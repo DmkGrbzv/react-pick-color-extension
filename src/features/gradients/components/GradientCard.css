@@ -3,6 +3,12 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 11px;
   margin-bottom: 5px;
+}
+
+.gradient-card-direction {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
 }
