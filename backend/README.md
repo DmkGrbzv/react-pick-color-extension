@@ -46,8 +46,9 @@ remain sanitized as `500 serverError`.
 
 ## Setup
 
-Use Node.js 22.16+ and MongoDB configured as a replica set (MongoDB Atlas is also
-suitable). Palette quota and creation use multi-document transactions.
+Use Node.js 22.16+ and MongoDB 4.4+ configured as a replica set (MongoDB Atlas is also
+suitable). The local Compose setup uses MongoDB 8.0. Palette quota and creation use
+multi-document transactions.
 
 ```sh
 cd backend

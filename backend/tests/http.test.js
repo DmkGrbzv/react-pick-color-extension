@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { gzipSync } from 'node:zlib';
 import { createApp } from '../src/app.js';
 import { ApiError } from '../src/http/apiError.js';
 import { ApplicationError } from '../src/errors/applicationError.js';
@@ -100,6 +101,25 @@ test( 'HTTP body limits and invalid JSON are handled before mutation', async ( c
   const oversized = await fetch( url + '/v1/palettes', { method: 'POST', headers, body: JSON.stringify( { text: 'x'.repeat( 33_000 ) } ) } );
   assert.equal( oversized.status, 413 );
   assert.equal( calls.length, 0 );
+} );
+
+test( 'compressed JSON works and malformed compressed bodies do not mutate data or stop the API', async ( context ) => {
+  const { url, calls } = await fixture( context );
+  const headers = { Authorization: 'Bearer test', 'Content-Type': 'application/json', 'Content-Encoding': 'gzip' };
+  const body = { name: 'Compressed palette', items: [{ type: 'color', hex: '#AABBCC' }] };
+  const compressed = gzipSync( JSON.stringify( body ) );
+  const valid = await fetch( url + '/v1/palettes', {
+    method: 'POST', headers, body: compressed, signal: AbortSignal.timeout( 5000 ),
+  } );
+  assert.equal( valid.status, 201 );
+  assert.deepEqual( calls[0].body, body );
+  const invalid = await fetch( url + '/v1/palettes', {
+    method: 'POST', headers, body: Buffer.concat( [compressed, Buffer.from( [255, 255, 255] )] ),
+    signal: AbortSignal.timeout( 5000 ),
+  } );
+  assert.ok( invalid.status >= 400 );
+  assert.equal( calls.length, 1 );
+  assert.equal( ( await fetch( url + '/health' ) ).status, 200 );
 } );
 
 test( 'authenticated rate limits include both IP and user and return retry guidance', async ( context ) => {

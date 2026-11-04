@@ -4,7 +4,7 @@ A Manifest V3 Chrome extension built with React 19 and Vite 8. The side panel an
 
 ## Run
 
-1. Use Node.js 22.12+ and Chrome 116+.
+1. Use a Node.js version allowed by `package.json` (22.22.2+ on Node 22) and Chrome 116+.
 2. Install dependencies: `npm ci`.
 3. Build: `npm run build`.
 4. Open `chrome://extensions`, enable Developer mode, and select **Load unpacked**.
@@ -318,11 +318,11 @@ MongoDB replica-set setup, integration tests and independent deployment.
 Dependency maintenance is separate from behavior tests. From the repository root:
 
 ```sh
-npm outdated
-npm --prefix backend outdated
 npm audit
 npm --prefix backend audit
 npm audit --omit=dev
+npm outdated
+npm --prefix backend outdated
 ```
 
 `outdated` compares installed (`current`), allowed by package.json (`wanted`), and
@@ -332,6 +332,11 @@ they find results. Use `--all` with `outdated` to inspect transitive versions to
 An older version does not by itself establish a vulnerability, and a passing
 audit does not prove safety. Review updates separately, then rerun the checks
 below, including MongoDB integration tests when backend dependencies change.
+
+The development dependency `minimatch` is overridden to 11.x (11.0.1 or later) to address
+[GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249) while ESLint
+still requests 10.x. Lint and architecture tests cover this compatibility choice;
+remove the override once upstream dependencies select a patched version.
 
 ```sh
 npm run format:check
