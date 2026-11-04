@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { findCycles, checkBoundaries, resolveSourceImport } from '../scripts/architectureRules.js';
+import { analyzeSource } from '../scripts/architectureSource.js';
 
 test( 'dependency audit accepts shared presentation and separate UI/worker composition', () => {
   const graph = new Map( [
@@ -13,6 +14,59 @@ test( 'dependency audit accepts shared presentation and separate UI/worker compo
   ] );
   assert.deepEqual( checkBoundaries( graph ), [] );
   assert.deepEqual( findCycles( graph ), [] );
+} );
+
+test( 'backend audit permits assembly and neutral contracts, rejects infrastructure leaks', () => {
+  const graph = new Map( [
+    ['backend/src/server.js', ['backend/src/infrastructure/mongodb/connectStorage.js', 'backend/src/auth/authService.js']],
+    ['backend/src/auth/authService.js', ['backend/src/errors/applicationError.js']],
+    ['backend/src/infrastructure/mongodb/authRepository.js', ['mongodb', 'backend/src/errors/applicationError.js']],
+    ['backend/src/http/middleware.js', ['backend/src/errors/applicationError.js']],
+  ] );
+  assert.deepEqual( checkBoundaries( graph ), [] );
+  for ( const target of ['mongodb', 'mongodb/lib/client.js', 'express', 'openid-client',
+    'backend/src/infrastructure/mongodb/authRepository.js', 'backend/src/http/apiError.js', 'backend/src/config.js'] ) {
+    const invalid = new Map( [['backend/src/auth/authService.js', [target]]] );
+    assert.ok( checkBoundaries( invalid ).some( ( value ) => value.includes( 'backend infrastructure or transport' ) ) );
+  }
+  assert.ok( checkBoundaries( new Map( [
+    ['backend/src/infrastructure/mongodb/paletteRepository.js', ['backend/src/http/apiError.js']],
+  ] ) ).some( ( value ) => value.includes( 'HTTP from infrastructure' ) ) );
+  assert.equal( resolveSourceImport( 'backend/src/auth/authService.js', '../contracts/authRepository.js' ),
+    'backend/src/contracts/authRepository.js' );
+  assert.throws( () => resolveSourceImport( 'backend/src/auth/authService.js', '../../../src/App.jsx' ), /outside backend\/src/ );
+  assert.ok( checkBoundaries( new Map( [
+    ['backend/src/auth/authService.js', ['backend/src/helpers/storage.js']],
+    ['backend/src/helpers/storage.js', ['mongodb']],
+  ] ) ).some( ( value ) => value.includes( 'reaches backend infrastructure or transport: mongodb' ) ) );
+  assert.ok( checkBoundaries( new Map( [
+    ['backend/src/http/middleware.js', ['backend/src/infrastructure/mongodb/rateLimiter.js']],
+  ] ) ).some( ( value ) => value.includes( 'concrete infrastructure from HTTP' ) ) );
+} );
+
+test( 'backend cycles across application and infrastructure are reported', () => {
+  const application = 'backend/src/auth/authService.js';
+  const adapter = 'backend/src/infrastructure/mongodb/authRepository.js';
+  assert.deepEqual( findCycles( new Map( [[application, [adapter]], [adapter, [application]]] ) ),
+    [[application, adapter, application]] );
+} );
+
+test( 'source audit rejects direct Chrome/session-key access in account hooks and policy', () => {
+  const hook = 'src/features/saved-palettes/hooks/useSavedPalettes.js';
+  for ( const source of [
+    'chrome.storage.local.get("key")', 'globalThis.chrome.storage.onChanged.addListener(callback)',
+    'window["chrome"]["storage"].local.get("key")', 'const { storage } = chrome;',
+    'const SESSION_KEY = "cloudSession";',
+  ] ) assert.ok( analyzeSource( hook, source ).violations.length, source );
+  assert.ok( analyzeSource( 'src/features/auth/services/sessionStore.js', 'storage.local.setAccessLevel({});' ).violations.length );
+  const imports = ['src/features/auth/constants/sessionKeys.js'];
+  assert.ok( checkBoundaries( new Map( [[hook, imports]] ) ).some( ( value ) => value.includes( 'storage keys' ) ) );
+  assert.deepEqual( analyzeSource( hook,
+    'import { subscribeToAccountEvents } from "../adapters/accountEvents.js"; subscribeToAccountEvents(callbacks);' ).violations, [] );
+  assert.deepEqual( analyzeSource( 'src/features/auth/adapters/accountEvents.js', 'chrome.storage.onChanged.addListener(callback);' ).violations, [] );
+  assert.throws( () => analyzeSource( hook, 'import(path)' ), /computed dynamic import/ );
+  assert.deepEqual( analyzeSource( hook, 'export { x } from "./module.js"; import("./other.js");' ).imports,
+    ['./module.js', './other.js'] );
 } );
 
 test( 'dependency audit rejects shared components importing features and feature models importing UI', () => {

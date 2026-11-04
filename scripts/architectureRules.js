@@ -2,14 +2,17 @@ import path from 'node:path';
 
 const shared = /^src\/(components|layouts|services|utils|types|constants|i18n)\//;
 const application = /^src\/(features|pages|routes|extension|api)\/|^src\/(App|main)\.jsx$/;
-const workerOnly = /^src\/(api\/client\.js|extension\/(background\.js|messaging\/(createListener|dispatchMessage|dispatchLibraryMessage)\.js)|features\/auth\/services\/|features\/saved-palettes\/services\/)/;
+const workerOnly = /^src\/(api\/client\.js|extension\/(background\.js|messaging\/(createListener|dispatchMessage|dispatchLibraryMessage)\.js)|features\/auth\/(services\/|adapters\/chromeSessionStorage\.js)|features\/saved-palettes\/services\/)/;
+const backendApplication = /^backend\/src\/(auth|palettes|contracts|errors)\//;
+const backendInfrastructure = /^backend\/src\/(http|infrastructure)\/|^backend\/src\/(app|server|config)\.js$|^(mongodb|express|openid-client)(\/|$)/;
 
 export function resolveSourceImport( file, specifier ) {
   let target;
   if ( specifier.startsWith( '@/' ) ) target = path.posix.normalize( 'src/' + specifier.slice( 2 ) );
   else if ( specifier.startsWith( '.' ) ) target = path.posix.normalize( path.posix.join( path.posix.dirname( file ), specifier ) );
   else return specifier;
-  if ( !target.startsWith( 'src/' ) ) throw new Error( file + ' imports outside src: ' + specifier );
+  const sourceRoot = file.startsWith( 'backend/src/' ) ? 'backend/src/' : 'src/';
+  if ( !target.startsWith( sourceRoot ) ) throw new Error( file + ' imports outside ' + sourceRoot.slice( 0, -1 ) + ': ' + specifier );
   return target;
 }
 
@@ -49,6 +52,17 @@ export function checkBoundaries( graph ) {
   const errors = new Set();
   for ( const [file, targets] of graph ) {
     for ( const target of targets ) {
+      if ( file.startsWith( 'backend/src/http/' ) &&
+        /^backend\/src\/infrastructure\/|^(mongodb|openid-client)(\/|$)/.test( target ) ) {
+        errors.add( file + ' imports concrete infrastructure from HTTP: ' + target );
+      }
+      if ( file.startsWith( 'backend/src/infrastructure/' ) && /^backend\/src\/http\//.test( target ) ) {
+        errors.add( file + ' imports HTTP from infrastructure: ' + target );
+      }
+      if ( /^src\/features\/(auth|saved-palettes)\/hooks\//.test( file ) &&
+        target === 'src/features/auth/constants/sessionKeys.js' ) {
+        errors.add( file + ' imports session storage keys: ' + target );
+      }
       if ( shared.test( file ) && application.test( target ) ) {
         errors.add( file + ' imports application functionality: ' + target );
       }
@@ -57,6 +71,11 @@ export function checkBoundaries( graph ) {
       }
       if ( /\/(services|models|utils)\/|^src\/api\//.test( file ) && /^(react|react-dom)(\/|$)|\.jsx$/.test( target ) ) {
         errors.add( file + ' imports React UI: ' + target );
+      }
+    }
+    if ( backendApplication.test( file ) ) {
+      for ( const target of reachable( graph, file ) ) {
+        if ( backendInfrastructure.test( target ) ) errors.add( file + ' reaches backend infrastructure or transport: ' + target );
       }
     }
   }

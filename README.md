@@ -174,6 +174,9 @@ src/
 ```
 
 The root `backend/` directory contains the independent Node.js/MongoDB API.
+Its services use storage/provider contracts; concrete MongoDB/OIDC adapters live
+in `backend/src/infrastructure/` and are selected in `backend/src/server.js`.
+See [backend architecture and adapter integration](backend/README.md#structure).
 `public/` holds the manifest, browser icons, and browser translations.
 `scripts/` contains build, packaging, and architecture checks.
 
@@ -198,9 +201,26 @@ does not reload HTML. The separately built service worker remains `background.js
 
 Run `npm run check:architecture` to validate actual import edges, missing local
 imports, cycles, layer boundaries, and transitive UI/worker separation.
+The audit covers both `src/` and `backend/src/`; backend application modules
+cannot reach database drivers, concrete adapters or HTTP implementation details.
+Account hooks cannot access Chrome APIs or session-storage keys directly.
 `npm run lint` also runs this audit. It reports module/import counts and requires
 zero cycles and zero boundary violations; these are project checks, not a claim
 that a folder convention guarantees production readiness.
+
+### Session storage boundary
+
+The worker creates `SessionStore` with `features/auth/adapters/chromeSessionStorage.js`.
+Session policy uses the lifetime-based contract in
+`features/auth/services/sessionStorage.contract.js`; the Chrome adapter alone maps
+persistent/temporary reads and writes to `local`/`session` and applies
+`TRUSTED_CONTEXTS` restrictions. The existing session, epoch and pending-save
+keys, absolute session lifetime and worker mutation queue remain compatible.
+
+`useSavedPalettes` receives session/pending notifications through
+`features/auth/adapters/accountEvents.js`. It owns subscription cleanup and focus
+refresh; it does not read storage areas, keys or credentials. Separate panel/tab
+instances still communicate through the worker and storage notifications.
 
 The decisions follow [React's state ownership guidance](https://react.dev/learn/thinking-in-react),
 [React's state preservation rules](https://react.dev/learn/preserving-and-resetting-state),
@@ -294,6 +314,24 @@ suite after `npm ci --prefix backend`. See the backend README for OAuth setup,
 MongoDB replica-set setup, integration tests and independent deployment.
 
 ## Checks
+
+Dependency maintenance is separate from behavior tests. From the repository root:
+
+```sh
+npm outdated
+npm --prefix backend outdated
+npm audit
+npm --prefix backend audit
+npm audit --omit=dev
+```
+
+`outdated` compares installed (`current`), allowed by package.json (`wanted`), and
+registry-tagged (`latest`) versions; it does not update packages. `audit` checks
+known advisories, including transitive dependencies. Both can exit nonzero when
+they find results. Use `--all` with `outdated` to inspect transitive versions too.
+An older version does not by itself establish a vulnerability, and a passing
+audit does not prove safety. Review updates separately, then rerun the checks
+below, including MongoDB integration tests when backend dependencies change.
 
 ```sh
 npm run format:check
