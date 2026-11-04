@@ -1,4 +1,4 @@
-import { ApiError } from '../http/apiError.js';
+import { ApplicationError } from '../errors/applicationError.js';
 import { digest, matches, secret } from './crypto.js';
 
 function validChallenge( value ) {
@@ -9,6 +9,8 @@ export class AuthService {
   #repository;
   #provider;
   #config;
+  /** @param {{repository: import('../contracts/authRepository.js').AuthRepository,
+   * provider: import('../contracts/identityProvider.js').IdentityProvider, config: object}} dependencies */
   constructor( { repository, provider, config } ) {
     this.#repository = repository;
     this.#provider = provider;
@@ -19,7 +21,7 @@ export class AuthService {
     if ( !input || Object.keys( input ).some( ( key ) => !['redirectUri', 'challenge', 'clientState'].includes( key ) ) ||
       !this.#config.redirectUris.includes( input.redirectUri ) ||
       !validChallenge( input.challenge ) || !validChallenge( input.clientState ) ) {
-      throw new ApiError( 400, 'invalidAuthRequest' );
+      throw new ApplicationError( 'invalidAuthRequest' );
     }
     const providerVerifier = secret();
     const transaction = {
@@ -34,9 +36,9 @@ export class AuthService {
   }
 
   async callback( query ) {
-    if ( !validChallenge( query.state ) ) throw new ApiError( 400, 'invalidAuthRequest' );
+    if ( !validChallenge( query.state ) ) throw new ApplicationError( 'invalidAuthRequest' );
     const transaction = await this.#repository.takeTransaction( query.state );
-    if ( !transaction ) throw new ApiError( 401, 'invalidAuthRequest' );
+    if ( !transaction ) throw new ApplicationError( 'invalidAuthRequest', 'unusableCredential' );
     const redirect = new URL( transaction.redirectUri );
     redirect.searchParams.set( 'state', transaction.clientState );
     if ( query.error ) {
@@ -44,7 +46,7 @@ export class AuthService {
       return redirect.href;
     }
     if ( typeof query.code !== 'string' || query.code.length > 4096 ) {
-      throw new ApiError( 400, 'invalidAuthRequest' );
+      throw new ApplicationError( 'invalidAuthRequest' );
     }
     try {
       const code = await this.#completeLogin( query, transaction );
@@ -62,7 +64,7 @@ export class AuthService {
     const code = secret();
     await this.#repository.createExchange( {
       codeHash: digest( code ), challenge: transaction.challenge,
-      userId: user._id, email: user.email,
+      userId: user.id, email: user.email,
       expiresAt: new Date( Date.now() + 60_000 ),
     } );
     return code;
@@ -71,9 +73,9 @@ export class AuthService {
   async exchange( input ) {
     if ( !input || Object.keys( input ).some( ( key ) => !['code', 'verifier'].includes( key ) ) ||
       !validChallenge( input.code ) || typeof input.verifier !== 'string' ||
-      !/^[\w-]{43,128}$/.test( input.verifier ) ) throw new ApiError( 400, 'invalidAuthRequest' );
+      !/^[\w-]{43,128}$/.test( input.verifier ) ) throw new ApplicationError( 'invalidAuthRequest' );
     const exchange = await this.#repository.takeExchange( digest( input.code ), digest( input.verifier ) );
-    if ( !exchange ) throw new ApiError( 401, 'invalidAuthRequest' );
+    if ( !exchange ) throw new ApplicationError( 'invalidAuthRequest', 'unusableCredential' );
     const token = secret();
     const expiresAt = new Date( Date.now() + this.#config.sessionSeconds * 1000 );
     await this.#repository.createSession( { tokenHash: digest( token ), userId: exchange.userId, expiresAt } );
@@ -82,9 +84,9 @@ export class AuthService {
 
   async authenticate( authorization ) {
     const token = typeof authorization === 'string' ? authorization.match( /^Bearer ([\w-]{43})$/ )?.[1] : null;
-    if ( !token ) throw new ApiError( 401, 'unauthorized' );
+    if ( !token ) throw new ApplicationError( 'unauthorized' );
     const session = await this.#repository.findSession( digest( token ) );
-    if ( !session || !matches( session.tokenHash, digest( token ) ) ) throw new ApiError( 401, 'unauthorized' );
+    if ( !session || !matches( session.tokenHash, digest( token ) ) ) throw new ApplicationError( 'unauthorized' );
     return session;
   }
 

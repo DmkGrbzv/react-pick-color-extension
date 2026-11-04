@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createApp } from '../src/app.js';
 import { ApiError } from '../src/http/apiError.js';
+import { ApplicationError } from '../src/errors/applicationError.js';
 
 async function fixture( context, limiter = { check: async () => {} } ) {
   const calls = [];
@@ -45,6 +46,36 @@ test( 'HTTP rejects unauthorized and foreign palette requests without leaking de
   assert.equal( value.error, 'serverError' );
   assert.ok( value.requestId );
   assert.ok( !JSON.stringify( value ).includes( 'secret' ) );
+} );
+
+test( 'HTTP centrally maps application errors, preserves credential status and hides unexpected errors', async ( context ) => {
+  let failure;
+  const app = createApp( { config: { origins: [], proxyHops: 0 },
+    auth: { begin: async () => { throw failure; } }, palettes: {}, limiter: { check: async () => {} } } );
+  const server = app.listen( 0, '127.0.0.1' );
+  await new Promise( ( resolve ) => server.once( 'listening', resolve ) );
+  context.after( () => new Promise( ( resolve ) => server.close( resolve ) ) );
+  const url = 'http://127.0.0.1:' + server.address().port + '/v1/auth/start';
+  for ( const [code, status, reason] of [
+    ['invalidAuthRequest', 400], ['invalidAuthRequest', 401, 'unusableCredential'],
+    ['invalidIdentity', 401], ['authConfiguration', 502], ['unauthorized', 401],
+    ['invalidPalette', 400], ['invalidSaveKey', 400], ['invalidCursor', 400],
+    ['notFound', 404], ['paletteLimit', 409], ['saveConflict', 409], ['snapshotDeleted', 410],
+    ['rateLimited', 429], ['serverError', 500], ['operationConflict', 500],
+  ] ) {
+    failure = new ApplicationError( code, reason );
+    assert.equal( failure.status, undefined );
+    const response = await fetch( url, { method: 'POST' } );
+    assert.equal( response.status, status, code );
+    assert.equal( ( await response.json() ).error, code === 'operationConflict' ? 'serverError' : code );
+    if ( status === 429 ) assert.equal( response.headers.get( 'retry-after' ), '60' );
+  }
+  failure = Object.assign( new Error( 'database-password-and-driver-details' ), { code: 11000 } );
+  const response = await fetch( url, { method: 'POST' } );
+  assert.equal( response.status, 500 );
+  const body = await response.text();
+  assert.ok( body.includes( 'serverError' ) );
+  assert.ok( !body.includes( 'database-password' ) );
 } );
 
 test( 'CORS preflight does not authenticate; a forged Origin is no substitute for a session', async ( context ) => {

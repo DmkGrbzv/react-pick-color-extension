@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readConfig } from '../src/config.js';
+import { readMongoConfig } from '../src/infrastructure/mongodb/config.js';
 
 const env = {
   NODE_ENV: 'development', PUBLIC_API_URL: 'http://localhost:3001',
@@ -26,7 +27,15 @@ test( 'production forbids HTTP and malformed origins, callbacks and numeric limi
     { EXTENSION_ORIGINS: '*' }, { AUTH_REDIRECT_URIS: 'http://attacker.test' },
     { SESSION_TTL_SECONDS: '-1' }, { MAX_PALETTE_ITEMS: '257' }, { TRUST_PROXY_HOPS: 'true' },
   ] ) assert.throws( () => readConfig( { ...env, ...overrides } ) );
-  assert.throws( () => readConfig( { ...env, NODE_ENV: 'production', PUBLIC_API_URL: 'https://api.test' } ), /TLS/ );
+  assert.throws( () => readMongoConfig( { ...env, NODE_ENV: 'production' } ), /TLS/ );
   assert.equal( readConfig( { ...env, NODE_ENV: 'production', PUBLIC_API_URL: 'https://api.test',
     MONGODB_URI: 'mongodb+srv://cluster.example.test/' } ).sessionSeconds, 86400 );
+} );
+
+test( 'general configuration is independent of storage; Mongo configuration owns its settings', () => {
+  assert.equal( readConfig( { ...env, MONGODB_URI: undefined, MONGODB_DATABASE: undefined } ).sessionSeconds, 86400 );
+  assert.deepEqual( readMongoConfig( env ), { uri: env.MONGODB_URI, database: env.MONGODB_DATABASE } );
+  for ( const key of ['MONGODB_URI', 'MONGODB_DATABASE'] ) assert.throws( () => readMongoConfig( { ...env, [key]: '' } ) );
+  assert.equal( readMongoConfig( { ...env, NODE_ENV: 'production', MONGODB_URI: 'mongodb+srv://cluster.example.test/' } ).database, 'test' );
+  assert.throws( () => readMongoConfig( { ...env, NODE_ENV: 'production', MONGODB_URI: 'mongodb+srv://cluster.test/?tls=false' } ), /TLS/ );
 } );

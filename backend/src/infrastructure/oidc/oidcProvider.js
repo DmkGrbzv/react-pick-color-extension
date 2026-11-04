@@ -1,8 +1,9 @@
 import * as oidc from 'openid-client';
-import { ApiError } from '../http/apiError.js';
+import { ApplicationError } from '../../errors/applicationError.js';
 
 // Provider adapter: AuthService depends only on authorizeUrl() and verify().
 // Google is selected by deployment configuration, not by the session service.
+/** @implements {import('../../contracts/identityProvider.js').IdentityProvider} */
 export class OidcProvider {
   #client;
   #issuer;
@@ -26,7 +27,7 @@ export class OidcProvider {
     try {
       const callback = new URL( this.#callback );
       for ( const [key, value] of Object.entries( query ) ) {
-        if ( typeof value !== 'string' ) throw new ApiError( 400, 'invalidAuthRequest' );
+        if ( typeof value !== 'string' ) throw new ApplicationError( 'invalidAuthRequest' );
         callback.searchParams.set( key, value );
       }
       const tokens = await oidc.authorizationCodeGrant( this.#client, callback, {
@@ -35,16 +36,16 @@ export class OidcProvider {
         idTokenExpected: true,
       } );
       const claims = tokens.claims();
-      if ( !claims?.sub ) throw new ApiError( 401, 'invalidIdentity' );
+      if ( !claims?.sub ) throw new ApplicationError( 'invalidIdentity' );
       return {
         provider: this.#issuer, sub: claims.sub,
         email: claims.email_verified === true ? claims.email : undefined,
       };
     } catch ( error ) {
       if ( error.error === 'invalid_client' || error.cause?.error === 'invalid_client' ) {
-        throw new ApiError( 502, 'authConfiguration' );
+        throw new ApplicationError( 'authConfiguration' );
       }
-      throw new ApiError( 401, 'invalidIdentity' );
+      throw new ApplicationError( 'invalidIdentity' );
     }
   }
 }

@@ -1,4 +1,4 @@
-import { ApiError } from '../http/apiError.js';
+import { ApplicationError } from '../errors/applicationError.js';
 import { digest } from '../auth/crypto.js';
 
 function exactKeys( value, allowed ) {
@@ -8,43 +8,43 @@ function exactKeys( value, allowed ) {
 
 function hex( value ) {
   if ( typeof value !== 'string' || !/^#[\da-f]{6}$/i.test( value ) ) {
-    throw new ApiError( 400, 'invalidPalette' );
+    throw new ApplicationError( 'invalidPalette' );
   }
   return value.toUpperCase();
 }
 
 function stop( value ) {
   if ( !exactKeys( value, ['hex', 'position'] ) || !Number.isFinite( value.position ) ||
-    value.position < 0 || value.position > 100 ) throw new ApiError( 400, 'invalidPalette' );
+    value.position < 0 || value.position > 100 ) throw new ApplicationError( 'invalidPalette' );
   return { hex: hex( value.hex ), position: value.position };
 }
 
 export function normalizeItem( value ) {
   if ( !exactKeys( value, ['type', 'hex', 'gradientType', 'direction', 'stops'] ) ) {
-    throw new ApiError( 400, 'invalidPalette' );
+    throw new ApplicationError( 'invalidPalette' );
   }
   if ( value.type === 'color' && exactKeys( value, ['type', 'hex'] ) ) {
     return { type: 'color', hex: hex( value.hex ) };
   }
   if ( value.type !== 'gradient' || !exactKeys( value, ['type', 'gradientType', 'direction', 'stops'] ) ||
     value.gradientType !== 'linear' || !['right', 'left', 'down', 'up'].includes( value.direction ) ||
-    !Array.isArray( value.stops ) || value.stops.length !== 2 ) throw new ApiError( 400, 'invalidPalette' );
+    !Array.isArray( value.stops ) || value.stops.length !== 2 ) throw new ApplicationError( 'invalidPalette' );
   const stops = value.stops.map( stop );
-  if ( stops[0].position > stops[1].position ) throw new ApiError( 400, 'invalidPalette' );
+  if ( stops[0].position > stops[1].position ) throw new ApplicationError( 'invalidPalette' );
   return { type: 'gradient', gradientType: 'linear', direction: value.direction, stops };
 }
 
 export function paletteName( value ) {
   if ( typeof value !== 'string' || !value.trim() || value.trim().length > 120 ||
     [...value].some( ( character ) => character.charCodeAt( 0 ) < 32 ) ) {
-    throw new ApiError( 400, 'invalidPalette' );
+    throw new ApplicationError( 'invalidPalette' );
   }
   return value.trim();
 }
 
 export function normalizeSnapshot( input, maxItems ) {
   if ( !exactKeys( input, ['items', 'name'] ) || !Array.isArray( input.items ) ||
-    input.items.length === 0 || input.items.length > maxItems ) throw new ApiError( 400, 'invalidPalette' );
+    input.items.length === 0 || input.items.length > maxItems ) throw new ApplicationError( 'invalidPalette' );
   const normalized = input.items.map( normalizeItem );
   const seen = new Set();
   const items = normalized.filter( ( item ) => {
@@ -58,7 +58,7 @@ export function normalizeSnapshot( input, maxItems ) {
 
 export function saveKey( key ) {
   if ( typeof key !== 'string' || !/^[\w-]{16,128}$/.test( key ) ) {
-    throw new ApiError( 400, 'invalidSaveKey' );
+    throw new ApplicationError( 'invalidSaveKey' );
   }
   return key;
 }
@@ -66,7 +66,7 @@ export function saveKey( key ) {
 export const snapshotHash = ( snapshot ) => digest( JSON.stringify( snapshot ) );
 
 export function encodeCursor( document ) {
-  return Buffer.from( JSON.stringify( { date: document.createdAt.toISOString(), id: document._id } ) ).toString( 'base64url' );
+  return Buffer.from( JSON.stringify( { date: document.createdAt.toISOString(), id: document.id } ) ).toString( 'base64url' );
 }
 
 export function decodeCursor( cursor ) {
@@ -76,12 +76,12 @@ export function decodeCursor( cursor ) {
     const value = JSON.parse( Buffer.from( cursor, 'base64url' ).toString() );
     if ( !exactKeys( value, ['date', 'id'] ) || typeof value.id !== 'string' ||
       !/^[\da-f-]{36}$/i.test( value.id ) || !Number.isFinite( Date.parse( value.date ) ) ) throw new Error();
-    return { date: new Date( value.date ), id: value.id };
+    return { createdAt: new Date( value.date ), id: value.id };
   } catch {
-    throw new ApiError( 400, 'invalidCursor' );
+    throw new ApplicationError( 'invalidCursor' );
   }
 }
 
 export function publicPalette( document ) {
-  return { id: document._id, name: document.name, items: document.items, createdAt: document.createdAt };
+  return { id: document.id, name: document.name, items: document.items, createdAt: document.createdAt };
 }

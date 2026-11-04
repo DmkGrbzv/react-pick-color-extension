@@ -5,13 +5,44 @@ Nothing in this directory is imported into the extension or packaged in its ZIP.
 
 ## Structure
 
-- `auth/AuthService`: login transaction, one-time exchange and application sessions.
-- `auth/OidcProvider`: injected OIDC adapter using `openid-client`; the issuer is
-  deployment configuration. Google is the first configured provider. Browser
-  accounts are not automatically identity providers.
-- `palettes/SavedPaletteService`: snapshot validation, ownership and save rules.
-- Repositories: MongoDB persistence, atomic exchange and transactional quotas.
-- `http`: request IDs, CORS, shared MongoDB rate limits and sanitized errors.
+- `src/auth/`: login transactions, one-time exchange and application sessions.
+- `src/palettes/`: snapshot validation, save rules and public palette/cursor mapping.
+- `src/contracts/`: operation-specific repository, identity-provider and rate-limiter
+  JSDoc contracts, including results, absence, errors and concurrency guarantees.
+- `src/errors/`: transport-independent application errors.
+- `src/infrastructure/mongodb/`: repositories, transactions, indexes, rate limiter,
+  connection settings and connection lifecycle. Only these modules know MongoDB.
+- `src/infrastructure/oidc/`: injected adapter using `openid-client`. The issuer
+  selects Google through configuration; browser accounts are not identity providers.
+- `src/http/`: request IDs, CORS, authentication middleware and centralized error
+  mapping. `src/app.js` defines the existing HTTP routes.
+- `src/server.js`: composition root; selects storage and identity provider, injects
+  repositories into services and the limiter into HTTP, and closes storage on exit.
+
+Dependencies (arrows mean imports or injected contracts):
+
+```text
+server.js --> Mongo connection + OIDC factory
+          --> AuthService / SavedPaletteService --> contracts + ApplicationError
+          --> app.js / HTTP middleware          --> services + limiter contract
+Mongo adapters / OIDC adapter                  --> contracts + ApplicationError
+HTTP error mapping                            --> ApplicationError
+```
+
+Services never import concrete adapters, driver types, Express or HTTP errors.
+Repository results are detached entities with `id`, never MongoDB documents or
+driver result objects. Creation returns `{ palette, created }`; listing returns
+`{ palettes, continuation }`. Only services build public palette responses and
+encode/decode the external cursor. The cursor remains base64url JSON
+`{ date: ISO-string, id }`, with UTC millisecond precision and descending
+`createdAt, id` ordering. IDs use canonical lowercase UUIDs and binary ASCII
+comparison (MongoDB simple collation). Pagination is exclusive after the cursor;
+it is not a snapshot across separate requests.
+
+Application errors carry stable codes without HTTP statuses. HTTP maps them in
+`http/applicationErrors.js`, including the existing 400/401 distinction for
+malformed versus unusable login credentials. Unexpected infrastructure errors
+remain sanitized as `500 serverError`.
 
 ## Setup
 
@@ -130,6 +161,44 @@ real RSA signatures and mocked provider HTTP responses to check signature,
 issuer, audience, nonce, expiry and state validation. The separate MongoDB suite
 checks actual indexes, transactions, concurrent quota and pagination.
 
+`tests/contracts/` contains reusable auth/palette suites accepting a fixture
+factory. `repositoryContracts.test.js` runs them against independent memory
+repositories; `mongo.integration.js` runs the same assertions against a real
+replica set. Fixtures supply repositories, seeded owners, cleanup and quota
+inspection/fault setup; these fixture helpers are not production interfaces.
+The suites cover neutral detached results, ownership, idempotency/conflicts,
+parallel quotas, single-use auth codes, expiry, deletion rollback and pagination
+with equal timestamps. Mongo-specific checks cover legacy ObjectId auth records,
+UUID palette records, tombstones and the shared rate limiter. Every Mongo test
+creates/drops only its generated `palette_test_*` database. Use a test account
+with permission to create and drop those databases.
+
+From the repository root, `npm run lint` checks imports in both `src/` and
+`backend/src/`, including cycles and forbidden application/HTTP/infrastructure
+dependencies. `tests/architecture.test.js` demonstrates rejected violations.
+
+## Adding another database adapter
+
+PostgreSQL is not implemented or required to run this version. To add it later:
+
+1. Implement the contracts under a new `src/infrastructure/postgresql/` adapter;
+   return the same neutral entities, null/boolean outcomes and application codes.
+2. Add migrations for users, sessions, transactions, exchanges, palettes,
+   idempotency receipts and shared rate limits. Preserve provider/subject and
+   owner/key uniqueness, current records and expiry checks independent of cleanup.
+3. Keep creation/quota and deletion/quota in database transactions. Serialize
+   competing writes per owner; use atomic conditional consumption for auth codes.
+   Deleting content must preserve its receipt and original payload hash.
+4. Preserve UUID IDs, UTC millisecond timestamps and binary ID comparison. Use
+   explicit ordering/comparison rules, rather than database-default collation or
+   greater timestamp precision, so existing external cursors remain compatible.
+5. Add connection configuration/lifecycle and an implementation of the limiter
+   contract in that infrastructure directory. Change adapter selection only in
+   `server.js`; do not add database switches inside services or HTTP middleware.
+6. Run the existing contract suites through a PostgreSQL fixture factory against
+   a real test database, then HTTP/OIDC, frontend, lint, format and build checks.
+   Data migration and deployment/backup acceptance remain separate work.
+
 Deploy this directory as its own service: build `npm ci --omit=dev`, start
 `node src/server.js`, health endpoint `/health`. With Docker, build from `backend/`
 and inject secrets at runtime. `npm start` is for local use with a `.env` file.
@@ -137,13 +206,10 @@ No live deployment, Google credentials or database instance are supplied by this
 Real Google/Chrome login, backup restore and deployment still require acceptance
 checks against the configured services. Firefox/Opera packaging is not implemented.
 
-Validation on 2026-10-14: 79 extension tests and 20 backend tests passed, along
-with root lint/format checks and local/API-enabled extension builds. The backend npm
-audit reported zero vulnerabilities. Generated `dist/` and the extension ZIP
-were checked for backend/environment files. The MongoDB integration test was
-attempted but could not connect to `127.0.0.1:27017` (`ECONNREFUSED`); its database
-guarantees are not yet verified against a running replica set. No live OAuth
-credentials or production deployment were used.
+Local verification on 2026-11-04: the shared repository contracts passed on a
+real MongoDB replica set, including concurrency and deletion rollback. Legacy
+record compatibility and the Mongo rate limiter also passed. No live Google
+login or production deployment was performed for this structural change.
 
 References: [openid-client](https://github.com/panva/openid-client),
 [MongoDB transactions](https://www.mongodb.com/docs/manual/core/transactions/),

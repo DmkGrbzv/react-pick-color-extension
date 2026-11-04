@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { ApiError } from './apiError.js';
+import { applicationErrorResponse } from './applicationErrors.js';
 
 export function requestContext( request, response, next ) {
   request.requestId = randomUUID();
@@ -29,6 +30,7 @@ export function authenticate( auth ) {
   };
 }
 
+/** @param {import('../contracts/rateLimiter.js').RateLimiter} limiter */
 export function rateLimit( limiter, scope, maximum ) {
   return async ( request, response, next ) => {
     await limiter.check( scope, request.ip, maximum );
@@ -40,10 +42,11 @@ export function rateLimit( limiter, scope, maximum ) {
 // Never return provider errors, SQL/DB messages, tokens or stack traces.
 export function errorResponse( error, request, response, next ) {
   if ( response.headersSent ) return next( error );
-  const status = error instanceof ApiError ? error.status :
-    error.type === 'entity.too.large' ? 413 : error.type === 'entity.parse.failed' ? 400 : 500;
-  const code = error instanceof ApiError ? error.code : status === 413 ? 'bodyTooLarge' :
-    status === 400 ? 'invalidJson' : 'serverError';
+  const application = applicationErrorResponse( error );
+  const status = application?.status ?? ( error instanceof ApiError ? error.status :
+    error.type === 'entity.too.large' ? 413 : error.type === 'entity.parse.failed' ? 400 : 500 );
+  const code = application?.code ?? ( error instanceof ApiError ? error.code : status === 413 ? 'bodyTooLarge' :
+    status === 400 ? 'invalidJson' : 'serverError' );
   if ( status === 429 ) response.set( 'Retry-After', '60' );
   response.status( status ).json( { error: code, requestId: request.requestId } );
 }

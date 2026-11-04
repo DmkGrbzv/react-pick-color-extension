@@ -1,6 +1,7 @@
-import { ApiError } from './apiError.js';
-import { digest } from '../auth/crypto.js';
+import { ApplicationError } from '../../errors/applicationError.js';
+import { digest } from '../../auth/crypto.js';
 
+/** @implements {import('../../contracts/rateLimiter.js').RateLimiter} */
 export class RateLimiter {
   #collection;
   constructor( db ) {
@@ -21,6 +22,6 @@ export class RateLimiter {
       if ( error.code !== 11000 ) throw error;
       result = await this.#collection.findOneAndUpdate( { _id }, update, { returnDocument: 'after' } );
     }
-    if ( result.count > maximum ) throw new ApiError( 429, 'rateLimited' );
+    if ( result.count > maximum ) throw new ApplicationError( 'rateLimited' );
   }
 }

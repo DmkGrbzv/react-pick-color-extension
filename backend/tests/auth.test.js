@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { AuthService } from '../src/auth/authService.js';
 import { AuthMemoryRepository } from './helpers/authMemory.js';
 import { digest, secret } from '../src/auth/crypto.js';
-import { ApiError } from '../src/http/apiError.js';
+import { ApplicationError } from '../src/errors/applicationError.js';
 
 const redirectUri = 'https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.chromiumapp.org/oauth';
 
@@ -71,7 +71,7 @@ test( 'expired transactions and codes are rejected even before database TTL clea
 test( 'cancelled or failed identity verification creates no session', async () => {
   const provider = {
     authorizeUrl: ( transaction ) => 'https://identity.test/?state=' + transaction.state,
-    verify: async () => { throw new ApiError( 401, 'invalidIdentity' ); },
+    verify: async () => { throw new ApplicationError( 'invalidIdentity' ); },
   };
   const { service, repository } = setup( provider );
   const started = await service.begin( { redirectUri, challenge: secret(), clientState: secret() } );

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync, sign } from 'node:crypto';
 import * as oidc from 'openid-client';
-import { OidcProvider } from '../src/auth/oidcProvider.js';
+import { OidcProvider } from '../src/infrastructure/oidc/oidcProvider.js';
 import { digest, secret } from '../src/auth/crypto.js';
 
 const issuer = 'https://identity.example.test';

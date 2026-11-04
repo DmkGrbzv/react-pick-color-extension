@@ -14,11 +14,6 @@ function integer( value, name, maximum ) {
 export function readConfig( env ) {
   const api = new URL( required( env, 'PUBLIC_API_URL' ) );
   const development = env.NODE_ENV === 'development';
-  const mongoUri = required( env, 'MONGODB_URI' );
-  const encryptedMongo = mongoUri.startsWith( 'mongodb+srv://' ) || /[?&](tls|ssl)=true(&|$)/i.test( mongoUri );
-  if ( !development && ( !encryptedMongo || /[?&](tls|ssl)=false(&|$)/i.test( mongoUri ) ) ) {
-    throw new Error( 'Production MongoDB requires TLS' );
-  }
   const local = ['localhost', '127.0.0.1'].includes( api.hostname );
   if ( api.protocol !== 'https:' && !( development && local && api.protocol === 'http:' ) ) {
     throw new Error( 'PUBLIC_API_URL requires HTTPS outside local development' );
@@ -55,8 +50,6 @@ export function readConfig( env ) {
     redirectUris,
     origins,
     proxyHops,
-    mongoUri,
-    database: required( env, 'MONGODB_DATABASE' ),
     issuer: required( env, 'OIDC_ISSUER' ),
     oidcClientId: required( env, 'OIDC_CLIENT_ID' ),
     oidcClientSecret: required( env, 'OIDC_CLIENT_SECRET' ),

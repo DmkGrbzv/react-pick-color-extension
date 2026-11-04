@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { SavedPaletteService } from '../src/palettes/paletteService.js';
 import { normalizeSnapshot, decodeCursor, encodeCursor } from '../src/palettes/paletteValidation.js';
+import { PaletteMemoryRepository } from './helpers/paletteMemory.js';
+import { ApplicationError } from '../src/errors/applicationError.js';
 
 const gradient = {
   type: 'gradient', gradientType: 'linear', direction: 'right',
@@ -30,17 +32,9 @@ test( 'unknown fields, owner spoofing, invalid gradients and oversized or empty 
 } );
 
 test( 'save retries preserve the snapshot, conflict on different content and scope the key to owner', async () => {
-  const documents = new Map();
-  const repository = {
-    async create( { ownerId, key, snapshot, payloadHash } ) {
-      const index = ownerId + ':' + key;
-      const existing = documents.get( index );
-      if ( existing ) return { document: existing, created: false };
-      const document = { _id: randomUUID(), ownerId, payloadHash, ...snapshot, createdAt: new Date() };
-      documents.set( index, document );
-      return { document, created: true };
-    },
-  };
+  const repository = new PaletteMemoryRepository();
+  repository.quotas.set( 'A', 0 );
+  repository.quotas.set( 'B', 0 );
   const service = new SavedPaletteService( { repository, config: { maxItems: 256, maxPalettes: 100 } } );
   const key = randomUUID();
   const first = await service.save( 'A', snapshot, key );
@@ -55,25 +49,33 @@ test( 'save retries preserve the snapshot, conflict on different content and sco
 
 test( 'read and rename always pass owner; missing and foreign palettes have the same error', async () => {
   const repository = {
-    find: async ( owner, id ) => owner === 'A' && id === 'own' ? { _id: id, ...snapshot, createdAt: new Date() } : null,
-    rename: async ( owner, id, name ) => owner === 'A' && id === 'own' ? { _id: id, ...snapshot, name } : null,
+    find: async ( owner, id ) => owner === 'A' && id === 'own' ? { id, ...snapshot, createdAt: new Date() } : null,
+    rename: async ( owner, id, name ) => owner === 'A' && id === 'own' ? { id, ...snapshot, name } : null,
   };
   const service = new SavedPaletteService( { repository, config: {} } );
   assert.equal( ( await service.get( 'A', 'own' ) ).name, 'Mixed' );
-  for ( const id of ['own', 'missing'] ) await assert.rejects( service.get( 'B', id ), { status: 404 } );
-  await assert.rejects( service.rename( 'B', 'own', { name: 'Changed' } ), { status: 404 } );
-  await assert.rejects( service.rename( 'A', 'own', { name: 'Changed', items: [] } ), { status: 400 } );
+  for ( const id of ['own', 'missing'] ) await assert.rejects( service.get( 'B', id ), { code: 'notFound' } );
+  await assert.rejects( service.rename( 'B', 'own', { name: 'Changed' } ), { code: 'notFound' } );
+  await assert.rejects( service.rename( 'A', 'own', { name: 'Changed', items: [] } ), { code: 'invalidPalette' } );
   assert.equal( ( await service.rename( 'A', 'own', { name: 'Changed' } ) ).name, 'Changed' );
 } );
 
 test( 'pagination validates limits and cursors and retains the tie-breaking ID', async () => {
-  const document = { _id: randomUUID(), createdAt: new Date() };
+  const document = { id: randomUUID(), createdAt: new Date( '2026-01-01T00:00:00.123Z' ) };
   const cursor = decodeCursor( encodeCursor( document ) );
-  assert.deepEqual( cursor, { date: document.createdAt, id: document._id } );
+  assert.deepEqual( cursor, document );
+  assert.deepEqual( JSON.parse( Buffer.from( encodeCursor( document ), 'base64url' ) ),
+    { date: '2026-01-01T00:00:00.123Z', id: document.id } );
   assert.throws( () => decodeCursor( 'invalid' ), { code: 'invalidCursor' } );
-  const service = new SavedPaletteService( { repository: { list: async ( owner, page ) => ( { owner, ...page } ) }, config: {} } );
-  for ( const limit of ['0', '51', 'invalid'] ) assert.throws( () => service.list( 'A', { limit } ), { status: 400 } );
-  assert.equal( ( await service.list( 'A', { limit: '20' } ) ).limit, 20 );
+  const service = new SavedPaletteService( { repository: { list: async ( owner, page ) => {
+    assert.equal( owner, 'A' );
+    assert.equal( page.limit, 20 );
+    return { palettes: [{ ...document, ownerId: owner, ...snapshot }], continuation: document };
+  } }, config: {} } );
+  for ( const limit of ['0', '51', 'invalid'] ) await assert.rejects( service.list( 'A', { limit } ), { code: 'invalidCursor' } );
+  const result = await service.list( 'A', { limit: '20' } );
+  assert.equal( result.nextCursor, encodeCursor( document ) );
+  assert.deepEqual( Object.keys( result.palettes[0] ).sort(), ['createdAt', 'id', 'items', 'name'] );
 } );
 
 test( 'deletion scopes by owner and a deleted save receipt cannot resurrect the snapshot', async () => {
@@ -82,12 +84,12 @@ test( 'deletion scopes by owner and a deleted save receipt cannot resurrect the 
     config: { maxItems: 256, maxPalettes: 100 },
     repository: {
       remove: async ( owner, id ) => { calls.push( [owner, id] ); return owner === 'A' && id === 'own'; },
-      create: async () => ( { document: { deletedAt: new Date() }, created: false } ),
+      create: async () => { throw new ApplicationError( 'snapshotDeleted' ); },
     },
   } );
   await service.remove( 'A', 'own' );
   assert.deepEqual( calls[0], ['A', 'own'] );
-  await assert.rejects( service.remove( 'B', 'own' ), { status: 404, code: 'notFound' } );
-  await assert.rejects( service.remove( 'A', 'missing' ), { status: 404, code: 'notFound' } );
-  await assert.rejects( service.save( 'A', snapshot, randomUUID() ), { status: 410, code: 'snapshotDeleted' } );
+  await assert.rejects( service.remove( 'B', 'own' ), { code: 'notFound' } );
+  await assert.rejects( service.remove( 'A', 'missing' ), { code: 'notFound' } );
+  await assert.rejects( service.save( 'A', snapshot, randomUUID() ), { code: 'snapshotDeleted' } );
 } );

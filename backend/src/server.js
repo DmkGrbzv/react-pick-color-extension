@@ -1,23 +1,20 @@
 import process from 'node:process';
 import { once } from 'node:events';
-import { MongoClient } from 'mongodb';
 import { readConfig } from './config.js';
 import { createApp } from './app.js';
-import { createIndexes } from './database/indexes.js';
-import { AuthRepository } from './auth/authRepository.js';
+import { readMongoConfig } from './infrastructure/mongodb/config.js';
+import { connectMongoStorage } from './infrastructure/mongodb/connectStorage.js';
 import { AuthService } from './auth/authService.js';
-import { createIdentityProvider } from './auth/oidcProvider.js';
-import { CloudPaletteRepository } from './palettes/paletteRepository.js';
+import { createIdentityProvider } from './infrastructure/oidc/oidcProvider.js';
 import { SavedPaletteService } from './palettes/paletteService.js';
-import { RateLimiter } from './http/rateLimit.js';
 
-function registerShutdown( server, client ) {
+function registerShutdown( server, storage ) {
   let closing = false;
   const shutdown = () => {
     if ( closing ) return;
     closing = true;
     server.close( async () => {
-      await client.close();
+      await storage.close();
       process.exit( 0 );
     } );
     setTimeout( () => process.exit( 1 ), 10_000 ).unref();
@@ -28,25 +25,23 @@ function registerShutdown( server, client ) {
 
 async function start() {
   const config = readConfig( process.env );
-  let client;
+  const storageConfig = readMongoConfig( process.env );
+  let storage;
   try {
-    client = new MongoClient( config.mongoUri, { serverSelectionTimeoutMS: 10_000 } );
-    await client.connect();
-    const db = client.db( config.database );
-    await createIndexes( db );
+    storage = await connectMongoStorage( storageConfig );
     const auth = new AuthService( {
-      repository: new AuthRepository( db ), provider: await createIdentityProvider( config ), config,
+      repository: storage.authRepository, provider: await createIdentityProvider( config ), config,
     } );
     const palettes = new SavedPaletteService( {
-      repository: new CloudPaletteRepository( { db, client } ), config,
+      repository: storage.paletteRepository, config,
     } );
-    const app = createApp( { config, auth, palettes, limiter: new RateLimiter( db ) } );
+    const app = createApp( { config, auth, palettes, limiter: storage.limiter } );
     const server = app.listen( config.port );
     await once( server, 'listening' );
-    registerShutdown( server, client );
+    registerShutdown( server, storage );
     console.log( 'Palette API listening on port ' + config.port );
   } catch {
-    await client?.close();
+    await storage?.close();
     throw new Error( 'API startup failed. Check database availability and OIDC configuration.' );
   }
 }
