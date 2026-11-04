@@ -35,7 +35,7 @@ export function normalizeItem( value ) {
 }
 
 export function paletteName( value ) {
-  if ( typeof value !== 'string' || value.trim().length > 120 ||
+  if ( typeof value !== 'string' || !value.trim() || value.trim().length > 120 ||
     [...value].some( ( character ) => character.charCodeAt( 0 ) < 32 ) ) {
     throw new ApiError( 400, 'invalidPalette' );
   }

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import { createServer } from 'vite';
 import { createElement, act } from 'react';
-import { createRoot } from 'react-dom/client';
+
 import { createTestStorage } from './helpers/extensionStorage.js';
 
 test( 'library UI allows independent login, preserves full mixed sets and requires explicit save confirmation', async () => {
@@ -73,6 +73,7 @@ test( 'library UI allows independent login, preserves full mixed sets and requir
     await act( async () => { target.click(); } );
   };
   try {
+    const { createRoot } = await import( 'react-dom/client' );
     server = await createServer( {
       server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom',
     } );
@@ -102,10 +103,22 @@ test( 'library UI allows independent login, preserves full mixed sets and requir
     await click( 'Save palette' );
     assert.equal( saves, 0 );
     assert.ok( document.querySelector( '.saved-confirm' ) );
-    assert.equal( document.querySelector( '.saved-confirm input' ).value, 'Working' );
+    assert.equal( document.querySelector( '.saved-confirm input' ).value, '' );
     await click( 'Cancel save' );
     assert.equal( saves, 0 );
     await click( 'Save palette' );
+    assert.equal( button( 'Confirm save' ).disabled, true );
+    const nameInput = document.querySelector( '.saved-confirm input' );
+    async function enterName( value ) {
+      await act( async () => {
+        Object.getOwnPropertyDescriptor( window.HTMLInputElement.prototype, 'value' ).set.call( nameInput, value );
+        nameInput.dispatchEvent( new window.Event( 'input', { bubbles: true } ) );
+      } );
+    }
+    await enterName( '   ' );
+    assert.equal( button( 'Confirm save' ).disabled, true );
+    await enterName( 'Working' );
+    assert.equal( button( 'Confirm save' ).disabled, false );
     await click( 'Confirm save' );
     assert.equal( saves, 1 );
     assert.equal( palette.colors.length, 1 );

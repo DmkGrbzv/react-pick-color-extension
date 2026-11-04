@@ -19,6 +19,7 @@ test( 'snapshot preserves gradients, order and canonical colors without local ID
 
 test( 'unknown fields, owner spoofing, invalid gradients and oversized or empty sets are rejected', () => {
   for ( const value of [
+    { ...snapshot, name: '' }, { ...snapshot, name: '   ' },
     { ...snapshot, ownerId: 'another-user' },
     { items: [] }, { items: Array( 257 ).fill( snapshot.items[0] ) },
     { items: [{ type: 'color', hex: 'red' }] },

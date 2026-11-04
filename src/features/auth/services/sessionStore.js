@@ -86,7 +86,7 @@ export class SessionStore {
     return ( await this.#storage.session.get( PENDING_KEY ) )[PENDING_KEY] ?? null;
   }
   renamePending( key, name ) {
-    if ( typeof name !== 'string' || name.trim().length > 120 ||
+    if ( typeof name !== 'string' || !name.trim() || name.trim().length > 120 ||
       [...name].some( ( character ) => character.charCodeAt( 0 ) < 32 ) ) {
       return Promise.reject( new AppError( 'invalidPalette' ) );
     }

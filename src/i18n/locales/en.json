@@ -74,7 +74,8 @@
       "invalidPalette": "The palette is invalid or exceeds 256 items.",
       "cloudBusy": "Another library operation is running. Please wait.",
       "cloudFailed": "Could not confirm the library operation. Your local palette is unchanged. Retry a pending save with the same snapshot. If signing out, server revocation was not confirmed."
-    }
+    },
+    "nameRequired": "Enter a palette name to save."
   },
   "theme": {
     "label": "Theme",

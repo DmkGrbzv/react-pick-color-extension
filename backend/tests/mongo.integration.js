@@ -19,7 +19,7 @@ test( 'MongoDB enforces concurrent save uniqueness, ownership, quota and cursor 
     const service = new SavedPaletteService( {
       repository: new CloudPaletteRepository( { db, client } ), config: { maxItems: 256, maxPalettes: 3 },
     } );
-    const snapshot = { items: [{ type: 'color', hex: '#AABBCC' }] };
+    const snapshot = { name: 'Test palette', items: [{ type: 'color', hex: '#AABBCC' }] };
     const key = randomUUID();
     const results = await Promise.all( Array.from( { length: 5 }, () => service.save( 'A', snapshot, key ) ) );
     assert.equal( new Set( results.map( ( result ) => result.palette.id ) ).size, 1 );

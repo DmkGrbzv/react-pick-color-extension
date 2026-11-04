@@ -16,6 +16,8 @@ On Windows, use `npm.cmd` if PowerShell blocks `npm.ps1`.
 
 `npm run dev` serves `/sidepanel.html` and `/editor.html` for layout preview. The compatible `/library.html` and `/print.html` entries start the same app on their respective screens. Chrome storage and extension APIs only work inside the installed extension.
 
+New palette saves require an explicit, nonblank name. The confirmation field starts empty; retries retain the submitted name and snapshot.
+
 ## App name and icons
 
 Set VITE_APP_NAME=Tintoom in root .env.local to configure the public app name.
