@@ -1,3 +1,4 @@
+import SavedColorSelect from './SavedColorSelect.jsx';
 import './GradientStopField.css';
 import { useTranslation } from 'react-i18next';
 import { useId } from 'react';
@@ -25,22 +26,9 @@ export default function GradientStopField( { stop, index, errors, preview, color
         </p>
       ) }
       <div className="gradient-color-actions">
-        <label>
-          <span className="sr-only">{ t( 'gradient.savedColors' ) }</span>
-          <select
-            value=""
-            onChange={ ( event ) => {
-              if ( event.target.value ) onChange( { type: 'hex', index, value: event.target.value } );
-            } }
-          >
-            <option value="">{ t( 'gradient.savedColors' ) }</option>
-            { colors.map( ( color ) => (
-              <option key={ color.id } value={ color.hex }>
-                { color.hex }
-              </option>
-            ) ) }
-          </select>
-        </label>
+        <SavedColorSelect colors={ colors } value={ stop.hex }
+          label={ t( 'gradient.savedColors' ) + ' - ' + t( 'gradient.color', { number: index + 1 } ) }
+          onChange={ ( value ) => onChange( { type: 'hex', index, value } ) } />
       </div>
       <label htmlFor={ id + '-position' }>{ t( 'gradient.position' ) }</label>
       <input

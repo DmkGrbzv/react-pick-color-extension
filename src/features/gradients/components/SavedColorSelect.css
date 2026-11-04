@@ -1,0 +1,64 @@
+.saved-color-select {
+  position: relative;
+  min-width: 0;
+}
+.saved-color-trigger {
+  width: 100%;
+  justify-content: flex-start;
+  min-height: 40px;
+  font-size: 12px;
+}
+.saved-color-chip {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  border-radius: 4px;
+}
+.saved-color-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.saved-color-arrow {
+  margin-left: auto;
+  flex: 0 0 6px;
+  width: 6px;
+  height: 6px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(45deg);
+}
+.saved-color-options {
+  position: absolute;
+  z-index: 10;
+  inset-inline: 0;
+  top: calc(100% + 5px);
+  max-height: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  border: var(--control-border);
+  border-radius: var(--control-radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.saved-color-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.saved-color-option[data-active='true'] {
+  background: var(--accent-soft);
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+.saved-color-selected {
+  margin-left: auto;
+  color: var(--accent);
+}
