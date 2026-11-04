@@ -53,8 +53,8 @@ export default function App( { panel = false, initialPage = 'working' } ) {
     <LanguageSelector compact={ panel } /><ThemeToggle />
   </> }>
     { page === 'working' ? <div className="working-palette-heading">
-      <h1 className={ savedPaletteName ? 'working-palette-name' : 'sr-only' }>{ title }</h1>
-    </div> : <h1>{ title }</h1> }
+      <h1 title={ savedPaletteName || undefined } className={ savedPaletteName ? 'working-palette-name' : 'sr-only' }>{ title }</h1>
+    </div> : <h1 title={ title }>{ title }</h1> }
     { page === 'working' && <p className="intro">{ t( panel ? 'brandIntro' : 'editorTitle' ) }</p> }
   </AppHeader>;
   const navigationActions = ( panel || apiUrl ) ? <>
