@@ -77,7 +77,7 @@ export class PaletteService {
         ( item ) => item.type !== 'gradient' && item.hex.toUpperCase() === hex
       );
       if ( exists ) return palette;
-      return { ...palette, colors: [...palette.colors, { id: this.#makeId(), hex }] };
+      return { ...palette, colors: [{ id: this.#makeId(), hex }, ...palette.colors] };
     } );
   }
 

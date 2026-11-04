@@ -212,7 +212,7 @@ test( 'opened source tracks content edits, restored values and account ownership
   await assert.rejects( library.prepare(), { code: 'paletteUnchanged' } );
   await local.addColor( '#FF0000' );
   assert.equal( isSavedPalette( await local.getPalette(), 'A' ), false );
-  await local.removeItem( ( await local.getPalette() ).colors.at( -1 ).id );
+  await local.removeItem( ( await local.getPalette() ).colors.find( ( item ) => item.hex === '#FF0000' ).id );
   assert.equal( isSavedPalette( await local.getPalette(), 'A' ), true );
   const gradient = opened.colors[1];
   await local.saveGradient( { ...gradient, direction: 'left' } );

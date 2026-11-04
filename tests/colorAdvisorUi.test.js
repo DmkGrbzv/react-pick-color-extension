@@ -126,7 +126,8 @@ test( 'advisor previews without writes, adds explicitly, rejects duplicates and 
         3,
         'Gradients have no advisor button'
       );
-      await click( document.querySelector( '.advisor-toggle' ) );
+      const sourceToggle = document.querySelector( '.advisor-toggle' );
+      await click( sourceToggle );
       assert.equal( document.querySelectorAll( '.color-advisor' ).length, 1 );
       assert.equal( document.querySelector( '.advisor-source code' ).textContent, '#7F39C4' );
       await click( document.querySelector( '.suggestion-option' ) );
@@ -163,6 +164,7 @@ test( 'advisor previews without writes, adds explicitly, rejects duplicates and 
       } );
       assert.equal( writes, 1 );
       assert.equal( stored.currentPalette.colors.length, initial.colors.length + 1 );
+      assert.equal( stored.currentPalette.colors[0].hex, selected );
       assert.equal( document.querySelector( '.advisor-source code' ).textContent, '#7F39C4' );
       assert.ok( document.querySelector( '.advisor-actions .primary' ).disabled );
       assert.equal(
@@ -173,13 +175,13 @@ test( 'advisor previews without writes, adds explicitly, rejects duplicates and 
       assert.equal( writes, 1 );
       await click( document.querySelector( '.advisor-heading button' ) );
       assert.equal( document.querySelectorAll( '.color-advisor' ).length, 0 );
-      assert.equal( document.activeElement, document.querySelector( '.advisor-toggle' ) );
+      assert.equal( document.activeElement, sourceToggle );
       assert.equal( writes, 1 );
-      await click( document.querySelectorAll( '.advisor-toggle' )[0] );
-      await click( document.querySelectorAll( '.advisor-toggle' )[1] );
+      await click( sourceToggle );
+      await click( document.querySelectorAll( '.advisor-toggle' )[2] );
       assert.equal( document.querySelectorAll( '.color-advisor' ).length, 1 );
       assert.equal( document.querySelector( '.advisor-source code' ).textContent, '#FF0000' );
-      await click( document.querySelectorAll( '.advisor-toggle' )[2] );
+      await click( document.querySelectorAll( '.advisor-toggle' )[3] );
       assert.equal( document.querySelector( '.advisor-source code' ).textContent, '#808080' );
       assert.equal( document.querySelectorAll( '.advisor-category option:disabled' ).length, 2 );
       assert.equal( writes, 1 );

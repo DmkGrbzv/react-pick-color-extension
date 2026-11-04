@@ -34,7 +34,7 @@ function setup() {
   return { storage, execute };
 }
 
-test( 'concurrent additions from two views survive and persist across worker restart', async () => {
+test( 'concurrent additions from two views are newest first and persist across worker restart', async () => {
   const { storage, execute } = setup();
   await Promise.all( [
     execute( { type: findCorrectMessageType( ADD_COLOR ), hex: '#ff0000' } ),
@@ -43,8 +43,8 @@ test( 'concurrent additions from two views survive and persist across worker res
   const restarted = createPaletteExecutor( storage );
   const palette = await restarted( { type: findCorrectMessageType( GET_PALETTE ) } );
   assert.deepEqual( palette.colors, [
-    { id: '1', hex: '#FF0000' },
     { id: '2', hex: '#00FF00' },
+    { id: '1', hex: '#FF0000' },
   ] );
   assert.equal( palette.id, 'current' );
 } );
