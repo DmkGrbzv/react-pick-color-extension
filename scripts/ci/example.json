@@ -1,0 +1,54 @@
+{
+  "context": {
+    "repository": "DmkGrbzv/react-pick-color-extension",
+    "workflow": ".github/workflows/ci.yml",
+    "ref": "refs/heads/master",
+    "event": "workflow_dispatch",
+    "sha": "0000000000000000000000000000000000000000",
+    "runId": "1",
+    "runNumber": "1",
+    "attempt": "1"
+  },
+  "needs": {
+    "frontend": {
+      "result": "success",
+      "outputs": {
+        "attempt": "1",
+        "install": "success",
+        "lint": "success",
+        "tests": "success",
+        "build": "success",
+        "verify": "success"
+      }
+    },
+    "backend": {
+      "result": "failure",
+      "outputs": { "attempt": "1", "install": "success", "tests": "failure" }
+    }
+  },
+  "records": {
+    "frontend": {
+      "tests": {
+        "schema": 1,
+        "job": "frontend",
+        "check": "tests",
+        "runId": "1",
+        "attempt": "1",
+        "exitCode": 0,
+        "metrics": { "tests": 114, "pass": 114, "fail": 0 }
+      }
+    },
+    "backend": {
+      "tests": {
+        "schema": 1,
+        "job": "backend",
+        "check": "tests",
+        "runId": "1",
+        "attempt": "1",
+        "exitCode": 1,
+        "metrics": { "tests": 34, "pass": 33, "fail": 1 },
+        "diagnosticCodes": ["assertion", "commandFailed"]
+      }
+    }
+  }
+}
