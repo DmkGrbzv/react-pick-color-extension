@@ -3,6 +3,7 @@ node_modules/
 dist/
 dist-ssr/
 release/
+.ci-reports/
 coverage/
 package-lock.json
 

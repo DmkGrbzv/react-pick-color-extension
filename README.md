@@ -319,6 +319,54 @@ Root `npm test` runs extension tests only. `npm run backend:test` runs the serve
 suite after `npm ci --prefix backend`. See the backend README for OAuth setup,
 MongoDB replica-set setup, integration tests and independent deployment.
 
+## Continuous integration
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on pull requests targeting
+`master` (opened, synchronized or reopened), every push to `master` (including PR
+merges), and manual `workflow_dispatch` runs. Updated PRs cancel older CI runs.
+
+Independent **Frontend** and **Backend** jobs use separate `ubuntu-latest` runners,
+Node.js 22.22.3 and a 10-minute timeout each. The Node version satisfies both
+manifests and their locked dependencies, including jsdom's Node 22.22.2 minimum.
+Actions are pinned to release commit SHAs. Check jobs have only `contents: read`;
+only the separate Google Docs reporting job can request an OIDC token. Checkout
+credentials are not persisted.
+
+- Frontend: root `npm ci`, then separate lint, test, build and `verify:extension`
+  steps. Lint includes backend sources and the architecture audit; it uses root
+  tooling without requiring the backend's dependencies to be installed.
+- Backend: `npm ci` and `npm test` inside `backend/`. Its unit/HTTP/OIDC tests use
+  memory repositories, loopback HTTP servers and mocked identity-provider responses.
+
+Each job caches npm downloads using its own lock-file hash; `node_modules` is not
+cached, and `npm ci` still runs. No production secrets or database are used. The
+library UI test supplies its own fake API origin instead of relying on a local
+environment file. A failed command fails its job; both checks must pass for a
+successful CI run. This workflow does not deploy or publish the extension.
+
+After checks on `master`, **Google Docs report** prepares a sanitized report,
+saves it as a seven-day artifact, and uses WIF to replace the dedicated Google
+document. PR runs never publish to Google. Check results remain independent of
+delivery errors. See [Google Docs reporting setup](docs/ci-google-reporting.md)
+for service-account access, repository/branch restrictions, Variables, dry-run,
+concurrency protection and cancellation limitations.
+
+`test:mongo` is **not included**. To add it to the Backend job, start an isolated
+MongoDB replica set (the local Compose file uses MongoDB 8.0), initialize `rs0`,
+wait until it has a writable primary, and set `MONGODB_TEST_URI` to that test
+instance before `npm run test:mongo` in `backend/`. A standalone MongoDB server
+does not support the transactions these tests exercise. The test account needs
+permission to create and drop the generated `palette_test_*` databases. Never
+point this suite at production.
+
+Open a branch PR with base `master`, then inspect **Checks**, or open **Actions →
+CI** for job and step logs. The manual **Run workflow** button becomes available
+after the workflow is present on the default branch. To enforce CI before merging,
+create an active branch ruleset targeting `master`, require pull requests and
+successful **Frontend** and **Backend** status checks. Observe their names in the
+first CI run before selecting them. Without these rules, a failed workflow alone
+does not prohibit merging or direct pushes.
+
 ## Checks
 
 Dependency maintenance is separate from behavior tests. From the repository root:
