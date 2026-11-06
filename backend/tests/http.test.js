@@ -5,7 +5,7 @@ import { createApp } from '../src/app.js';
 import { ApiError } from '../src/http/apiError.js';
 import { ApplicationError } from '../src/errors/applicationError.js';
 
-async function fixture( context, limiter = { check: async () => {} } ) {
+async function fixture( context, limiter = { check: async () => {} }, readiness ) {
   const calls = [];
   const auth = {
     async authenticate( header ) {
@@ -24,13 +24,30 @@ async function fixture( context, limiter = { check: async () => {} } ) {
   };
   const app = createApp( {
     config: { origins: ['chrome-extension://allowed'], proxyHops: 0 },
-    auth, palettes, limiter,
+    auth, palettes, limiter, readiness,
   } );
   const server = app.listen( 0, '127.0.0.1' );
   await new Promise( ( resolve ) => server.once( 'listening', resolve ) );
   context.after( () => new Promise( ( resolve ) => server.close( resolve ) ) );
   return { url: 'http://127.0.0.1:' + server.address().port, calls };
 }
+
+test( 'liveness is independent of readiness; readiness failures are sanitized and recover', async ( context ) => {
+  let ready = false;
+  const { url } = await fixture( context, undefined, async () => {
+    if ( ready === 'error' ) throw new Error( 'mongodb://user:password@private/' );
+    return ready;
+  } );
+  assert.deepEqual( await ( await fetch( url + '/health' ) ).json(), { status: 'ok' } );
+  assert.equal( ( await fetch( url + '/ready' ) ).status, 503 );
+  ready = true;
+  assert.equal( ( await fetch( url + '/ready' ) ).status, 200 );
+  ready = 'error';
+  const failure = await fetch( url + '/ready' );
+  assert.equal( failure.status, 503 );
+  assert.deepEqual( await failure.json(), { status: 'notReady' } );
+  assert.equal( ( await fetch( url + '/health' ) ).status, 200 );
+} );
 
 test( 'HTTP rejects unauthorized and foreign palette requests without leaking details', async ( context ) => {
   const { url } = await fixture( context );

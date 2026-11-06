@@ -7,6 +7,7 @@ import { createIndexes } from '../src/infrastructure/mongodb/indexes.js';
 import { AuthRepository } from '../src/infrastructure/mongodb/authRepository.js';
 import { CloudPaletteRepository } from '../src/infrastructure/mongodb/paletteRepository.js';
 import { RateLimiter } from '../src/infrastructure/mongodb/rateLimiter.js';
+import { connectMongoStorage } from '../src/infrastructure/mongodb/connectStorage.js';
 import { authRepositoryContract } from './contracts/authRepository.js';
 import { paletteRepositoryContract } from './contracts/paletteRepository.js';
 
@@ -30,6 +31,15 @@ async function mongoFactory( context ) {
 
 authRepositoryContract( 'Mongo auth', mongoFactory );
 paletteRepositoryContract( 'Mongo palettes', mongoFactory );
+
+test( 'Mongo storage readiness requires a writable primary and becomes false after close', async ( context ) => {
+  const { db } = await mongoFactory( context );
+  const storage = await connectMongoStorage( { uri: process.env.MONGODB_TEST_URI, database: db.databaseName } );
+  context.after( () => storage.close() );
+  assert.equal( await storage.isReady(), true );
+  await storage.close();
+  assert.equal( await storage.isReady(), false );
+} );
 
 test( 'Mongo: legacy ObjectId auth records, UUID users and tombstones remain compatible', async ( context ) => {
   const { db, auth, palettes, owner } = await mongoFactory( context );
