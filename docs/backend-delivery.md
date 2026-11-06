@@ -62,6 +62,16 @@ doubles; `test:mongo` uses a per-run temporary Compose project and only generate
 days; cleanup runs even when tests fail. This is the only automatic volume deletion,
 and it targets only the CI job's unique disposable project.
 
+`backend/compose.ci.yaml` applies only to that disposable database. MongoDB 8.0.34
+refuses to start on the current hosted runner kernel (SERVER-121912 / SERVER-131779).
+The override gives glibc ownership of rseq with `GLIBC_TUNABLES=glibc.pthread.rseq=1`,
+disabling TCMalloc's per-CPU optimization. CI explicitly verifies
+`serverStatus().tcmalloc.usingPerCPUCaches === false` before integration tests.
+This trades allocator performance for compatibility; tests still use the same
+MongoDB version, transactions and persistence behavior. It is not a performance
+benchmark or a staging setting. Remove/reassess the override when a fixed MongoDB
+patch is pinned. Local Compose and staging delivery are unaffected.
+
 The image job exports `palette-backend:ci` to an artifact. After successful
 Frontend, Backend (including Mongo) and image checks, a master **push** publishes
 that exact archive. PRs build without publishing. Publication never depends on
@@ -185,4 +195,6 @@ to staging and verifies it, with an application-image rollback on failure.
 
 References: [Compose readiness ordering](https://docs.docker.com/compose/how-tos/startup-order/),
 [MongoDB connection options](https://www.mongodb.com/docs/drivers/node/current/connect/connection-options/),
-[GitHub image publication](https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images).
+[GitHub image publication](https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images),
+[MongoDB kernel/cache guard](https://github.com/mongodb/mongo/blob/r8.0.34/src/mongo/db/startup_check_rseq.cpp),
+[Ubuntu kernel-version fix](https://jira.mongodb.org/browse/SERVER-131779).

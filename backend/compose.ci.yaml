@@ -1,0 +1,7 @@
+# Test-only allocator fallback for MongoDB 8.0.34 on current hosted Linux kernels.
+# Let glibc own rseq, so TCMalloc uses its thread cache instead of per-CPU rseq.
+# Do not use this performance tradeoff as production deployment configuration.
+services:
+  mongo:
+    environment:
+      GLIBC_TUNABLES: glibc.pthread.rseq=1

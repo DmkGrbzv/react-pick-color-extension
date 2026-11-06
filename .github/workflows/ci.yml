@@ -129,8 +129,9 @@ jobs:
       - name: Start isolated MongoDB replica set
         id: mongo_start
         run: |
-          docker compose -f compose.yaml up -d mongo
-          docker compose -f compose.yaml run --rm mongo-init
+          docker compose -f compose.yaml -f compose.ci.yaml up -d mongo
+          docker compose -f compose.yaml -f compose.ci.yaml run --rm mongo-init
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T mongo mongosh --quiet --eval 'if (db.serverStatus().tcmalloc.usingPerCPUCaches !== false) quit(1)'
 
       - name: Test MongoDB transactions and repository contracts
         id: mongo
@@ -142,11 +143,11 @@ jobs:
         if: ${{ always() && steps.mongo_start.outcome != 'skipped' }}
         run: |
           mkdir -p ../.ci-reports/backend
-          docker compose -f compose.yaml logs --no-color --tail 100 mongo > ../.ci-reports/backend/mongo-service.log 2>&1 || true
+          docker compose -f compose.yaml -f compose.ci.yaml logs --no-color --tail 100 mongo > ../.ci-reports/backend/mongo-service.log 2>&1 || true
 
       - name: Remove temporary MongoDB environment
         if: ${{ always() && steps.mongo_start.outcome != 'skipped' }}
-        run: docker compose -f compose.yaml down --volumes --remove-orphans
+        run: docker compose -f compose.yaml -f compose.ci.yaml down --volumes --remove-orphans
 
       - name: Save sanitized backend diagnostics
         id: artifact
