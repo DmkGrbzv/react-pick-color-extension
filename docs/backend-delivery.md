@@ -187,6 +187,12 @@ seconds; restarting MongoDB restored readiness. MongoDB driver 7.8 ignores
 `timeoutMS`, so the readiness probe uses `Db.command` with an abort signal instead.
 Registry publication and remote staging deployment were not exercised locally.
 
+The [PR CI run](https://github.com/DmkGrbzv/react-pick-color-extension/actions/runs/42194981477)
+also passed Frontend, Backend (including the isolated MongoDB suite) and Backend
+Docker image on GitHub-hosted runners. Publication and Google reporting were
+skipped as expected for a pull request; this does not verify a registry push or
+remote deployment.
+
 An **image** is the packaged backend; a **container** is its running instance.
 GHCR is the **registry** storing images. A named **volume** holds MongoDB data
 outside replaceable containers. **rs0** is MongoDB's replica set enabling the

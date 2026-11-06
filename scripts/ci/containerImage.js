@@ -1,8 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { IMAGE_REPOSITORY } from '../../backend/deploy/imageReference.js';
 
-export { IMAGE_REPOSITORY };
-
 export function docker( args, { input, missing = false } = {} ) {
   const result = spawnSync( 'docker', args, { input, encoding: 'utf8', windowsHide: true,
     timeout: 300_000, maxBuffer: 4 * 1024 * 1024 } );
