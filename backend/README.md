@@ -88,6 +88,71 @@ authenticated database with encrypted transport and tested backups. Configure
 One instance assumes a fixed hop count. Do not expose a route that bypasses the
 expected proxy when enabling proxy trust.
 
+## Atlas staging connection check
+
+`scripts/checkAtlasConnection.js` is a standalone connection probe using the installed
+MongoDB driver and shared Mongo configuration parser. It does not import the server
+or storage initializer, create indexes, read/write collections or run tests. It
+authenticates, sends only `ping` to `palette_staging`, and closes the client in
+`finally`. Errors omit driver messages, URIs and credentials; driver logging is off.
+
+Keep the separate local file `backend/.env.staging.local` (already excluded by Git's
+`.env.*` rule and the backend Docker context's `.env.*` rule):
+
+```dotenv
+NODE_ENV=staging
+MONGODB_URI="mongodb+srv://palette_staging_app:<PASSWORD>@palette-staging.kyvrc93.mongodb.net/palette_staging?authSource=admin"
+MONGODB_DATABASE=palette_staging
+```
+
+Replace only `<PASSWORD>` in that file with the database user's password. URI-encode
+password special characters; do not put the real password in terminal commands.
+Allow your current public IP in the Atlas project's Network Access list.
+
+In the VS Code PowerShell terminal, from the repository root:
+
+```powershell
+npm.cmd --prefix backend run check:atlas:staging
+```
+
+Or, if the terminal is already in `backend`:
+
+```powershell
+npm.cmd run check:atlas:staging
+```
+
+The command explicitly loads `.env.staging.local`; local `.env`, Docker Compose
+and `npm run dev` keep their existing behavior. Node gives existing terminal
+environment variables priority over env-file values. Use a fresh terminal without
+`MONGODB_URI`/`MONGODB_DATABASE` overrides; the probe refuses a different host, user
+or database instead of connecting to another environment.
+
+Failures include fixed categories such as `[DNS]`, `[AUTH]`, `[TLS]`, `[NETWORK]`
+and `[TIMEOUT]`, including nested driver errors, without printing their raw text.
+A network/timeout result does not prove that the Atlas IP access list is the cause.
+If Windows resolves the cluster but Node reports `[DNS]`, this probe supports an
+optional process-local resolver override in `.env.staging.local`:
+
+```dotenv
+ATLAS_DNS_SERVERS=1.1.1.1,8.8.8.8
+```
+
+Use only DNS servers reachable and permitted on your network. This does not change
+Windows DNS settings, the API's resolver, local Docker configuration or CI.
+
+Verification on 2026-11-07: the Windows resolver returned Atlas records, but Node's
+default resolver refused SRV/TXT queries. Using the process-local override above,
+the real staging connection authenticated, `ping` succeeded on `palette_staging`,
+and the client closed. No collection/index changes or write-permission tests ran.
+
+The application uses `MONGODB_DATABASE` explicitly in `client.db(config.database)`,
+so keep it set to `palette_staging` even though the URI also names that database.
+`authSource=admin` selects credential authentication, not the application database.
+The intended role is `readWrite` on `palette_staging`. A successful ping confirms
+connectivity/authentication, not write permissions; this probe never tests writes.
+Do not point `test:mongo` at this Atlas instance: those tests create/drop their own
+temporary databases, beyond this user's single-database role.
+
 ## API
 
 | Route                               | Purpose                                                              |
