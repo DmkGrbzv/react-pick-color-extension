@@ -75,12 +75,26 @@ For local MongoDB, start Docker Desktop, then:
 
 ```sh
 docker compose up -d
-docker compose exec mongo mongosh --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]})'
+docker compose run --rm mongo-init
 npm run dev
 ```
 
 The compose service binds to loopback and has no database authentication; use it
 only on a trusted development machine. Do not deploy that configuration.
+
+For the full local stack, run `docker compose --profile api up -d --build --wait`.
+The API uses `.env` at runtime and connects to `mongo:27017`; host development uses
+`mongodb://127.0.0.1:27017/?replicaSet=rs0&directConnection=true`. The initializer
+waits for a writable primary and preserves existing `rs0` configuration/data.
+`docker compose down` preserves the named database volume. Never add `--volumes`
+when stopping an environment whose data you want to keep.
+
+`GET /health` keeps its existing process-liveness response. `GET /ready` returns
+200 only while the API is serving and MongoDB is a writable primary, otherwise
+503 with no dependency details. The image probes `/ready`, runs as `node`, and
+handles SIGTERM by draining HTTP before closing storage (10-second upper limit).
+See [Docker and staging delivery](../docs/backend-delivery.md) for complete commands,
+CI image publication, environment setup, update/rollback and remaining decisions.
 
 Outside local development, `PUBLIC_API_URL` must be HTTPS. Use a persistent,
 authenticated database with encrypted transport and tested backups. Configure
@@ -202,7 +216,7 @@ PostgreSQL is not implemented or required to run this version. To add it later:
 
 Deploy this directory as its own service: build `npm ci --omit=dev`, start
 `node src/server.js`, health endpoint `/health`. With Docker, build from `backend/`
-and inject secrets at runtime. `npm start` is for local use with a `.env` file.
+and inject secrets at runtime. Readiness endpoint: `/ready`. `npm start` is for local use with a `.env` file.
 No live deployment, Google credentials or database instance are supplied by this repo.
 Real Google/Chrome login, backup restore and deployment still require acceptance
 checks against the configured services. Firefox/Opera packaging is not implemented.

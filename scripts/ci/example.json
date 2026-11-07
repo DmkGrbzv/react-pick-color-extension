@@ -23,7 +23,11 @@
     },
     "backend": {
       "result": "failure",
-      "outputs": { "attempt": "1", "install": "success", "tests": "failure" }
+      "outputs": { "attempt": "1", "install": "success", "tests": "failure", "mongo": "skipped" }
+    },
+    "image": {
+      "result": "success",
+      "outputs": { "attempt": "1", "build": "success" }
     }
   },
   "records": {

@@ -88,11 +88,14 @@ jobs:
     name: Backend
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      COMPOSE_PROJECT_NAME: ci-mongo-${{ github.run_id }}-${{ github.run_attempt }}
     outputs:
       attempt: ${{ steps.context.outputs.attempt }}
       install: ${{ steps.install.conclusion }}
       tests: ${{ steps.tests.conclusion }}
       artifact: ${{ steps.artifact.outputs.artifact-url }}
+      mongo: ${{ steps.mongo.conclusion }}
     defaults:
       run:
         working-directory: backend
@@ -123,6 +126,29 @@ jobs:
         id: tests
         run: node ../scripts/ci/runCheck.js backend tests
 
+      - name: Start isolated MongoDB replica set
+        id: mongo_start
+        run: |
+          docker compose -f compose.yaml -f compose.ci.yaml up -d mongo
+          docker compose -f compose.yaml -f compose.ci.yaml run --rm mongo-init
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T mongo mongosh --quiet --eval 'if (db.serverStatus().tcmalloc.usingPerCPUCaches !== false) quit(1)'
+
+      - name: Test MongoDB transactions and repository contracts
+        id: mongo
+        run: node ../scripts/ci/runCheck.js backend mongo
+        env:
+          MONGODB_TEST_URI: mongodb://127.0.0.1:27017/?replicaSet=rs0&directConnection=true
+
+      - name: Save isolated MongoDB diagnostics
+        if: ${{ always() && steps.mongo_start.outcome != 'skipped' }}
+        run: |
+          mkdir -p ../.ci-reports/backend
+          docker compose -f compose.yaml -f compose.ci.yaml logs --no-color --tail 100 mongo > ../.ci-reports/backend/mongo-service.log 2>&1 || true
+
+      - name: Remove temporary MongoDB environment
+        if: ${{ always() && steps.mongo_start.outcome != 'skipped' }}
+        run: docker compose -f compose.yaml -f compose.ci.yaml down --volumes --remove-orphans
+
       - name: Save sanitized backend diagnostics
         id: artifact
         if: ${{ always() }}
@@ -132,13 +158,109 @@ jobs:
           path: |
             .ci-reports/backend/install.json
             .ci-reports/backend/tests.json
+            .ci-reports/backend/mongo.json
+            .ci-reports/backend/mongo-service.log
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
+
+  image:
+    name: Backend Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      attempt: ${{ steps.context.outputs.attempt }}
+      build: ${{ steps.build.conclusion }}
+      artifact: ${{ steps.artifact.outputs.artifact-url }}
+    steps:
+      - name: Record check attempt
+        id: context
+        run: echo "attempt=$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+      - name: Build backend Docker image
+        id: build
+        run: node scripts/ci/runCheck.js image build
+        env:
+          REVISION: ${{ github.sha }}
+      - name: Export the checked image
+        run: docker save palette-backend:ci --output .ci-reports/image/backend.tar
+      - name: Save checked image for publication
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: backend-image-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .ci-reports/image/backend.tar
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 7
+      - name: Save sanitized image diagnostics
+        id: artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ci-checks-image-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .ci-reports/image/build.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
+
+  publish:
+    name: Publish backend image
+    needs: [frontend, backend, image]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    concurrency:
+      group: publish-backend-${{ github.sha }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+      - name: Download checked image from this run
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: backend-image-${{ github.run_id }}-*
+          path: .ci-reports/checked-images
+      - name: Load the exact image that passed the build check
+        run: |
+          archive=".ci-reports/checked-images/backend-image-${GITHUB_RUN_ID}-${CHECK_ATTEMPT}/backend.tar"
+          docker load --input "$archive"
+        env:
+          CHECK_ATTEMPT: ${{ needs.image.outputs.attempt }}
+      - name: Publish full-SHA tag without rebuilding or overwriting
+        run: node scripts/ci/publishImage.js
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Save published digest
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: backend-publication-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .ci-reports/publication/image.json
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 7
 
   report:
     name: Google Docs report
-    needs: [frontend, backend]
+    needs: [frontend, backend, image]
     if: ${{ always() && github.ref == 'refs/heads/master' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5

@@ -1,0 +1,19 @@
+// Development/test single-node replica set. Existing data/configuration is kept.
+try {
+  try {
+    const config = rs.conf();
+    if (config._id !== 'rs0' || config.members.length !== 1) throw new Error('Unexpected replica set');
+  } catch (error) {
+    if (error.code !== 94) throw error;
+    rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo:27017'}]});
+  }
+  const deadline = Date.now() + 90000;
+  while (!db.adminCommand({hello: 1}).isWritablePrimary) {
+    if (Date.now() > deadline) throw new Error('Primary timeout');
+    sleep(500);
+  }
+  print('Replica set rs0 has a writable primary.');
+} catch (error) {
+  print('Replica set initialization failed; check the local MongoDB service.');
+  quit(1);
+}

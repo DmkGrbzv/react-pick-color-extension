@@ -1,6 +1,8 @@
 # CI reporting to Google Docs
 
-The existing CI triggers are unchanged. Frontend and Backend remain independent.
+The existing CI triggers are unchanged. Frontend, Backend and the backend Docker
+image build remain independent. Backend also runs isolated MongoDB tests. Image
+publication depends on those application checks, not this optional reporting job.
 `Google Docs report` waits for both jobs and runs with `always()` only for `push`
 to `master` or `workflow_dispatch` on `master`. Pull requests and manual runs on
 other branches never get Google credentials or update the document.

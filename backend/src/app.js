@@ -44,12 +44,19 @@ function paletteRoutes( palettes, limiter ) {
   return router;
 }
 
-export function createApp( { config, auth, palettes, limiter } ) {
+export function createApp( { config, auth, palettes, limiter, readiness = async () => false } ) {
   const app = express();
   app.disable( 'x-powered-by' );
   app.set( 'trust proxy', config.proxyHops );
   app.use( helmet(), requestContext, corsPolicy( config ), express.json( { limit: '32kb', strict: true } ) );
   app.get( '/health', ( request, response ) => response.json( { status: 'ok' } ) );
+  app.get( '/ready', async ( request, response ) => {
+    response.set( 'Cache-Control', 'no-store' );
+    try {
+      if ( await readiness() ) return response.json( { status: 'ready' } );
+    } catch { /* Dependency failures expose no infrastructure details. */ }
+    response.status( 503 ).json( { status: 'notReady' } );
+  } );
   app.use( '/v1/auth', authRoutes( auth, limiter ) );
   app.use( '/v1', authenticate( auth ), rateLimit( limiter, 'api', 120 ) );
   app.get( '/v1/me', ( request, response ) => response.json( {

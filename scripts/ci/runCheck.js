@@ -18,10 +18,11 @@ async function main() {
   await mkdir( directory, { recursive: true } );
   await writeFile( filename, JSON.stringify( { ...identity, exitCode: null, metrics: {}, diagnosticCodes: [] } ) );
   let captured = '';
-  const child = spawn( process.platform === 'win32' ? 'npm.cmd' : 'npm', args, {
+  const program = job === 'image' ? 'docker' : process.platform === 'win32' ? 'npm.cmd' : 'npm';
+  const child = spawn( program, args, {
     cwd: job === 'backend' ? path.join( root, 'backend' ) : root,
     // Commands and arguments come only from CHECKS, never from workflow/user data.
-    shell: process.platform === 'win32',
+    shell: process.platform === 'win32' && job !== 'image',
     stdio: ['ignore', 'pipe', 'pipe'],
   } );
   const capture = ( stream, chunk ) => {

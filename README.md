@@ -335,10 +335,15 @@ credentials are not persisted.
 - Frontend: root `npm ci`, then separate lint, test, build and `verify:extension`
   steps. Lint includes backend sources and the architecture audit; it uses root
   tooling without requiring the backend's dependencies to be installed.
-- Backend: `npm ci` and `npm test` inside `backend/`. Its unit/HTTP/OIDC tests use
-  memory repositories, loopback HTTP servers and mocked identity-provider responses.
+- Backend: `npm ci`, ordinary tests, then `test:mongo` against a unique temporary
+  MongoDB `rs0` project. Test databases have generated `palette_test_*` names.
+  Diagnostics are saved before its temporary containers and volume are removed.
+- Backend Docker image: builds the pinned Node.js image and saves that exact image
+  as an artifact. On master pushes, publication waits for all application checks,
+  loads this artifact and pushes a full-SHA GHCR tag without rebuilding. Google
+  reporting is independent and cannot block publication.
 
-Each job caches npm downloads using its own lock-file hash; `node_modules` is not
+Frontend and Backend cache npm downloads using their own lock-file hashes; `node_modules` is not
 cached, and `npm ci` still runs. No production secrets or database are used. The
 library UI test supplies its own fake API origin instead of relying on a local
 environment file. A failed command fails its job; both checks must pass for a
@@ -351,13 +356,11 @@ delivery errors. See [Google Docs reporting setup](docs/ci-google-reporting.md)
 for service-account access, repository/branch restrictions, Variables, dry-run,
 concurrency protection and cancellation limitations.
 
-`test:mongo` is **not included**. To add it to the Backend job, start an isolated
-MongoDB replica set (the local Compose file uses MongoDB 8.0), initialize `rs0`,
-wait until it has a writable primary, and set `MONGODB_TEST_URI` to that test
-instance before `npm run test:mongo` in `backend/`. A standalone MongoDB server
-does not support the transactions these tests exercise. The test account needs
-permission to create and drop the generated `palette_test_*` databases. Never
-point this suite at production.
+`test:mongo` is included in CI. It also runs locally after starting an isolated
+replica set and setting `MONGODB_TEST_URI`. Never point it at production.
+See [Docker and backend delivery](docs/backend-delivery.md) for local Compose,
+GHCR permissions, the manual staging preparation workflow and rollback commands.
+Remote deployment remains unconnected until a server and access mechanism are chosen.
 
 Open a branch PR with base `master`, then inspect **Checks**, or open **Actions →
 CI** for job and step logs. The manual **Run workflow** button becomes available

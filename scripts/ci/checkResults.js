@@ -2,7 +2,8 @@ import { stripVTControlCharacters } from 'node:util';
 
 export const CHECKS = Object.freeze( {
   frontend: { install: ['ci'], lint: ['run', 'lint'], tests: ['test'], build: ['run', 'build'], verify: ['run', 'verify:extension'] },
-  backend: { install: ['ci'], tests: ['test'] },
+  backend: { install: ['ci'], tests: ['test'], mongo: ['run', 'test:mongo'] },
+  image: { build: ['build', '--pull', '--build-arg', 'REVISION', '--tag', 'palette-backend:ci', 'backend'] },
 } );
 
 export const DIAGNOSTICS = Object.freeze( {
