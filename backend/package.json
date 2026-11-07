@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node --env-file=.env src/server.js",
     "dev": "node --env-file=.env --watch src/server.js",
+    "check:atlas:staging": "node --env-file=.env.staging.local scripts/checkAtlasConnection.js",
     "test": "node --test tests/*.test.js",
     "test:mongo": "node --env-file-if-exists=.env --test tests/mongo.integration.js"
   },
