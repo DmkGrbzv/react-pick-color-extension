@@ -236,14 +236,11 @@ jobs:
       - name: Download checked image from this run
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          pattern: backend-image-${{ github.run_id }}-*
-          path: .ci-reports/checked-images
+          # Select the original check attempt when only publication is retried.
+          name: backend-image-${{ github.run_id }}-${{ needs.image.outputs.attempt }}
+          path: .ci-reports/checked-image
       - name: Load the exact image that passed the build check
-        run: |
-          archive=".ci-reports/checked-images/backend-image-${GITHUB_RUN_ID}-${CHECK_ATTEMPT}/backend.tar"
-          docker load --input "$archive"
-        env:
-          CHECK_ATTEMPT: ${{ needs.image.outputs.attempt }}
+        run: docker load --input .ci-reports/checked-image/backend.tar
       - name: Publish full-SHA tag without rebuilding or overwriting
         run: node scripts/ci/publishImage.js
         env:
