@@ -52,5 +52,7 @@ jobs:
             backend/deploy/deploy.js
             backend/deploy/imageReference.js
             backend/deploy/.env.example
+            backend/deploy/nginx/
+            docs/ec2-staging.md
           include-hidden-files: true
           retention-days: 7

@@ -63,9 +63,9 @@ test( 'an unready update automatically restores the previous healthy backend and
   assert.equal( ( await state() ).failed, NEXT );
 } );
 
-test( 'a failed first deployment stops the backend without changing any database or volume', async ( context ) => {
+test( 'a failed first deployment stops the backend and reports that no previous release exists', async ( context ) => {
   const { options, dependencies, state } = await fixture( context, { initial: null, failing: [NEXT] } );
-  await assert.rejects( deployBackend( options, dependencies ), /First deployment failed/ );
+  await assert.rejects( deployBackend( options, dependencies ), /First deployment failed.*No previous release is available/ );
   assert.equal( ( await state() ).current, null );
 } );
 

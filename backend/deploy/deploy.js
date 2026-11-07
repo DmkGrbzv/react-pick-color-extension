@@ -86,7 +86,7 @@ export async function deployBackend( options, dependencies = {} ) {
       }
       await compose( target, ['stop', 'backend'] );
       await saveState( stateFile, { ...state, current: null, pending: null, failed: target } );
-      throw new Error( 'First deployment failed; the backend was stopped. No database was changed.' );
+      throw new Error( 'First deployment failed; the backend was stopped. No previous release is available.' );
     }
     const result = { current: target, previous: state.pending || previous === target ? state.previous : previous, pending: null };
     await saveState( stateFile, result );
