@@ -112,11 +112,13 @@ until the first real staging deployment has been confirmed.
 
 ## Server decisions still required
 
-Choose the Linux amd64 host/provider, DNS/HTTPS proxy and firewall topology,
-connection mechanism (SSH, provider agent or another approved transport), service
-identity and registry pull access. No address or connection credential is invented.
-Choose a persistent **separate staging MongoDB** with authentication, TLS and
-backups: managed or independently operated containers with named volumes. The
+The first manual target is AWS EC2 Ubuntu 24.04 amd64, host Nginx/HTTPS and the
+separate Atlas `palette_staging` database. Follow the
+[EC2 staging runbook](ec2-staging.md) for the owner's cost review, server creation,
+Windows SSH, host setup, runtime configuration and acceptance checks. Region,
+instance, domain, administrator/deploy identities and private GHCR read access
+still require real values. No address or connection credential is invented.
+Keep staging database credentials and backups separate from production. The
 backend-only delivery Compose intentionally does not create/recreate that service.
 This keeps database lifecycle and image rollback independent. Do not deploy the
 unauthenticated local-development Compose file on a public server.

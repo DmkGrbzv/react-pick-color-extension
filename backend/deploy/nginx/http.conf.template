@@ -1,0 +1,18 @@
+# Bootstrap only: obtain the certificate before installing https.conf.template.
+server {
+    listen 80;
+    server_name __STAGING_DOMAIN__;
+    access_log off;
+    # Nginx error context can contain OAuth query strings; do not record requests.
+    error_log /dev/null;
+
+    if ($host != "__STAGING_DOMAIN__") { return 444; }
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/tintoom-acme;
+        default_type text/plain;
+        try_files $uri =404;
+    }
+
+    location / { return 503; }
+}
