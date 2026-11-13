@@ -112,11 +112,13 @@ until the first real staging deployment has been confirmed.
 
 ## Server decisions still required
 
-Choose the Linux amd64 host/provider, DNS/HTTPS proxy and firewall topology,
-connection mechanism (SSH, provider agent or another approved transport), service
-identity and registry pull access. No address or connection credential is invented.
-Choose a persistent **separate staging MongoDB** with authentication, TLS and
-backups: managed or independently operated containers with named volumes. The
+The first manual target is AWS EC2 Ubuntu 24.04 amd64, host Nginx/HTTPS and the
+separate Atlas `palette_staging` database. Follow the
+[EC2 staging runbook](ec2-staging.md) for the owner's cost review, server creation,
+Windows SSH, host setup, runtime configuration and acceptance checks. Region,
+instance, domain, administrator/deploy identities and private GHCR read access
+still require real values. No address or connection credential is invented.
+Keep staging database credentials and backups separate from production. The
 backend-only delivery Compose intentionally does not create/recreate that service.
 This keeps database lifecycle and image rollback independent. Do not deploy the
 unauthenticated local-development Compose file on a public server.
@@ -156,7 +158,23 @@ waits for its `/ready` healthcheck. On failure it restores the previous cached
 image, verifies readiness and still exits unsuccessfully so delivery is red.
 If the first deployment fails, it stops that backend and reports the absence of
 a previous release. Rollback failure preserves recovery state for an operator.
-An interrupted deployment blocks another update until `--rollback` is used.
+An interrupted update blocks another update until `--rollback` is used.
+For an interrupted **first** deployment (`pending` is a digest, `current` and
+`previous` are null), rollback is unavailable. Review the failure, configuration
+and possible startup side effects before explicitly retrying the recorded image:
+
+```sh
+node backend/deploy/deploy.js --resume-first
+```
+
+This command accepts only that first-deployment state and retries its immutable
+pending digest; it does not accept a new image. An existing backend must use the
+same digest, otherwise recovery stops for operator inspection. Readiness is
+checked again. On failure the backend is stopped, the failed digest is recorded,
+and pending recovery is retained for another explicit `--resume-first` attempt;
+ordinary updates remain blocked. No partially started image is treated as a rollback target. A successful
+retry records no previous release. This is not database recovery or a reversal
+of startup side effects.
 After a host/process crash, inspect pending state and active processes before
 manually removing a stale `deployment.lock`; never remove a live deployment's lock.
 

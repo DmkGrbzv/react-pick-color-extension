@@ -360,7 +360,9 @@ concurrency protection and cancellation limitations.
 replica set and setting `MONGODB_TEST_URI`. Never point it at production.
 See [Docker and backend delivery](docs/backend-delivery.md) for local Compose,
 GHCR permissions, the manual staging preparation workflow and rollback commands.
-Remote deployment remains unconnected until a server and access mechanism are chosen.
+The [first manual EC2 staging runbook](docs/ec2-staging.md) covers host Nginx/HTTPS,
+Atlas configuration and acceptance/rollback checks using the existing deploy tool.
+Remote deployment through GitHub Actions remains unconnected.
 
 Open a branch PR with base `master`, then inspect **Checks**, or open **Actions →
 CI** for job and step logs. The manual **Run workflow** button becomes available

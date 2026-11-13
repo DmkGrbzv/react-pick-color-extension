@@ -16,3 +16,8 @@ services:
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     stop_grace_period: 15s
+    logging:
+      driver: local
+      options:
+        max-size: '10m'
+        max-file: '3'
