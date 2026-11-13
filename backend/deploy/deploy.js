@@ -82,7 +82,11 @@ export async function deployBackend( options, dependencies = {} ) {
     if ( existing && !validImage( existing ) ) throw new Error( 'Existing backend image is outside the staging release contract.' );
     if ( resumeFirst && existing && existing !== state.pending ) throw new Error( 'Existing backend differs from the interrupted first release; operator inspection is required.' );
     // A partially started first release is not a known-good rollback target.
-    const previous = resumeFirst ? null : existing;
+    const failedFirst = state.current === null && !state.pending && validImage( state.failed );
+    if ( failedFirst && existing && existing !== state.failed ) {
+      throw new Error( 'Existing backend differs from the failed first release; operator inspection is required.' );
+    }
+    const previous = resumeFirst || failedFirst ? null : existing;
     await saveState( stateFile, { ...state, current: previous, pending: target } );
     try {
       await replaceBackend( context, target );
