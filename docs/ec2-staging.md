@@ -322,7 +322,8 @@ sudo sed "s/__STAGING_DOMAIN__/$STAGING_DOMAIN/g" \
 # Fresh dedicated host only: disable Ubuntu's default site, preserving its file.
 sudo unlink /etc/nginx/sites-enabled/default
 sudo ln -s /etc/nginx/sites-available/tintoom-staging /etc/nginx/sites-enabled/tintoom-staging
-sudo nginx -t && sudo systemctl reload nginx
+sudo nginx -t
+sudo systemctl reload nginx
 )
 ```
 
@@ -347,7 +348,8 @@ sudo cp /etc/nginx/sites-available/tintoom-staging /etc/nginx/tintoom-staging/bo
 sudo sed "s/__STAGING_DOMAIN__/$STAGING_DOMAIN/g" \
   "$RELEASE_DIR/backend/deploy/nginx/https.conf.template" | \
   sudo tee /etc/nginx/sites-available/tintoom-staging >/dev/null
-sudo nginx -t && sudo systemctl reload nginx
+sudo nginx -t
+sudo systemctl reload nginx
 sudo install -d -m 0755 /etc/letsencrypt/renewal-hooks/deploy
 sudo install -m 0755 "$RELEASE_DIR/backend/deploy/nginx/renew-hook.sh" \
   /etc/letsencrypt/renewal-hooks/deploy/tintoom-nginx
@@ -526,8 +528,12 @@ rollback as **unit-tested / prepared**, not verified on EC2.
 The shared `deployment.lock` serializes manual invocations. Do not use another
 state directory or Compose project to bypass it. If a deployment is interrupted,
 inspect processes and `/var/lib/tintoom/staging/deployment.json` before removing
-an orphaned lock; then use the existing recovery behavior described in
-[backend delivery](backend-delivery.md#update-and-rollback). Never remove a live
+an orphaned lock. If `pending` contains a digest and both `current` and `previous`
+are null, there is no rollback target: after reviewing the failure and confirming
+that retrying that same release is safe, use `node backend/deploy/deploy.js --resume-first`.
+This retries only the recorded digest and refuses a different existing backend.
+For an interrupted update with a recorded current release, use `--rollback` as
+described in [backend delivery](backend-delivery.md#update-and-rollback). Never remove a live
 lock. No procedure here deletes databases, named volumes or package versions.
 
 ## What is and is not verified

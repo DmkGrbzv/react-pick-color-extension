@@ -57,8 +57,13 @@ export async function deployBackend( options, dependencies = {} ) {
   const stateFile = path.join( stateDirectory, 'deployment.json' );
   try {
     const state = await readState( stateFile );
-    if ( state.pending && !options.rollback ) throw new Error( 'Staging has an interrupted deployment; use --rollback before another update.' );
-    const requested = options.rollback ? state.pending ? state.current : state.previous : options.image;
+    const resumeFirst = options.resumeFirst === true;
+    if ( resumeFirst && ( options.rollback || state.current !== null || state.previous !== null ||
+      !validImage( state.pending ) || !state.pending.startsWith( IMAGE_REPOSITORY + '@sha256:' ) ) ) {
+      throw new Error( 'Staging first-deployment recovery requires an interrupted first release with a recorded digest and no prior release.' );
+    }
+    if ( state.pending && !options.rollback && !resumeFirst ) throw new Error( 'Staging has an interrupted deployment; use --rollback, or --resume-first for an interrupted first release.' );
+    const requested = resumeFirst ? state.pending : options.rollback ? state.pending ? state.current : state.previous : options.image;
     if ( !validImage( requested ) ) throw new Error( 'Use this repository image with a full SHA tag or digest; rollback requires a previous release.' );
     const env = { ...process.env, STAGING_ENV_FILE: envFile };
     const docker = ( args, timeout ) => ( dependencies.docker || dockerCommand )( args, env, timeout );
@@ -71,9 +76,13 @@ export async function deployBackend( options, dependencies = {} ) {
     const digests = JSON.parse( await docker( ['image', 'inspect', '--format', '{{json .RepoDigests}}', requested] ) );
     const target = digests.find( ( ref ) => ref.startsWith( IMAGE_REPOSITORY + '@sha256:' ) && validImage( ref ) );
     if ( !target ) throw new Error( 'Registry digest could not be verified.' );
+    if ( resumeFirst && target !== state.pending ) throw new Error( 'Registry digest differs from the interrupted first release.' );
     const id = await compose( target, ['ps', '--all', '--quiet', 'backend'] );
-    const previous = id ? await docker( ['inspect', '--format', '{{.Config.Image}}', id] ) : null;
-    if ( previous && !validImage( previous ) ) throw new Error( 'Existing backend image is outside the staging release contract.' );
+    const existing = id ? await docker( ['inspect', '--format', '{{.Config.Image}}', id] ) : null;
+    if ( existing && !validImage( existing ) ) throw new Error( 'Existing backend image is outside the staging release contract.' );
+    if ( resumeFirst && existing && existing !== state.pending ) throw new Error( 'Existing backend differs from the interrupted first release; operator inspection is required.' );
+    // A partially started first release is not a known-good rollback target.
+    const previous = resumeFirst ? null : existing;
     await saveState( stateFile, { ...state, current: previous, pending: target } );
     try {
       await replaceBackend( context, target );
@@ -85,7 +94,7 @@ export async function deployBackend( options, dependencies = {} ) {
         throw new Error( 'Deployment failed; the previous backend was restored and is ready.' );
       }
       await compose( target, ['stop', 'backend'] );
-      await saveState( stateFile, { ...state, current: null, pending: null, failed: target } );
+      await saveState( stateFile, { ...state, current: null, pending: resumeFirst ? target : null, failed: target } );
       throw new Error( 'First deployment failed; the backend was stopped. No previous release is available.' );
     }
     const result = { current: target, previous: state.pending || previous === target ? state.previous : previous, pending: null };
@@ -99,6 +108,7 @@ export async function deployBackend( options, dependencies = {} ) {
 
 async function main() {
   const result = await deployBackend( { image: process.argv[2], rollback: process.argv[2] === '--rollback',
+    resumeFirst: process.argv[2] === '--resume-first',
     envFile: process.env.STAGING_ENV_FILE, stateDirectory: process.env.STAGING_STATE_DIR,
     timeoutSeconds: Number( process.env.STAGING_READY_TIMEOUT || 90 ) } );
   console.log( JSON.stringify( { status: 'ready', ...result } ) );

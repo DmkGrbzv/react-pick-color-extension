@@ -158,7 +158,23 @@ waits for its `/ready` healthcheck. On failure it restores the previous cached
 image, verifies readiness and still exits unsuccessfully so delivery is red.
 If the first deployment fails, it stops that backend and reports the absence of
 a previous release. Rollback failure preserves recovery state for an operator.
-An interrupted deployment blocks another update until `--rollback` is used.
+An interrupted update blocks another update until `--rollback` is used.
+For an interrupted **first** deployment (`pending` is a digest, `current` and
+`previous` are null), rollback is unavailable. Review the failure, configuration
+and possible startup side effects before explicitly retrying the recorded image:
+
+```sh
+node backend/deploy/deploy.js --resume-first
+```
+
+This command accepts only that first-deployment state and retries its immutable
+pending digest; it does not accept a new image. An existing backend must use the
+same digest, otherwise recovery stops for operator inspection. Readiness is
+checked again. On failure the backend is stopped, the failed digest is recorded,
+and pending recovery is retained for another explicit `--resume-first` attempt;
+ordinary updates remain blocked. No partially started image is treated as a rollback target. A successful
+retry records no previous release. This is not database recovery or a reversal
+of startup side effects.
 After a host/process crash, inspect pending state and active processes before
 manually removing a stale `deployment.lock`; never remove a live deployment's lock.
 

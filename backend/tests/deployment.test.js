@@ -18,6 +18,7 @@ async function fixture( context, { initial = PREVIOUS, failing = [] } = {} ) {
   const envFile = path.join( directory, 'staging.env' );
   await writeFile( envFile, 'OIDC_CLIENT_SECRET=fixture-not-exported\n' );
   let current = initial;
+  let stopped = false;
   let clock = 0;
   const replacements = [];
   const docker = async ( args, env ) => {
@@ -26,11 +27,12 @@ async function fixture( context, { initial = PREVIOUS, failing = [] } = {} ) {
     if ( args[0] === 'image' ) return JSON.stringify( [args.at( -1 ).includes( '@' ) ? args.at( -1 ) : NEXT] );
     if ( args[0] === 'inspect' ) {
       if ( args.includes( '{{.Config.Image}}' ) ) return current;
+      if ( stopped ) return 'exited';
       return failing.includes( current ) ? 'running unhealthy' : 'running healthy';
     }
     if ( args.includes( 'ps' ) ) return current ? 'container-id' : '';
-    if ( args.includes( 'up' ) ) { current = env.BACKEND_IMAGE; replacements.push( current ); return ''; }
-    if ( args.includes( 'stop' ) ) { current = null; return ''; }
+    if ( args.includes( 'up' ) ) { current = env.BACKEND_IMAGE; stopped = false; replacements.push( current ); return ''; }
+    if ( args.includes( 'stop' ) ) { stopped = true; return ''; }
     assert.fail( 'Unexpected Docker operation' );
   };
   return { options: { image: NEXT, envFile, stateDirectory: directory, timeoutSeconds: 1 },
@@ -103,4 +105,78 @@ test( 'an interrupted deployment blocks updates and recovers the recorded releas
   assert.equal( ( await state() ).current, PREVIOUS );
   assert.equal( ( await state() ).pending, null );
   assert.deepEqual( replacements, [PREVIOUS] );
+} );
+
+test( 'an interrupted first deployment can resume the recorded digest before or after container creation', async ( context ) => {
+  for ( const initial of [null, NEXT] ) {
+    const { options, dependencies, directory, state, replacements } = await fixture( context, { initial } );
+    await writeFile( path.join( directory, 'deployment.json' ), JSON.stringify( { current: null, previous: null, pending: NEXT } ) );
+    await assert.rejects( deployBackend( options, dependencies ), /interrupted deployment/ );
+    await assert.rejects( deployBackend( { ...options, rollback: true }, dependencies ), /rollback requires a previous release/ );
+    await deployBackend( { ...options, image: PREVIOUS, resumeFirst: true }, dependencies );
+    assert.deepEqual( replacements, [NEXT] );
+    assert.deepEqual( await state(), { current: NEXT, previous: null, pending: null } );
+  }
+} );
+
+test( 'first-deployment recovery never rolls back to the unready partial release', async ( context ) => {
+  const failing = [NEXT];
+  const { options, dependencies, directory, state, replacements } = await fixture( context, { initial: NEXT, failing } );
+  await writeFile( path.join( directory, 'deployment.json' ), JSON.stringify( { current: null, previous: null, pending: NEXT } ) );
+  await assert.rejects( deployBackend( { ...options, resumeFirst: true }, dependencies ), /First deployment failed/ );
+  assert.deepEqual( replacements, [NEXT] );
+  assert.deepEqual( await state(), { current: null, previous: null, pending: NEXT, failed: NEXT } );
+  await assert.rejects( deployBackend( options, dependencies ), /interrupted deployment/ );
+  failing.length = 0;
+  await deployBackend( { ...options, resumeFirst: true }, dependencies );
+  assert.deepEqual( replacements, [NEXT, NEXT] );
+  assert.deepEqual( await state(), { current: NEXT, previous: null, pending: null } );
+} );
+
+test( 'first-deployment recovery refuses a different container and preserves pending state', async ( context ) => {
+  const { options, dependencies, directory, state, replacements } = await fixture( context );
+  const pending = { current: null, previous: null, pending: NEXT };
+  await writeFile( path.join( directory, 'deployment.json' ), JSON.stringify( pending ) );
+  await assert.rejects( deployBackend( { ...options, resumeFirst: true }, dependencies ), /Existing backend differs/ );
+  assert.deepEqual( replacements, [] );
+  assert.deepEqual( await state(), pending );
+} );
+
+test( 'first-deployment recovery rejects non-first states without Docker operations', async ( context ) => {
+  const { options, directory } = await fixture( context );
+  for ( const state of [
+    { current: null, previous: null },
+    { current: PREVIOUS, previous: null, pending: NEXT },
+    { current: null, previous: PREVIOUS, pending: NEXT },
+    { current: null, previous: null, pending: IMAGE_REPOSITORY + ':' + 'b'.repeat( 40 ) },
+  ] ) {
+    await writeFile( path.join( directory, 'deployment.json' ), JSON.stringify( state ) );
+    await assert.rejects( deployBackend( { ...options, resumeFirst: true }, {
+      docker: () => assert.fail( 'Invalid recovery must not call Docker' ),
+    } ), /first-deployment recovery requires/ );
+  }
+} );
+
+test( 'first-deployment recovery preserves pending state when pulling fails', async ( context ) => {
+  const { options, directory, state } = await fixture( context, { initial: NEXT } );
+  const pending = { current: null, previous: null, pending: NEXT };
+  await writeFile( path.join( directory, 'deployment.json' ), JSON.stringify( pending ) );
+  await assert.rejects( deployBackend( { ...options, resumeFirst: true }, {
+    docker: async () => { throw new Error( 'registry unavailable' ); },
+  } ), /registry unavailable/ );
+  assert.deepEqual( await state(), pending );
+} );
+
+test( 'first-deployment recovery refuses a registry digest mismatch before touching the container', async ( context ) => {
+  const { options, directory, state } = await fixture( context );
+  const pending = { current: null, previous: null, pending: NEXT };
+  await writeFile( path.join( directory, 'deployment.json' ), JSON.stringify( pending ) );
+  await assert.rejects( deployBackend( { ...options, resumeFirst: true }, {
+    docker: async ( args ) => {
+      if ( args[0] === 'pull' ) return '';
+      if ( args[0] === 'image' ) return JSON.stringify( [PREVIOUS] );
+      assert.fail( 'Mismatched digest must not touch the container' );
+    },
+  } ), /Registry digest differs/ );
+  assert.deepEqual( await state(), pending );
 } );
