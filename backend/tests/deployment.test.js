@@ -180,3 +180,33 @@ test( 'first-deployment recovery refuses a registry digest mismatch before touch
   } ), /Registry digest differs/ );
   assert.deepEqual( await state(), pending );
 } );
+
+for ( const retryImage of [NEXT, PREVIOUS] ) {
+  test( 'ordinary first-deploy retry has no rollback target: ' + retryImage, async ( context ) => {
+    const failing = [NEXT, PREVIOUS];
+    const { options, dependencies, state, replacements } = await fixture( context, { initial: null, failing } );
+    await assert.rejects( deployBackend( options, dependencies ), /First deployment failed/ );
+    await assert.rejects( deployBackend( { ...options, image: retryImage }, dependencies ), /First deployment failed/ );
+    assert.deepEqual( replacements, [NEXT, retryImage] );
+    assert.equal( ( await state() ).current, null );
+    assert.equal( ( await state() ).pending, null );
+    assert.equal( ( await state() ).failed, retryImage );
+    failing.length = 0;
+    const result = await deployBackend( { ...options, image: retryImage }, dependencies );
+    assert.deepEqual( result, { current: retryImage, previous: null, pending: null } );
+    await assert.rejects( deployBackend( { ...options, rollback: true }, dependencies ), /rollback requires a previous release/ );
+    await deployBackend( { ...options, image: retryImage === NEXT ? PREVIOUS : NEXT }, dependencies );
+    assert.equal( ( await state() ).previous, retryImage );
+    await deployBackend( { ...options, rollback: true }, dependencies );
+    assert.equal( ( await state() ).current, retryImage );
+  } );
+}
+
+test( 'ordinary first-deploy retry refuses an unrelated retained container', async ( context ) => {
+  const { options, dependencies, directory, state, replacements } = await fixture( context );
+  const failed = { current: null, previous: null, pending: null, failed: NEXT };
+  await writeFile( path.join( directory, 'deployment.json' ), JSON.stringify( failed ) );
+  await assert.rejects( deployBackend( options, dependencies ), /Existing backend differs from the failed first release/ );
+  assert.deepEqual( replacements, [] );
+  assert.deepEqual( await state(), failed );
+} );
