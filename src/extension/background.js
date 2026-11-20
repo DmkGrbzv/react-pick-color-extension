@@ -10,20 +10,29 @@ import { ChromeSessionStorage } from '@/features/auth/adapters/chromeSessionStor
 import { SessionStore } from '@/features/auth/services/sessionStore.js';
 import { BrowserSignIn } from '@/features/auth/services/browserSignIn.js';
 import { SavedPaletteService } from '@/features/saved-palettes/services/savedPaletteService.js';
+import { DeviceBackupService } from '@/features/saved-palettes/services/deviceBackupService.js';
+import { SESSION_KEY, EPOCH_KEY } from '@/features/auth/constants/sessionKeys.js';
 import { apiUrl } from '@/api/config.js';
 
 const storage = new StorageAdapter( chrome.storage );
 const paletteService = new PaletteService( new PaletteRepository( storage ) );
 const panel = new PanelController( chrome );
 const http = apiUrl ? new ApiClient( apiUrl ) : null;
-const sessions = http ? new SessionStore( new ChromeSessionStorage( chrome.storage ) ) : null;
+const sessionStorage = new ChromeSessionStorage( chrome.storage );
+void sessionStorage.initialize().catch( () => { console.error( 'Trusted storage initialization failed.' ); } );
+const sessions = new SessionStore( sessionStorage );
 const library = http ? new SavedPaletteService( {
   http,
   store: sessions,
   login: new BrowserSignIn( { api: chrome, http } ),
   palette: paletteService,
 } ) : null;
+const backup = new DeviceBackupService( { storage: sessionStorage, store: sessions, http, palette: paletteService } );
+chrome.storage.onChanged.addListener( ( changes ) => {
+  if ( Object.hasOwn( changes, SESSION_KEY ) || Object.hasOwn( changes, EPOCH_KEY ) ) backup.cancel();
+} );
 const messageDependencies = {
+  backup,
   paletteService,
   library,
   openEditor: createOpenEditor( chrome, panel ),

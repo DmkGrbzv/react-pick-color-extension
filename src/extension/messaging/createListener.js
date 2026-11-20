@@ -15,7 +15,7 @@ async function respondToMessage( dispatch, message, sender, sendResponse ) {
     response = {
       ok: false,
       error: error instanceof AppError ? error.code : fallbackError,
-      ...( message.type.startsWith( 'cloud:' ) ? {} : {
+      ...( ( message.type.startsWith( 'cloud:' ) || message.type.startsWith( 'backup:' ) ) ? {} : {
         details: error instanceof Error ? error.message : String( error ),
       } ),
     };
@@ -26,7 +26,7 @@ async function respondToMessage( dispatch, message, sender, sendResponse ) {
 export function createListener( extensionId, dispatch, extensionUrl ) {
   return ( message, sender, sendResponse ) => {
     if ( sender.id !== extensionId || !isMessageType( message?.type ) ) return false;
-    if ( message.type.startsWith( 'cloud:' ) && !isLibrarySender( sender, extensionId, extensionUrl ) ) return false;
+    if ( ( message.type.startsWith( 'cloud:' ) || message.type.startsWith( 'backup:' ) ) && !isLibrarySender( sender, extensionId, extensionUrl ) ) return false;
     void respondToMessage( dispatch, message, sender, sendResponse );
     // Chrome requires a synchronous true to keep the response channel open.
     return true;
