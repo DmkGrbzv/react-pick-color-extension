@@ -185,6 +185,43 @@ test( 'advisor previews without writes, adds explicitly, rejects duplicates and 
       assert.equal( document.querySelector( '.advisor-source code' ).textContent, '#808080' );
       assert.equal( document.querySelectorAll( '.advisor-category option:disabled' ).length, 2 );
       assert.equal( writes, 1 );
+      await category( 'historical' );
+      assert.equal( document.querySelectorAll( '.historical-palette' ).length, 6 );
+      assert.equal( document.querySelector( '.historical-palettes > label select' ).value, 'original' );
+      const originalHexes = [...document.querySelectorAll( '.historical-palette:first-of-type .suggestion-option' )].map( node => node.querySelectorAll( 'span' )[1].textContent );
+      const beforeHistorical = structuredClone( stored.currentPalette );
+      await act( async () => {
+        const select = document.querySelector( '.historical-palettes > label select' );
+        select.value = 'adapted';
+        select.dispatchEvent( new window.Event( 'change', { bubbles: true } ) );
+      } );
+      const firstCard = document.querySelector( '.historical-palette' );
+      const adaptedHexes = [...firstCard.querySelectorAll( '.suggestion-option' )].map( node => node.querySelectorAll( 'span' )[1].textContent );
+      assert.ok( adaptedHexes.includes( '#808080' ) );
+      assert.equal( adaptedHexes.length, originalHexes.length );
+      assert.deepEqual( stored.currentPalette, beforeHistorical );
+      await click( firstCard.querySelector( '.suggestion-option' ) );
+      await click( document.querySelector( '.advisor-actions button:last-child' ) );
+      assert.equal( copied.at( -1 ), adaptedHexes[0] );
+      failWrite = true;
+      await click( firstCard.querySelector( ':scope > button' ) );
+      assert.equal( writes, 1 );
+      assert.deepEqual( stored.currentPalette, beforeHistorical );
+      assert.ok( document.querySelector( '.advisor-notice .error' ) );
+      const addAll = firstCard.querySelector( ':scope > button' );
+      await act( async () => { addAll.click(); addAll.click(); } );
+      assert.equal( writes, 2, 'one complete batch write despite rapid clicks' );
+      assert.ok( firstCard.querySelector( ':scope > button' ).disabled );
+      const expectedNew = adaptedHexes.filter( hex => !beforeHistorical.colors.some( item => item.hex === hex ) );
+      assert.deepEqual( stored.currentPalette.colors.slice( 0, expectedNew.length ).map( item => item.hex ), expectedNew );
+      assert.deepEqual( stored.currentPalette.colors.slice( expectedNew.length ), beforeHistorical.colors );
+      await act( async () => {
+        const select = document.querySelector( '.historical-palettes > label select' );
+        select.value = 'original';
+        select.dispatchEvent( new window.Event( 'change', { bubbles: true } ) );
+      } );
+      assert.deepEqual( [...firstCard.querySelectorAll( '.suggestion-option' )].map( node => node.querySelectorAll( 'span' )[1].textContent ), originalHexes );
+      assert.equal( document.querySelector( '.advisor-actions' ), null );
       // Deletion from another context closes the removed source's advisor.
       await act( async () =>
         local.set( {

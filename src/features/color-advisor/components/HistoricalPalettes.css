@@ -1,0 +1,35 @@
+.historical-palettes {
+  display: grid;
+  gap: 12px;
+}
+.historical-palettes > label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+.historical-palette {
+  min-width: 0;
+  padding: 10px;
+  border: var(--control-border);
+  border-radius: 8px;
+}
+.historical-palette h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+}
+.historical-palette .suggestion-grid {
+  display: flex;
+  gap: 0;
+}
+.historical-palette .suggestion-option {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 2px;
+  font-size: 9px;
+  overflow-wrap: anywhere;
+}
+.historical-palette > button {
+  margin-top: 8px;
+  width: 100%;
+  font-size: 11px;
+}

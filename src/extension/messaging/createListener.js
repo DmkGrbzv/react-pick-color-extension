@@ -1,5 +1,5 @@
 import { ERROR_CODES } from '@/constants/errorCodes.js';
-import { OPEN_EDITOR, findCorrectMessageType, isMessageType } from '@/extension/messaging/messageTypes.js';
+import { OPEN_EDITOR, ADD_COLORS, findCorrectMessageType, isMessageType } from '@/extension/messaging/messageTypes.js';
 import { AppError } from '@/utils/errors.js';
 import { isLibrarySender } from '@/extension/messaging/dispatchLibraryMessage.js';
 
@@ -26,7 +26,7 @@ async function respondToMessage( dispatch, message, sender, sendResponse ) {
 export function createListener( extensionId, dispatch, extensionUrl ) {
   return ( message, sender, sendResponse ) => {
     if ( sender.id !== extensionId || !isMessageType( message?.type ) ) return false;
-    if ( ( message.type.startsWith( 'cloud:' ) || message.type.startsWith( 'backup:' ) ) && !isLibrarySender( sender, extensionId, extensionUrl ) ) return false;
+    if ( ( message.type.startsWith( 'cloud:' ) || message.type.startsWith( 'backup:' ) || message.type === findCorrectMessageType( ADD_COLORS ) ) && !isLibrarySender( sender, extensionId, extensionUrl ) ) return false;
     void respondToMessage( dispatch, message, sender, sendResponse );
     // Chrome requires a synchronous true to keep the response channel open.
     return true;

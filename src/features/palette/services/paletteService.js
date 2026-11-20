@@ -81,6 +81,25 @@ export class PaletteService {
     } );
   }
 
+  // One queued read/transform/write for a whole combination, never partial adds.
+  addColors( values ) {
+    return this.#update( ( palette ) => {
+      if ( !Array.isArray( values ) || values.length < 1 || values.length > 5 ||
+        !Array.from( values ).every( value => typeof value === 'string' && /^#[\da-f]{6}$/i.test( value ) ) ) {
+        throw new AppError( ERROR_CODES.INVALID_HEX );
+      }
+      const seen = new Set( palette.colors.filter( item => item.type !== 'gradient' ).map( item => item.hex.toUpperCase() ) );
+      const additions = [];
+      for ( const value of values ) {
+        const hex = value.toUpperCase();
+        if ( seen.has( hex ) ) continue;
+        seen.add( hex );
+        additions.push( { id: this.#makeId(), hex } );
+      }
+      return additions.length ? { ...palette, colors: [...additions, ...palette.colors] } : palette;
+    } );
+  }
+
   saveGradient( value ) {
     return this.#update( ( palette ) => {
       const gradient = normalizeGradient( value );

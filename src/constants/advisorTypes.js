@@ -1,5 +1,6 @@
 export const ADVISOR_CATEGORIES = Object.freeze( {
   SHADES: 'shades',
+  HISTORICAL: 'historical',
   ANALOGOUS: 'analogous',
   ACCENTS: 'accents',
 } );
