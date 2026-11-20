@@ -216,7 +216,7 @@
       "shades": "Lighter and darker versions of the source color for backgrounds or stronger accents.",
       "analogous": "The source color and two hues 30° to either side, for exploring a close color combination.",
       "accents": "Explore stronger differences with an opposite hue or two evenly spaced hues.",
-      "historical": "Offline Sanzo Wada combinations, ranked by perceptual color distance."
+      "historical": "Find harmonious combinations for your selected color from Sanzo Wada’s historical collection."
     },
     "complementary": {
       "title": "Complementary",
@@ -237,15 +237,18 @@
     "guidance": "These are starting points, not guaranteed matches. The result depends on proportions, background, and use. Text readability is not evaluated.",
     "historical": {
       "variant": "Palette version",
-      "original": "Original palette",
-      "adapted": "Adapted to your color",
-      "originalHint": "Original digitized HEX values, unchanged.",
-      "adaptedHint": "Tintoom replaces the nearest color with your exact source HEX. This is an adaptation, not a historical recommendation.",
-      "combination": "Combination {{id}}",
+      "original": "Classic",
+      "adapted": "With my color",
+      "originalHint": "Original combinations from the collection, found using the closest shade to your color.",
+      "adaptedHint": "Combinations from the collection with one shade replaced by your selected color.",
+      "combination": "Palette No. {{id}}",
       "addAll": "Add all colors",
       "addedAll": "Combination added to the working palette.",
       "credit": "Sanzo Wada collection · 159 colors, 348 combinations · MIT data.",
-      "notices": "Sources and licenses"
+      "notices": "Sources and licenses",
+      "title": "Find color combinations",
+      "yourColor": "Your color",
+      "nearestColor": "Closest color in the collection"
     }
   },
   "palettePreview": {

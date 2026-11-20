@@ -27,7 +27,7 @@ export default function ColorAdvisor( { id, source, savedColors, format, disable
   return (
     <section className="color-advisor" id={ id } aria-labelledby={ id + '-title' }>
       <div className="advisor-heading">
-        <h3 id={ id + '-title' }>{ t( 'advisor.title' ) }</h3>
+        <h3 id={ id + '-title' }>{ t( category === ADVISOR_CATEGORIES.HISTORICAL ? 'advisor.historical.title' : 'advisor.title' ) }</h3>
         <button type="button" onClick={ onClose }>
           <Icon name="close" />
           { t( 'advisor.close' ) }
@@ -36,7 +36,7 @@ export default function ColorAdvisor( { id, source, savedColors, format, disable
       <div className="advisor-source">
         <span style={ { backgroundColor: suggestions.source } } aria-hidden="true" />
         <div>
-          { t( 'advisor.source' ) }
+          { t( category === ADVISOR_CATEGORIES.HISTORICAL ? 'advisor.historical.yourColor' : 'advisor.source' ) }
           <code>{ suggestions.source }</code>
         </div>
       </div>

@@ -33,3 +33,8 @@
   width: 100%;
   font-size: 11px;
 }
+.historical-palette .suggestion-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}

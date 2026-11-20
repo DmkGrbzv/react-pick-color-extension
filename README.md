@@ -554,8 +554,9 @@ Components in `src/features/color-advisor/components/` have separate roles: Colo
 Choose **Historical combinations** in Color Advisor. Six combinations are ranked by
 CIELAB D65 / Delta E 1976 distance to the closest historical color; IDs break ties.
 The bundled MIT dataset contains 159 colors and 348 combinations of **2–4 colors**.
-Original palettes retain all digitized HEX values. **Adapted to your color** replaces
-only the nearest color with the exact selected HEX; Tintoom labels the adaptation.
+**Classic** palettes retain all digitized HEX values. **With my color** replaces
+only the nearest color with the exact selected HEX. Each card marks the closest
+historical color or your color, and uses its collection palette number.
 Black, white, and gray sources work in this mode. Results are deterministic and
 require no network requests, new browser permissions, runtime packages, or backend.
 
@@ -578,7 +579,7 @@ JSON checksum, schema and combination references are covered by tests. No images
 scans or modern book layout are included. Original means original digitized data,
 not a claim of exact physical print reproduction or a recommendation by the author.
 
-Local validation: lint/architecture, full tests, build, verify:extension, and ZIP
+RPC-4 local validation: lint/architecture, full tests, build, verify:extension, and ZIP
 notice inclusion. The measured unpacked build is 575,943 bytes across 17 files
 (previous local build: 535,961 bytes; increase: 39,982 bytes). The vendored JSON is
 60,245 bytes; Vite bundles it into the UI. These sizes describe this local build,
