@@ -29,6 +29,7 @@ export function isMessageType( type ) {
 
 // Preserve existing wire values across extension contexts during upgrades.
 export const LIBRARY_MESSAGE_TYPES = Object.freeze( [
+  'backup:read', 'backup:create', 'backup:remove', 'backup:open',
   'cloud:state', 'cloud:signIn', 'cloud:logout', 'cloud:prepare', 'cloud:cancelSave',
   'cloud:save', 'cloud:nameSave', 'cloud:list', 'cloud:get', 'cloud:open', 'cloud:rename', 'cloud:remove',
 ] );

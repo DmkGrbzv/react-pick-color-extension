@@ -245,5 +245,33 @@
     "confirm": "Remove all colors and gradients from the working palette on this device? Unsaved items will be lost. Palettes already saved in the library will not be deleted.",
     "cleared": "Working palette cleared.",
     "changed": "The working palette changed in another view. Review it before trying to clear it again."
+  },
+  "backup": {
+    "title": "Backup on this device",
+    "explanation": "This copy stays accessible to people using this browser profile until you delete it, including after sign-out. It is not an encrypted vault.",
+    "captureHint": "Create a copy of the current cloud library. Library changes during capture can affect the result. A successful new copy replaces the previous device copy.",
+    "confirm": "Save your cloud library on this device? It will remain accessible after sign-out until explicitly deleted. Replace the previous device copy only if the complete capture succeeds.",
+    "create": "Save backup on this device",
+    "view": "View device backup",
+    "delete": "Delete device backup",
+    "deleteConfirm": "Delete the backup from this device? Your cloud library and working palette are unaffected.",
+    "busy": "Working on the device backup…",
+    "saved": "Device backup saved.",
+    "deleted": "Device backup deleted.",
+    "copied": "Copied.",
+    "empty": "There is no backup on this device.",
+    "count": "{{count}} saved palettes",
+    "copyGradient": "Copy gradient CSS",
+    "errors": {
+      "failed": "Could not complete the action. Check the connection or clipboard permission and try again.",
+      "unauthorized": "Sign in to create a backup. Viewing and deleting a device copy remain available offline.",
+      "sessionChanged": "Capture was cancelled because the account changed or the operation was cancelled. The previous copy was preserved.",
+      "backupStorageFailed": "Device storage could not save the copy. The previous backup was preserved. Free device storage and retry.",
+      "invalidBackup": "Backup data is invalid or exceeds the device-copy limits. You can delete an invalid copy and create a new one.",
+      "paletteChanged": "The working palette changed. Review it before opening this backup again.",
+      "cloudBusy": "A backup capture is already running. Wait for it to finish."
+    },
+    "previous": "Previous backup cards",
+    "next": "Next backup cards"
   }
 }

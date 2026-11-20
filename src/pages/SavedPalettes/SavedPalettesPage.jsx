@@ -3,6 +3,7 @@ import { paletteVersion, isSavedPalette } from '@/utils/paletteSnapshot.js';
 import SavePaletteConfirmation from '@/features/saved-palettes/components/SavePaletteConfirmation.jsx';
 import SavedPalettePreview from '@/features/saved-palettes/components/SavedPalettePreview.jsx';
 import SavedPaletteDetails from '@/features/saved-palettes/components/SavedPaletteDetails.jsx';
+import DeviceBackupPanel from '@/features/saved-palettes/components/DeviceBackupPanel.jsx';
 import './SavedPalettesPage.css';
 
 const errorCodes = new Set( [
@@ -80,6 +81,8 @@ export default function SavedPalettesPage( { palette, library, onOpened } ) {
         onOpen={ () => open( state.detail.id ) } onRemove={ () => remove( state.detail ) }
         onClose={ () => model.closeDetails() } /> }
     </section>
+    <DeviceBackupPanel key={ ( state.user?.id || 'guest' ) + ( state.user?.expiresAt || '' ) }
+      signedIn={ Boolean( state.user ) } palette={ palette } onOpened={ onOpened } />
     </>
   );
 }
