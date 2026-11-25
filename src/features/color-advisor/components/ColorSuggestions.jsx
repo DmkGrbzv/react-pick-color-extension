@@ -17,7 +17,7 @@ export default function ColorSuggestions( { colors, selectedHex, savedHexes, onS
             type="button"
             key={ hex }
             className="suggestion-option"
-            aria-label={ [t( 'advisor.previewColor', { hex } ), colorLabels[hex]].filter( Boolean ).join( '. ' ) }
+            aria-label={ [t( 'advisor.previewColor', { hex } ), colorLabels[hex], savedHexes.has( hex ) ? t( 'advisor.alreadyAdded' ) : null].filter( Boolean ).join( '. ' ) }
             aria-pressed={ selectedHex === hex }
             onClick={ () => onSelect( hex ) }
           >
@@ -27,7 +27,6 @@ export default function ColorSuggestions( { colors, selectedHex, savedHexes, onS
               aria-hidden="true"
             />
             <span>{ hex }</span>
-            { colorLabels[hex] && <span className="suggestion-label">{ colorLabels[hex] }</span> }
             { savedHexes.has( hex ) && (
               <span className="suggestion-saved">{ t( 'advisor.alreadyAdded' ) }</span>
             ) }

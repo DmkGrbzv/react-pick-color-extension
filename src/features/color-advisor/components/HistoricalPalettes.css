@@ -19,7 +19,8 @@
 }
 .historical-palette .suggestion-grid {
   display: flex;
-  gap: 0;
+  gap: 8px;
+  padding: 4px;
 }
 .historical-palette .suggestion-option {
   flex: 1;
@@ -32,9 +33,4 @@
   margin-top: 8px;
   width: 100%;
   font-size: 11px;
-}
-.historical-palette .suggestion-label {
-  color: var(--text-muted);
-  font-size: 10px;
-  overflow-wrap: anywhere;
 }

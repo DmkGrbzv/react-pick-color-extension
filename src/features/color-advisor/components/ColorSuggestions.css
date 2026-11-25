@@ -33,3 +33,6 @@
   font-size: 9px;
   overflow-wrap: anywhere;
 }
+.suggestion-option > span {
+  overflow-wrap: anywhere;
+}

@@ -264,10 +264,10 @@ Node.js/MongoDB API lives in [`backend/`](backend/README.md), with its own
 `package.json` and lockfile. Next.js and a separate repository are not required.
 The server runs separately; it is never copied into the extension's `dist/` or ZIP.
 
-Server-backed palette storage is opt-in at build time. Copy root `.env.example` to
-`.env.local`, set `VITE_PALETTE_API_URL` to your actual API origin, and build.
+Cloud UI and network access default to off. Server-backed palette storage is opt-in at build time. Copy root `.env.example` to
+`.env.local`, set `VITE_ENABLE_CLOUD=true` and `VITE_PALETTE_API_URL` to your actual API origin, and build.
 Only the public API URL enters the extension. The generated manifest adds
-`identity` and the configured host permission. An unset URL keeps local mode and
+`identity` and the configured host permission. A missing/false cloud flag or unset URL keeps local mode and
 does not add these permissions. For development use a loopback API; production
 requires HTTPS. Never put OIDC secrets or database credentials in `VITE_*`.
 
@@ -555,8 +555,9 @@ Choose **Historical combinations** in Color Advisor. Six combinations are ranked
 CIELAB D65 / Delta E 1976 distance to the closest historical color; IDs break ties.
 The bundled MIT dataset contains 159 colors and 348 combinations of **2–4 colors**.
 **Classic** palettes retain all digitized HEX values. **With my color** replaces
-only the nearest color with the exact selected HEX. Each card marks the closest
-historical color or your color, and uses its collection palette number.
+only the nearest color with the exact selected HEX. Each card uses its collection
+palette number. Origin is conveyed in accessible labels; each swatch shows only
+one Already added status when present in the working palette.
 Black, white, and gray sources work in this mode. Results are deterministic and
 require no network requests, new browser permissions, runtime packages, or backend.
 
@@ -587,3 +588,19 @@ not a permanent size budget. Manual Chrome checks remain: load the built ZIP's
 contents, go offline, exercise original/adapted modes in panel and full tab, copy,
 add one/all, reopen/reload, check en/uk and both themes, and confirm cross-view state.
 Browser automation could not be authorized in this session.
+
+
+### Local-Only release candidate
+
+Cloud is hidden by default through VITE_ENABLE_CLOUD (only the exact string true
+opts in). A configured API URL alone does not enable UI, worker requests or extra
+manifest permissions. Legacy library entries/hash/history resolve to the working
+palette; local tools, printing and preferences remain available. Existing sessions,
+pending saves, cloud-source references and local copies are retained unchanged.
+The working screen offers existing device backups in a collapsible local section;
+cloud capture controls are hidden there. No cloud request is made on opening it.
+
+See [Local-Only release checklist](docs/local-only-release.md) for exact Windows
+build commands, artifact verification and required owner/browser checks. A passing
+DOM/worker test is not installed-extension acceptance. The release remains NO-GO
+until real Chrome and owner-supplied store/privacy materials are complete.
