@@ -5,8 +5,9 @@ import { paletteVersion } from '@/utils/paletteSnapshot.js';
 import { gradientDeclaration } from '@/utils/gradient.js';
 import { BACKUP_KEY } from '../utils/deviceBackupValidation.js';
 import SavedPalettePreview from './SavedPalettePreview.jsx';
+import './SavedPalettes.css';
 
-export default function DeviceBackupPanel( { signedIn, palette, onOpened } ) {
+export default function DeviceBackupPanel( { signedIn, palette, onOpened, captureEnabled = true } ) {
   const { t, i18n } = useTranslation();
   const [backup, setBackup] = useState( null );
   const [page, setPage] = useState( 0 );
@@ -83,9 +84,9 @@ export default function DeviceBackupPanel( { signedIn, palette, onOpened } ) {
     <section className="saved-palettes" aria-label={ t( 'backup.title' ) }>
       <h2>{ t( 'backup.title' ) }</h2>
       <p className="hint">{ t( 'backup.explanation' ) }</p>
-      <p className="hint">{ t( 'backup.captureHint' ) }</p>
+      { captureEnabled && <p className="hint">{ t( 'backup.captureHint' ) }</p> }
       <div className="saved-actions">
-        <button type="button" disabled={ busy || !signedIn } onClick={ create }>{ t( 'backup.create' ) }</button>
+        { captureEnabled && <button type="button" disabled={ busy || !signedIn } onClick={ create }>{ t( 'backup.create' ) }</button> }
         <button type="button" disabled={ busy } onClick={ view }>{ t( 'backup.view' ) }</button>
         <button type="button" onClick={ remove }>{ t( 'backup.delete' ) }</button>
       </div>

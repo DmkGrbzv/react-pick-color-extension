@@ -210,18 +210,25 @@ test( 'advisor previews without writes, adds explicitly, rejects duplicates and 
         assert.ok( document.querySelector( '.advisor-source' ).textContent.includes( labels.your ) );
         assert.equal( card.querySelector( 'h4' ).textContent, labels.card + expectedId );
         assert.equal( card.getAttribute( 'aria-label' ), labels.card + expectedId );
-        assert.equal( card.querySelectorAll( '.suggestion-label' ).length, 1 );
-        assert.equal( card.querySelector( '.suggestion-label' ).textContent, labels.nearest );
+        assert.equal( card.querySelectorAll( '.suggestion-label' ).length, 0 );
+        assert.ok( [...card.querySelectorAll( '.suggestion-option' )].some( node => node.getAttribute( 'aria-label' ).includes( labels.nearest ) ) );
         const historicalHexes = [...card.querySelectorAll( '.suggestion-option' )].map( node => node.querySelectorAll( 'span' )[1].textContent );
         await act( async () => {
           selector.value = 'adapted';
           selector.dispatchEvent( new window.Event( 'change', { bubbles: true } ) );
         } );
         assert.equal( explanation.textContent, labels.personalHint );
-        const marker = card.querySelector( '.suggestion-label' );
-        assert.equal( marker.textContent, labels.your );
-        assert.equal( marker.closest( 'button' ).querySelectorAll( 'span' )[1].textContent, '#808080' );
-        assert.ok( marker.closest( 'button' ).getAttribute( 'aria-label' ).includes( labels.your ) );
+        const marker = [...card.querySelectorAll( '.suggestion-option' )].find( node => node.getAttribute( 'aria-label' ).includes( labels.your ) );
+        assert.equal( marker.querySelectorAll( 'span' )[1].textContent, '#808080' );
+        assert.ok( !card.textContent.includes( labels.your ) );
+        assert.ok( !card.textContent.includes( labels.nearest ) );
+        assert.equal( marker.querySelectorAll( '.suggestion-saved' ).length, 1 );
+        assert.equal( marker.querySelector( '.suggestion-saved' ).textContent, labels.lang === 'uk' ? 'Вже додано' : 'Already added' );
+        for ( const option of card.querySelectorAll( '.suggestion-option' ) ) {
+          const value = option.querySelectorAll( 'span' )[1].textContent;
+          const exists = stored.currentPalette.colors.some( item => item.hex === value );
+          assert.equal( option.querySelectorAll( '.suggestion-saved' ).length, exists ? 1 : 0 );
+        }
         await act( async () => {
           selector.value = 'original';
           selector.dispatchEvent( new window.Event( 'change', { bubbles: true } ) );
@@ -257,6 +264,16 @@ test( 'advisor previews without writes, adds explicitly, rejects duplicates and 
       const expectedNew = adaptedHexes.filter( hex => !beforeHistorical.colors.some( item => item.hex === hex ) );
       assert.deepEqual( stored.currentPalette.colors.slice( 0, expectedNew.length ).map( item => item.hex ), expectedNew );
       assert.deepEqual( stored.currentPalette.colors.slice( expectedNew.length ), beforeHistorical.colors );
+      const beforeRemoteDelete = structuredClone( stored.currentPalette );
+      const removedHex = expectedNew[0];
+      assert.ok( removedHex );
+      const swatchFor = hex => [...firstCard.querySelectorAll( '.suggestion-option' )].find( node => node.querySelectorAll( 'span' )[1].textContent === hex );
+      await act( async () => local.set( { currentPalette: {
+        ...beforeRemoteDelete, colors: beforeRemoteDelete.colors.filter( item => item.hex !== removedHex ),
+      } } ) );
+      assert.equal( swatchFor( removedHex ).querySelector( '.suggestion-saved' ), null );
+      await act( async () => local.set( { currentPalette: beforeRemoteDelete } ) );
+      assert.equal( swatchFor( removedHex ).querySelectorAll( '.suggestion-saved' ).length, 1 );
       await act( async () => {
         const select = document.querySelector( '.historical-palettes > label select' );
         select.value = 'original';

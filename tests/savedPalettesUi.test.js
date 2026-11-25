@@ -77,7 +77,7 @@ test( 'library UI allows independent login, preserves full mixed sets and requir
     const { createRoot } = await import( 'react-dom/client' );
     server = await createServer( {
       envDir: false,
-      define: { 'import.meta.env.VITE_PALETTE_API_URL': JSON.stringify( 'https://api.example.test' ) },
+      define: { 'import.meta.env.VITE_ENABLE_CLOUD': JSON.stringify( 'true' ), 'import.meta.env.VITE_PALETTE_API_URL': JSON.stringify( 'https://api.example.test' ) },
       server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom',
     } );
     const { default: App } = await server.ssrLoadModule( '/src/App.jsx' );

@@ -4,7 +4,7 @@ import SavePaletteConfirmation from '@/features/saved-palettes/components/SavePa
 import SavedPalettePreview from '@/features/saved-palettes/components/SavedPalettePreview.jsx';
 import SavedPaletteDetails from '@/features/saved-palettes/components/SavedPaletteDetails.jsx';
 import DeviceBackupPanel from '@/features/saved-palettes/components/DeviceBackupPanel.jsx';
-import './SavedPalettesPage.css';
+import '@/features/saved-palettes/components/SavedPalettes.css';
 
 const errorCodes = new Set( [
   'unauthorized', 'authCancelled', 'authConfiguration', 'authFlowFailed', 'invalidIdentity', 'invalidAuthRequest',
