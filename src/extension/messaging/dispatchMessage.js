@@ -2,6 +2,7 @@ import { ERROR_CODES } from '@/constants/errorCodes.js';
 import {
   GET_PALETTE,
   ADD_COLOR,
+  ADD_COLORS,
   REMOVE_COLOR,
   CLEAR_PALETTE,
   MOVE_ITEM_FIRST,
@@ -29,6 +30,8 @@ export async function dispatchMessage( { paletteService, openEditor, library, ba
       return paletteService.getPalette();
     case findCorrectMessageType( ADD_COLOR ):
       return paletteService.addColor( message.hex );
+    case findCorrectMessageType( ADD_COLORS ):
+      return paletteService.addColors( message.hexes );
     case findCorrectMessageType( MOVE_ITEM_FIRST ):
       return paletteService.moveItemFirst( message.id );
     case findCorrectMessageType( REMOVE_COLOR ):

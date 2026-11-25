@@ -160,7 +160,7 @@ src/
 │   ├── palette/                   # local palette components, subscription, repository, mutation queue
 │   ├── gradients/                 # gradient builder, cards, and editing hook
 │   ├── saved-palettes/            # library components, view model, and snapshot service
-│   ├── color-advisor/             # suggestions, comparison, actions, and pure suggestion functions
+│   ├── color-advisor/             # suggestions, comparison, actions, historical data, and pure ranking
 │   ├── preferences/               # theme, language controls, and color-format preferences
 │   └── printing/                  # document components and pagination
 ├── extension/
@@ -544,6 +544,46 @@ background.js composes these dependencies. UI api modules send messages; prefere
 
 The lightbulb on each solid-color card opens an inline advisor; only one source is expanded per view. Suggestions stay local until Add is pressed. Copy uses the currently selected HEX/RGB/CMYK format. Saved colors are marked Already added, and the existing palette service remains responsible for deduplication and persistence. Gradients keep their existing editing flow.
 
-`features/color-advisor/utils/colorSuggestions.js` is pure: shades mix RGB channels with black or white at 20%, 40%, and 60%; neighboring hues rotate HSL hue by 30 degrees; complementary and triadic variants rotate by 180 and 120/240 degrees. Hue values are not persisted. A source with an RGB channel spread of 16 or less is treated as nearly neutral and offers shades only. Results are deterministic, not a guarantee of aesthetic suitability or text contrast.
+`features/color-advisor/utils/colorSuggestions.js` is pure: shades mix RGB channels with black or white at 20%, 40%, and 60%; neighboring hues rotate HSL hue by 30 degrees; complementary and triadic variants rotate by 180 and 120/240 degrees. Hue values are not persisted. A source with an RGB channel spread of 16 or less is treated as nearly neutral and offers shades plus historical combinations. Results are deterministic, not a guarantee of aesthetic suitability or text contrast.
 
 Components in `src/features/color-advisor/components/` have separate roles: ColorAdvisor coordinates categories and selection; ColorSuggestions renders choices; ColorComparison renders the pair and reversible background/accent composition. useColorAdvisorActions handles explicit save/copy actions and local feedback. Styles live beside those components, and category identifiers in constants/advisorTypes.js.
+
+
+### Historical combinations (Sanzo Wada)
+
+Choose **Historical combinations** in Color Advisor. Six combinations are ranked by
+CIELAB D65 / Delta E 1976 distance to the closest historical color; IDs break ties.
+The bundled MIT dataset contains 159 colors and 348 combinations of **2–4 colors**.
+**Classic** palettes retain all digitized HEX values. **With my color** replaces
+only the nearest color with the exact selected HEX. Each card marks the closest
+historical color or your color, and uses its collection palette number.
+Black, white, and gray sources work in this mode. Results are deterministic and
+require no network requests, new browser permissions, runtime packages, or backend.
+
+Click a swatch to compare, copy its HEX, or add that color. **Add all colors** sends
+one bounded worker command (1–5 input colors), deduplicates existing and incoming
+colors, and prepends the missing colors in combination order. One serialized storage
+write commits the batch; a failed write preserves the previous palette. Existing
+colors, gradients, name, and saved-source metadata are retained.
+
+The current working palette already persists locally. Named library snapshots use
+the existing explicit cloud save flow after adding the combination and require
+sign-in. A separate offline library of named historical palettes needs its own
+entity, selection UI, storage lifecycle and migration policy; this is a follow-up,
+not a new storage format introduced by this feature.
+
+Source commits and complete MIT notices are in
+[THIRD-PARTY-NOTICES.txt](public/THIRD-PARTY-NOTICES.txt), copied into dist and ZIP.
+The vendored source is src/features/color-advisor/data/sanzoWada.json; its canonical
+JSON checksum, schema and combination references are covered by tests. No images,
+scans or modern book layout are included. Original means original digitized data,
+not a claim of exact physical print reproduction or a recommendation by the author.
+
+RPC-4 local validation: lint/architecture, full tests, build, verify:extension, and ZIP
+notice inclusion. The measured unpacked build is 575,943 bytes across 17 files
+(previous local build: 535,961 bytes; increase: 39,982 bytes). The vendored JSON is
+60,245 bytes; Vite bundles it into the UI. These sizes describe this local build,
+not a permanent size budget. Manual Chrome checks remain: load the built ZIP's
+contents, go offline, exercise original/adapted modes in panel and full tab, copy,
+add one/all, reopen/reload, check en/uk and both themes, and confirm cross-view state.
+Browser automation could not be authorized in this session.

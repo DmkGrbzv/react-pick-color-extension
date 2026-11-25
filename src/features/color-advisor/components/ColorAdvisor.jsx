@@ -6,13 +6,14 @@ import { createColorSuggestions } from '@/features/color-advisor/utils/colorSugg
 import { useColorAdvisorActions } from '@/features/color-advisor/hooks/useColorAdvisorActions.js';
 import ColorSuggestions from '@/features/color-advisor/components/ColorSuggestions.jsx';
 import ColorComparison from '@/features/color-advisor/components/ColorComparison.jsx';
+import HistoricalPalettes from './HistoricalPalettes.jsx';
 import './ColorAdvisor.css';
 
 export default function ColorAdvisor( { id, source, savedColors, format, disabled, onClose } ) {
   const { t } = useTranslation();
   const [category, setCategory] = useState( ADVISOR_CATEGORIES.SHADES );
   const [selectedHex, setSelectedHex] = useState( null );
-  const { saving, notice, add, copy } = useColorAdvisorActions();
+  const { saving, notice, add, addAll, copy } = useColorAdvisorActions();
   const suggestions = useMemo( () => createColorSuggestions( source.hex ), [source.hex] );
   const savedHexes = useMemo(
     () => new Set(
@@ -26,7 +27,7 @@ export default function ColorAdvisor( { id, source, savedColors, format, disable
   return (
     <section className="color-advisor" id={ id } aria-labelledby={ id + '-title' }>
       <div className="advisor-heading">
-        <h3 id={ id + '-title' }>{ t( 'advisor.title' ) }</h3>
+        <h3 id={ id + '-title' }>{ t( category === ADVISOR_CATEGORIES.HISTORICAL ? 'advisor.historical.title' : 'advisor.title' ) }</h3>
         <button type="button" onClick={ onClose }>
           <Icon name="close" />
           { t( 'advisor.close' ) }
@@ -35,7 +36,7 @@ export default function ColorAdvisor( { id, source, savedColors, format, disable
       <div className="advisor-source">
         <span style={ { backgroundColor: suggestions.source } } aria-hidden="true" />
         <div>
-          { t( 'advisor.source' ) }
+          { t( category === ADVISOR_CATEGORIES.HISTORICAL ? 'advisor.historical.yourColor' : 'advisor.source' ) }
           <code>{ suggestions.source }</code>
         </div>
       </div>
@@ -54,7 +55,7 @@ export default function ColorAdvisor( { id, source, savedColors, format, disable
             <option
               key={ value }
               value={ value }
-              disabled={ suggestions.isNeutral && value !== ADVISOR_CATEGORIES.SHADES }
+              disabled={ suggestions.isNeutral && value !== ADVISOR_CATEGORIES.SHADES && value !== ADVISOR_CATEGORIES.HISTORICAL }
             >
               { t( 'advisor.categories.' + value ) }
             </option>
@@ -64,8 +65,11 @@ export default function ColorAdvisor( { id, source, savedColors, format, disable
       <p id={ id + '-explanation' } className="hint">
         { t( 'advisor.descriptions.' + category ) }
       </p>
-      { suggestions.isNeutral && <p className="hint">{ t( 'advisor.neutral' ) }</p> }
-      { groups.map( ( group ) => (
+      { suggestions.isNeutral && category !== ADVISOR_CATEGORIES.HISTORICAL && <p className="hint">{ t( 'advisor.neutral' ) }</p> }
+      { category === ADVISOR_CATEGORIES.HISTORICAL ? (
+        <HistoricalPalettes sourceHex={ suggestions.source } selectedHex={ selectedHex } savedHexes={ savedHexes }
+          onSelect={ setSelectedHex } onAddAll={ addAll } disabled={ disabled || saving } />
+      ) : groups.map( ( group ) => (
         <ColorSuggestions
           key={ group }
           heading={ category === ADVISOR_CATEGORIES.ACCENTS ? group : undefined }
@@ -92,9 +96,9 @@ export default function ColorAdvisor( { id, source, savedColors, format, disable
               <Icon name={ alreadyAdded ? 'check' : 'plus' } />
               { t( alreadyAdded ? 'advisor.alreadyAdded' : saving ? 'busy' : 'advisor.add' ) }
             </button>
-            <button type="button" onClick={ () => copy( selectedHex, format ) }>
+            <button type="button" onClick={ () => copy( selectedHex, category === ADVISOR_CATEGORIES.HISTORICAL ? 'hex' : format ) }>
               <Icon name="copy" />
-              { t( 'advisor.copy', { format: format.toUpperCase() } ) }
+              { t( 'advisor.copy', { format: category === ADVISOR_CATEGORIES.HISTORICAL ? 'HEX' : format.toUpperCase() } ) }
             </button>
           </div>
         </>

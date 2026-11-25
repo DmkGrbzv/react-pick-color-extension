@@ -5,6 +5,7 @@ import { createServer } from 'vite';
 import { createElement, act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPaletteExecutor } from './helpers/palette.js';
+import { findHistoricalPalettes } from '@/features/color-advisor/utils/historicalPalettes.js';
 import { colorValues } from '@/utils/colorConversion.js';
 
 // Mount real components with the real palette service, replacing only browser APIs.
@@ -114,7 +115,7 @@ test( 'advisor previews without writes, adds explicitly, rejects duplicates and 
       appType: 'custom',
     } );
     const { default: App } = await server.ssrLoadModule( '/src/App.jsx' );
-    const { languageReady } = await server.ssrLoadModule( '/src/i18n/index.js' );
+    const { languageReady, default: i18n } = await server.ssrLoadModule( '/src/i18n/index.js' );
     await languageReady;
     for ( const editor of [false, true] ) {
       stored.currentPalette = structuredClone( initial );
@@ -185,6 +186,84 @@ test( 'advisor previews without writes, adds explicitly, rejects duplicates and 
       assert.equal( document.querySelector( '.advisor-source code' ).textContent, '#808080' );
       assert.equal( document.querySelectorAll( '.advisor-category option:disabled' ).length, 2 );
       assert.equal( writes, 1 );
+      await category( 'historical' );
+      assert.equal( document.querySelectorAll( '.historical-palette' ).length, 6 );
+      assert.equal( document.querySelector( '.historical-palettes > label select' ).value, 'original' );
+      const expectedId = findHistoricalPalettes( '#808080' )[0].id;
+      for ( const labels of [
+        { lang: 'en', title: 'Find color combinations', classic: 'Classic', personal: 'With my color',
+          your: 'Your color', nearest: 'Closest color in the collection', card: 'Palette No. ',
+          classicHint: 'Original combinations from the collection, found using the closest shade to your color.',
+          personalHint: 'Combinations from the collection with one shade replaced by your selected color.' },
+        { lang: 'uk', title: 'Добір кольорових поєднань', classic: 'Класичні', personal: 'З моїм кольором',
+          your: 'Ваш колір', nearest: 'Найближчий колір у колекції', card: 'Палітра №',
+          classicHint: 'Оригінальні поєднання з колекції, знайдені за найближчим відтінком до вашого кольору.',
+          personalHint: 'Поєднання з колекції, у яких один із відтінків замінено на ваш вибраний колір.' },
+      ] ) {
+        await act( async () => i18n.changeLanguage( labels.lang ) );
+        const selector = document.querySelector( '.historical-palettes > label select' );
+        const card = document.querySelector( '.historical-palette' );
+        assert.equal( document.querySelector( '.advisor-heading h3' ).textContent, labels.title );
+        assert.deepEqual( [...selector.options].map( option => option.textContent ), [labels.classic, labels.personal] );
+        const explanation = document.getElementById( selector.getAttribute( 'aria-describedby' ) );
+        assert.equal( explanation.textContent, labels.classicHint );
+        assert.ok( document.querySelector( '.advisor-source' ).textContent.includes( labels.your ) );
+        assert.equal( card.querySelector( 'h4' ).textContent, labels.card + expectedId );
+        assert.equal( card.getAttribute( 'aria-label' ), labels.card + expectedId );
+        assert.equal( card.querySelectorAll( '.suggestion-label' ).length, 1 );
+        assert.equal( card.querySelector( '.suggestion-label' ).textContent, labels.nearest );
+        const historicalHexes = [...card.querySelectorAll( '.suggestion-option' )].map( node => node.querySelectorAll( 'span' )[1].textContent );
+        await act( async () => {
+          selector.value = 'adapted';
+          selector.dispatchEvent( new window.Event( 'change', { bubbles: true } ) );
+        } );
+        assert.equal( explanation.textContent, labels.personalHint );
+        const marker = card.querySelector( '.suggestion-label' );
+        assert.equal( marker.textContent, labels.your );
+        assert.equal( marker.closest( 'button' ).querySelectorAll( 'span' )[1].textContent, '#808080' );
+        assert.ok( marker.closest( 'button' ).getAttribute( 'aria-label' ).includes( labels.your ) );
+        await act( async () => {
+          selector.value = 'original';
+          selector.dispatchEvent( new window.Event( 'change', { bubbles: true } ) );
+        } );
+        assert.equal( explanation.textContent, labels.classicHint );
+        assert.deepEqual( [...card.querySelectorAll( '.suggestion-option' )].map( node => node.querySelectorAll( 'span' )[1].textContent ), historicalHexes );
+      }
+      await act( async () => i18n.changeLanguage( 'en' ) );
+      const originalHexes = [...document.querySelectorAll( '.historical-palette:first-of-type .suggestion-option' )].map( node => node.querySelectorAll( 'span' )[1].textContent );
+      const beforeHistorical = structuredClone( stored.currentPalette );
+      await act( async () => {
+        const select = document.querySelector( '.historical-palettes > label select' );
+        select.value = 'adapted';
+        select.dispatchEvent( new window.Event( 'change', { bubbles: true } ) );
+      } );
+      const firstCard = document.querySelector( '.historical-palette' );
+      const adaptedHexes = [...firstCard.querySelectorAll( '.suggestion-option' )].map( node => node.querySelectorAll( 'span' )[1].textContent );
+      assert.ok( adaptedHexes.includes( '#808080' ) );
+      assert.equal( adaptedHexes.length, originalHexes.length );
+      assert.deepEqual( stored.currentPalette, beforeHistorical );
+      await click( firstCard.querySelector( '.suggestion-option' ) );
+      await click( document.querySelector( '.advisor-actions button:last-child' ) );
+      assert.equal( copied.at( -1 ), adaptedHexes[0] );
+      failWrite = true;
+      await click( firstCard.querySelector( ':scope > button' ) );
+      assert.equal( writes, 1 );
+      assert.deepEqual( stored.currentPalette, beforeHistorical );
+      assert.ok( document.querySelector( '.advisor-notice .error' ) );
+      const addAll = firstCard.querySelector( ':scope > button' );
+      await act( async () => { addAll.click(); addAll.click(); } );
+      assert.equal( writes, 2, 'one complete batch write despite rapid clicks' );
+      assert.ok( firstCard.querySelector( ':scope > button' ).disabled );
+      const expectedNew = adaptedHexes.filter( hex => !beforeHistorical.colors.some( item => item.hex === hex ) );
+      assert.deepEqual( stored.currentPalette.colors.slice( 0, expectedNew.length ).map( item => item.hex ), expectedNew );
+      assert.deepEqual( stored.currentPalette.colors.slice( expectedNew.length ), beforeHistorical.colors );
+      await act( async () => {
+        const select = document.querySelector( '.historical-palettes > label select' );
+        select.value = 'original';
+        select.dispatchEvent( new window.Event( 'change', { bubbles: true } ) );
+      } );
+      assert.deepEqual( [...firstCard.querySelectorAll( '.suggestion-option' )].map( node => node.querySelectorAll( 'span' )[1].textContent ), originalHexes );
+      assert.equal( document.querySelector( '.advisor-actions' ), null );
       // Deletion from another context closes the removed source's advisor.
       await act( async () =>
         local.set( {
