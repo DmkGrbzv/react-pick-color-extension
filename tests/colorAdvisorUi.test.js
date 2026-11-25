@@ -264,6 +264,16 @@ test( 'advisor previews without writes, adds explicitly, rejects duplicates and 
       const expectedNew = adaptedHexes.filter( hex => !beforeHistorical.colors.some( item => item.hex === hex ) );
       assert.deepEqual( stored.currentPalette.colors.slice( 0, expectedNew.length ).map( item => item.hex ), expectedNew );
       assert.deepEqual( stored.currentPalette.colors.slice( expectedNew.length ), beforeHistorical.colors );
+      const beforeRemoteDelete = structuredClone( stored.currentPalette );
+      const removedHex = expectedNew[0];
+      assert.ok( removedHex );
+      const swatchFor = hex => [...firstCard.querySelectorAll( '.suggestion-option' )].find( node => node.querySelectorAll( 'span' )[1].textContent === hex );
+      await act( async () => local.set( { currentPalette: {
+        ...beforeRemoteDelete, colors: beforeRemoteDelete.colors.filter( item => item.hex !== removedHex ),
+      } } ) );
+      assert.equal( swatchFor( removedHex ).querySelector( '.suggestion-saved' ), null );
+      await act( async () => local.set( { currentPalette: beforeRemoteDelete } ) );
+      assert.equal( swatchFor( removedHex ).querySelectorAll( '.suggestion-saved' ).length, 1 );
       await act( async () => {
         const select = document.querySelector( '.historical-palettes > label select' );
         select.value = 'original';
