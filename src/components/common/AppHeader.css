@@ -26,10 +26,37 @@
   white-space: nowrap;
 }
 .app-logo {
+  position: relative;
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+}
+.app-logo img {
   display: block;
   max-width: 100%;
   height: auto;
   object-fit: contain;
+}
+:root[data-theme='dark'] .app-logo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: #bff7e8;
+  mask: url('/icons/tintoom-logo.png') center / 100% 100% no-repeat;
+  /* Recolor the lettering while retaining the central splash and source alpha. */
+  clip-path: polygon(
+    0 0,
+    44% 0,
+    44% 50%,
+    46.4% 50%,
+    46.4% 100%,
+    78.7% 100%,
+    78.7% 0,
+    100% 0,
+    100% 100%,
+    0 100%
+  );
 }
 .app-preferences {
   grid-column: 2;
