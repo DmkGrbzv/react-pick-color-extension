@@ -597,8 +597,8 @@ opts in). A configured API URL alone does not enable UI, worker requests or extr
 manifest permissions. Legacy library entries/hash/history resolve to the working
 palette; local tools, printing and preferences remain available. Existing sessions,
 pending saves, cloud-source references and local copies are retained unchanged.
-The working screen offers existing device backups in a collapsible local section;
-cloud capture controls are hidden there. No cloud request is made on opening it.
+The device-backup block is omitted from the Local-Only working screen by owner
+request. Revisit its UX when backend work resumes; see the release checklist.
 
 See [Local-Only release checklist](docs/local-only-release.md) for exact Windows
 build commands, artifact verification and required owner/browser checks. A passing

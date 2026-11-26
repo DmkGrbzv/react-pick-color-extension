@@ -41,16 +41,3 @@
     display: none !important;
   }
 }
-.local-backup {
-  margin-top: 20px;
-  min-width: 0;
-}
-.local-backup > summary {
-  cursor: pointer;
-  color: var(--text-muted);
-}
-@media print {
-  .local-backup {
-    display: none;
-  }
-}
