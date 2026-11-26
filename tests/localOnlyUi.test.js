@@ -99,11 +99,10 @@ test( 'local-only entries and legacy routes stay offline and preserve account da
       window.history.replaceState( null, '', '#view=working' );
       await act( async () => root.render( createElement( App ) ) );
       assert.equal( [...document.querySelectorAll( 'button' )].some( button => button.textContent === 'Save backup on this device' ), false );
-      await act( async () => document.querySelector( '.local-backup summary' ).click() );
-      await act( async () => [...document.querySelectorAll( 'button' )].find( button => button.textContent === 'View device backup' ).click() );
-      assert.ok( document.querySelector( '.local-backup' ).textContent.includes( 'Offline set' ) );
-      await act( async () => [...document.querySelectorAll( 'button' )].find( button => button.textContent === 'Open as working palette' ).click() );
-      assert.equal( storage.local.data.currentPalette.colors[0].hex, '#112233' );
+      assert.equal( document.querySelector( '.local-backup' ), null );
+      for ( const label of ['View device backup', 'Delete device backup'] ) {
+        assert.equal( [...document.querySelectorAll( 'button' )].some( button => button.textContent === label ), false );
+      }
       await act( async () => root.unmount() ); root = null;
       // Disabled cloud commands cannot clear the existing account or launch login.
       assert.deepEqual( await chromeApi.runtime.sendMessage( { type: 'cloud:state' } ), { ok: true, value: { configured: false, user: null, pending: null } } );

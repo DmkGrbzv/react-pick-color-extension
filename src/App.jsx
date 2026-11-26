@@ -19,7 +19,6 @@ import AccountMenu from '@/features/auth/components/AccountMenu.jsx';
 import LanguageSelector from '@/features/preferences/components/LanguageSelector.jsx';
 import ThemeToggle from '@/features/preferences/components/ThemeToggle.jsx';
 import WorkingPalettePage from '@/pages/WorkingPalette/WorkingPalettePage.jsx';
-import DeviceBackupPanel from '@/features/saved-palettes/components/DeviceBackupPanel.jsx';
 import SavedPalettesPage from '@/pages/SavedPalettes/SavedPalettesPage.jsx';
 import PrintPage from '@/pages/Print/PrintPage.jsx';
 import './App.css';
@@ -87,10 +86,6 @@ export default function App( { panel = false, initialPage = 'working' } ) {
       { !palette && !error && <p role="status">{ t( 'loading' ) }</p> }
       { visited.includes( 'working' ) && <section className="app-content" hidden={ page !== 'working' } aria-label={ t( 'navigation.working' ) }>
         <WorkingPalettePage key={ workingRevision } palette={ palette } panel={ panel } />
-        { !apiUrl && <details className="local-backup">
-          <summary>{ t( 'backup.title' ) }</summary>
-          <DeviceBackupPanel signedIn={ false } captureEnabled={ false } palette={ palette } onOpened={ opened } />
-        </details> }
       </section> }
       { apiUrl && visited.includes( 'library' ) && <section className="app-content" hidden={ page !== 'library' } aria-label={ t( 'navigation.saved' ) }>
         <SavedPalettesPage palette={ palette } library={ library } onOpened={ opened } />

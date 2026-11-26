@@ -46,8 +46,8 @@ the returned HEX, not screen images: [EyeDropper API](https://developer.chrome.c
 - VITE_ENABLE_CLOUD defaults off; only true plus an API URL opts into the existing
   cloud build. UI, worker HTTP client and generated manifest use the same flag.
 - Working palette, gradients, preferences, local copies and old account data are
-  not migrated/deleted. An existing local backup is available from the working
-  screen without sign-in. Creating a new cloud backup is hidden in local mode.
+  not migrated/deleted. The device-backup block is omitted from the Local-Only
+  working screen by owner request; backup services remain available for later backend work.
 - Legacy library.html and #view=library links safely show the working screen.
   Print/full-view/navigation and reload use the same app and worker queue.
 - One visible Already added / Вже додано state is derived from current local data;
@@ -66,8 +66,8 @@ the returned HEX, not screen images: [EyeDropper API](https://developer.chrome.c
    source HEX; narrow panel at 240–430 px and 125/200% zoom; keyboard focus; en/uk
    and light/dark; print; two-window/tab sync; close/reopen/browser reload.
 3. Verify fresh and upgraded profiles: no cloud/sign-in/save prompts, no network
-   cloud attempts, safe old library links, existing local backup view/open with
-   confirmation, and preserved prior account/pending data. Record the tested ZIP
+   cloud attempts or device-backup controls, safe old library links, and preserved
+   prior account/pending/backup data. Record the tested ZIP
    hash, Chrome version and results. Automated substituted-browser tests do not
    satisfy this step. The owner selected manual browser verification.
 4. Provide the real publisher/support contact and public privacy-policy URL; owner
@@ -105,3 +105,12 @@ keep cloud re-enablement behind an explicit build decision and appropriate QA.
 Record exact branch/commit, commands/results, ZIP path/hash/size and remaining P0
 in the single RPC-6 Notion journal. GO requires all P0 evidence and owner materials.
 Until then: NO-GO for Chrome Web Store, even when code checks are green.
+
+## Reminder when backend work resumes
+
+Owner request, 2026-11-26: revisit the device-backup block before restoring it.
+Agree its purpose and placement first. Check whether a saved backup actually exists;
+hide or disable view/delete when none exists, avoid empty confirmation/success flows,
+and refresh the state after deletion. Verify guest/signed-in and offline cases.
+The block was removed from the Local-Only working screen; the reusable component
+and storage services were retained. No actual user backup was inspected.
